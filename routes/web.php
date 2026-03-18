@@ -6,7 +6,7 @@ use App\Http\Controllers\Client\RoutineController;
 use App\Http\Controllers\Client\LogController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 })->name('home');
 
 Route::view('dashboard', 'dashboard')

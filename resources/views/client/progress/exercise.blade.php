@@ -1,184 +1,17 @@
 <x-layouts.client>
-<style>
-    .rw { max-width: 640px; margin: 0 auto; }
 
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #555;
-        text-decoration: none;
-        margin-bottom: 14px;
-        transition: color 0.15s;
-    }
-    .back-link:hover { color: #f0f0f0; }
-
-    .pg-label {
-        font-size: 10px;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: #555;
-        margin-bottom: 2px;
-    }
-    .pg-title {
-        font-size: 34px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: -0.01em;
-        line-height: 1.1;
-        margin-bottom: 20px;
-    }
-
-    /* PR card */
-    .pr-card {
-        background: #161616;
-        border: 1px solid #222;
-        border-radius: 12px;
-        padding: 16px 18px;
-        margin-bottom: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    .pr-label {
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: #555;
-        margin-bottom: 4px;
-    }
-    .pr-value {
-        font-size: 36px;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        color: #e8ff47;
-        line-height: 1;
-    }
-    .pr-unit {
-        font-size: 16px;
-        font-weight: 600;
-        color: #e8ff47;
-        opacity: 0.7;
-        margin-left: 3px;
-    }
-    .pr-none { font-size: 28px; font-weight: 900; color: #333; }
-
-    .last-log {
-        background: #1a1a1a;
-        border: 1px solid #222;
-        border-radius: 8px;
-        padding: 10px 14px;
-        flex-shrink: 0;
-    }
-    .last-log-label {
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: #444;
-        margin-bottom: 5px;
-    }
-    .last-log-date { font-size: 11px; color: #555; margin-bottom: 4px; }
-    .last-log-detail { font-size: 13px; font-weight: 700; color: #f0f0f0; }
-
-    /* Chart card */
-    .chart-card {
-        background: #161616;
-        border: 1px solid #222;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 14px;
-    }
-    .chart-card-header {
-        padding: 12px 16px;
-        border-bottom: 1px solid #1e1e1e;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .chart-card-title {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: #555;
-    }
-    .chart-tabs {
-        display: flex;
-        gap: 4px;
-    }
-    .chart-tab {
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        padding: 3px 9px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.15s;
-        background: transparent;
-        color: #555;
-        font-family: 'Montserrat', sans-serif;
-    }
-    .chart-tab.active {
-        background: rgba(232,255,71,0.1);
-        color: #e8ff47;
-    }
-    .chart-wrap {
-        padding: 16px;
-        position: relative;
-        height: 200px;
-    }
-
-    /* Logs card */
-    .logs-card {
-        background: #161616;
-        border: 1px solid #222;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    .logs-card-header {
-        padding: 12px 16px;
-        border-bottom: 1px solid #1e1e1e;
-    }
-    .logs-card-title {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: #555;
-    }
-    .log-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 11px 16px;
-        border-bottom: 1px solid #1e1e1e;
-        font-size: 13px;
-        transition: background 0.15s;
-    }
-    .log-row:last-child { border-bottom: none; }
-    .log-row:hover { background: #1a1a1a; }
-    .log-time  { color: #444; font-size: 11px; min-width: 72px; flex-shrink: 0; }
-    .log-set   { color: #555; font-size: 11px; min-width: 42px; flex-shrink: 0; }
-    .log-kg    { color: #f0f0f0; font-weight: 700; min-width: 60px; }
-    .log-reps  { color: #555; font-size: 11px; }
-
-    .empty-text {
-        padding: 24px 16px;
-        font-size: 13px;
-        color: #444;
-        font-weight: 500;
-    }
-</style>
+{{-- Video modal --}}
+<div class="modal-overlay" id="videoModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle"></span>
+            <button class="modal-close" onclick="closeVideo()">✕</button>
+        </div>
+        <div class="modal-body">
+            <iframe id="modalIframe" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
 
 <div class="rw">
 
@@ -186,6 +19,17 @@
 
     <p class="pg-label">Progreso</p>
     <h1 class="pg-title">{{ $exercise->title }}</h1>
+
+    {{-- Botón video --}}
+    @if ($exercise->video_url)
+        <div style="margin-bottom:16px;">
+            <button class="btn-video" style="font-size:11px; padding:6px 14px;"
+                onclick="openVideo('{{ $exercise->video_url }}', '{{ addslashes($exercise->title) }}')">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;"><path d="M8 5v14l11-7z"/></svg>
+                Ver tutorial
+            </button>
+        </div>
+    @endif
 
     {{-- PR + último registro --}}
     <div class="pr-card">
@@ -197,7 +41,6 @@
                 <div class="pr-none">—</div>
             @endif
         </div>
-
         @if ($last)
             <div class="last-log">
                 <div class="last-log-label">Último registro</div>
@@ -213,26 +56,25 @@
 
     {{-- Gráfico --}}
     @if (!$logs->isEmpty())
-    <div class="chart-card">
-        <div class="chart-card-header">
-            <span class="chart-card-title">Evolución</span>
-            <div class="chart-tabs">
-                <button class="chart-tab active" onclick="switchChart('weight', this)">Peso</button>
-                <button class="chart-tab" onclick="switchChart('reps', this)">Reps</button>
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-card-title">Evolución</span>
+                <div class="chart-tabs">
+                    <button class="chart-tab active" onclick="switchChart('weight', this)">Peso</button>
+                    <button class="chart-tab" onclick="switchChart('reps', this)">Reps</button>
+                </div>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="progressChart"></canvas>
             </div>
         </div>
-        <div class="chart-wrap">
-            <canvas id="progressChart"></canvas>
-        </div>
-    </div>
     @endif
 
-    {{-- Historial de sets --}}
+    {{-- Historial --}}
     <div class="logs-card">
         <div class="logs-card-header">
             <span class="logs-card-title">Historial de sets</span>
         </div>
-
         @if ($logs->isEmpty())
             <div class="empty-text">Todavía no hay registros para este ejercicio.</div>
         @else
@@ -261,89 +103,91 @@
         ];
     });
 @endphp
-    const rawLogs = {!! json_encode($chartData) !!};
+const rawLogs  = {!! json_encode($chartData) !!};
+const labels   = rawLogs.map(l => l.date);
+const weights  = rawLogs.map(l => l.weight);
+const repsData = rawLogs.map(l => l.reps);
 
-    const labels  = rawLogs.map(l => l.date);
-    const weights = rawLogs.map(l => l.weight);
-    const reps    = rawLogs.map(l => l.reps);
+const ctx = document.getElementById('progressChart').getContext('2d');
 
-    const ctx = document.getElementById('progressChart').getContext('2d');
-
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: '#1f1f1f',
-                borderColor: '#333',
-                borderWidth: 1,
-                titleColor: '#888',
-                bodyColor: '#f0f0f0',
-                titleFont: { family: 'Montserrat', size: 10, weight: '700' },
-                bodyFont: { family: 'Montserrat', size: 13, weight: '700' },
-                padding: 10,
-            },
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: '#1f1f1f',
+            borderColor: '#333',
+            borderWidth: 1,
+            titleColor: '#888',
+            bodyColor: '#f0f0f0',
+            titleFont: { family: 'Montserrat', size: 10, weight: '700' },
+            bodyFont: { family: 'Montserrat', size: 13, weight: '700' },
+            padding: 10,
         },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#444',
-                    font: { family: 'Montserrat', size: 9 },
-                    maxTicksLimit: 8,
-                    maxRotation: 0,
-                },
-                grid: { color: '#1e1e1e' },
-                border: { color: '#222' },
-            },
-            y: {
-                ticks: {
-                    color: '#444',
-                    font: { family: 'Montserrat', size: 10 },
-                },
-                grid: { color: '#1e1e1e' },
-                border: { color: '#222' },
-            },
+    },
+    scales: {
+        x: {
+            ticks: { color: '#444', font: { family: 'Montserrat', size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
+            grid: { color: '#1e1e1e' },
+            border: { color: '#222' },
         },
+        y: {
+            ticks: { color: '#444', font: { family: 'Montserrat', size: 10 } },
+            grid: { color: '#1e1e1e' },
+            border: { color: '#222' },
+        },
+    },
+};
+
+function makeDataset(data) {
+    return {
+        data,
+        borderColor: '#e63946',
+        backgroundColor: 'rgba(230,57,70,0.06)',
+        pointBackgroundColor: '#e63946',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.35,
     };
+}
 
-    function makeDataset(data, label, unit) {
-        return {
-            label,
-            data,
-            borderColor: '#e8ff47',
-            backgroundColor: 'rgba(232,255,71,0.06)',
-            pointBackgroundColor: '#e8ff47',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            borderWidth: 2,
-            fill: true,
-            tension: 0.35,
-        };
-    }
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [makeDataset(weights)] },
+    options: commonOptions,
+});
 
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [makeDataset(weights, 'Peso', 'kg')],
-        },
-        options: commonOptions,
-    });
-
-    function switchChart(type, btn) {
-        document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (type === 'weight') {
-            chart.data.datasets[0] = makeDataset(weights, 'Peso', 'kg');
-        } else {
-            chart.data.datasets[0] = makeDataset(reps, 'Reps', '');
-        }
-        chart.update();
-    }
+function switchChart(type, btn) {
+    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    chart.data.datasets[0] = makeDataset(type === 'weight' ? weights : repsData);
+    chart.update();
+}
 </script>
 @endif
+
+<script>
+function getYoutubeId(url) {
+    const match = url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/);
+    return match ? match[1] : null;
+}
+function openVideo(url, title) {
+    const id = getYoutubeId(url);
+    if (!id) return;
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalIframe').src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+    document.getElementById('videoModal').classList.add('open');
+}
+function closeVideo() {
+    document.getElementById('modalIframe').src = '';
+    document.getElementById('videoModal').classList.remove('open');
+}
+document.getElementById('videoModal').addEventListener('click', function(e) {
+    if (e.target === this) closeVideo();
+});
+</script>
 
 </x-layouts.client>
