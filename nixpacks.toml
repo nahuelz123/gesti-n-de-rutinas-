@@ -1,6 +1,3 @@
-[phases.setup]
-nixPkgs = ["php83", "php83Extensions.intl", "php83Extensions.zip", "php83Extensions.mbstring", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "php83Extensions.tokenizer", "php83Extensions.xml", "php83Extensions.curl", "php83Extensions.fileinfo", "php83Extensions.gd", "composer", "nodejs_20"]
-
 [phases.install]
 cmds = ["composer install --optimize-autoloader --no-dev --no-interaction --ignore-platform-req=ext-intl --ignore-platform-req=ext-zip", "npm install", "npm run build"]
 
