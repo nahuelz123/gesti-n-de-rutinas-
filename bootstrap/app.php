@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     'filament.access' => \App\Http\Middleware\EnsureNotClientForFilament::class,
     'client' => \App\Http\Middleware\EnsureClientRole::class,
     'no-back' => \App\Http\Middleware\PreventBackNavigation::class,
+    'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,                  
 ]);
 })
 ->withExceptions(function (Exceptions $exceptions): void {
