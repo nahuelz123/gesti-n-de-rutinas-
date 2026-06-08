@@ -9,7 +9,8 @@ class Login extends BaseLogin
     public function mount(): void
     {
         if (auth()->check()) {
-            redirect()->to('/admin')->send();
+            $this->redirect('/admin/dashboard', navigate: false);
+            return;
         }
         
         parent::mount();
