@@ -44,23 +44,23 @@ class UserResource extends Resource
 
 
 
-    public static function getEloquentQuery(): Builder
-    {
-        $user = Auth::user();
-
-        return parent::getEloquentQuery()
-            ->when($user, function (Builder $query) use ($user) {
-                if ($user->role === 'super_admin') {
-                    return;
-                }
-
-                $query->where('gym_id', $user->gym_id);
-
-                if ($user->role === 'coach') {
-                    $query->where('role', 'client');
-                }
-            });
-    }
+   public static function getEloquentQuery(): Builder
+{
+    $user = Auth::user();
+    return parent::getEloquentQuery()
+        ->when($user, function (Builder $query) use ($user) {
+            if ($user->role === 'super_admin') {
+                return;
+            }
+            $query->where('gym_id', $user->gym_id);
+            if ($user->role === 'admin') {
+                $query->whereNotIn('role', ['super_admin']);
+            }
+            if ($user->role === 'coach') {
+                $query->where('role', 'client');
+            }
+        });
+}
 
 
     public static function canCreate(): bool
