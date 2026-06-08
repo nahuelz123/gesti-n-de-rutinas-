@@ -14,7 +14,7 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 
-Route::middleware(['auth', 'client'])
+Route::middleware(['auth', 'client','no-back'])
     ->prefix('app')
     ->name('client.')
     ->group(function () {
