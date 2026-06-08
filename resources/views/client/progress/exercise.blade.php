@@ -15,7 +15,7 @@
 
 <div class="rw">
 
-    <a class="back-link" href="{{ route('client.routines.active') }}">← Volver</a>
+    <a class="back-link" href="{{ url()->previous() }}">← Volver</a>
 
     <p class="pg-label">Progreso</p>
     <h1 class="pg-title">{{ $exercise->title }}</h1>
