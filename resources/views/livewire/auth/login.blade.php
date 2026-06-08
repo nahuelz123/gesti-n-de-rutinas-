@@ -1,7 +1,9 @@
 <x-layouts.auth>
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
-
+      <div style="text-align:center; margin-bottom:16px; font-size:24px; font-weight:bold;">
+    VisionFit
+</div>
+<x-auth-header :title="__('Iniciar sesión')" :description="__('Ingresá tu email y contraseña')" />
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
