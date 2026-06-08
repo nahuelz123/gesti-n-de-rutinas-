@@ -15,160 +15,82 @@
 
 <div class="rw">
 
-    <a class="back-link" href="{{ route('client.routines.active') }}">← Volver</a>
+    <a class="back-link" href="{{ route('client.routines.history') }}">← Volver</a>
 
-    <p class="pg-label">Progreso</p>
-    <h1 class="pg-title">{{ $exercise->title }}</h1>
+    <p class="pg-label">Detalle de rutina</p>
+    <h1 class="pg-title">{{ $assignment->routine->title }}</h1>
 
-    {{-- Video button --}}
-    @if ($exercise->video_url)
-        <div style="margin-bottom:16px;">
-            <button class="btn-video" style="font-size:11px; padding:6px 14px;"
-                onclick="openVideo('{{ $exercise->video_url }}', '{{ addslashes($exercise->title) }}')">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px;"><path d="M8 5v14l11-7z"/></svg>
-                Ver tutorial
-            </button>
+    @if ($assignment->routine->description)
+        <div class="routine-card">
+            <div class="routine-card-desc">{{ $assignment->routine->description }}</div>
         </div>
     @endif
 
-    {{-- PR + último registro --}}
-    <div class="pr-card">
-        <div>
-            <div class="pr-label">Récord personal</div>
-            @if ($pr)
-                <div class="pr-value">{{ $pr }}<span class="pr-unit">kg</span></div>
-            @else
-                <div class="pr-none">—</div>
-            @endif
-        </div>
-        @if ($last)
-            <div class="last-log">
-                <div class="last-log-label">Último registro</div>
-                <div class="last-log-date">{{ $last->logged_at->format('d/m/Y H:i') }}</div>
-                <div class="last-log-detail">
-                    Set {{ $last->set_number }} &nbsp;·&nbsp;
-                    {{ $last->weight ?? '—' }} kg &nbsp;·&nbsp;
-                    {{ $last->reps ?? '—' }} reps
-                </div>
-            </div>
-        @endif
-    </div>
-
-    {{-- Gráfico --}}
-    @if (!$logs->isEmpty())
-    <div class="chart-card">
-        <div class="chart-card-header">
-            <span class="chart-card-title">Evolución</span>
-            <div class="chart-tabs">
-                <button class="chart-tab active" onclick="switchChart('weight', this)">Peso</button>
-                <button class="chart-tab" onclick="switchChart('reps', this)">Reps</button>
-            </div>
-        </div>
-        <div class="chart-wrap">
-            <canvas id="progressChart"></canvas>
+    <div class="routine-card" style="margin-bottom:12px;">
+        <div class="routine-card-desc">
+            Asignada el {{ $assignment->assigned_at?->format('d/m/Y') }} &nbsp;·&nbsp;
+            <span class="status-badge {{ $assignment->status === 'active' ? 'status-active' : 'status-inactive' }}">
+                {{ $assignment->status }}
+            </span>
         </div>
     </div>
-    @endif
 
-    {{-- Historial --}}
-    <div class="logs-card">
-        <div class="logs-card-header">
-            <span class="logs-card-title">Historial de sets</span>
-        </div>
-        @if ($logs->isEmpty())
-            <div class="empty-text">Todavía no hay registros para este ejercicio.</div>
-        @else
-            @foreach ($logs as $log)
-                <div class="log-row" style="padding: 11px 16px; border-bottom: 1px solid #1e1e1e;">
-                    <span class="log-time">{{ $log->logged_at->format('d/m H:i') }}</span>
-                    <span class="log-set">Set {{ $log->set_number }}</span>
-                    <span class="log-kg">{{ $log->weight ?? '—' }} kg</span>
-                    <span class="log-reps">{{ $log->reps ?? '—' }} reps</span>
+    @foreach ($assignment->routine->days as $day)
+        <div class="day-block">
+            <div class="day-header">
+                <span class="day-badge">Día {{ $day->day_number }}</span>
+                <span class="day-title">{{ $day->title }}</span>
+            </div>
+
+            @foreach ($day->exercises->sortBy('order') as $dx)
+                <div class="ex-card">
+                    <div class="ex-top">
+                        <div class="ex-top-row">
+
+                            @if ($dx->exercise->gif_url)
+                                <img class="ex-gif"
+                                     src="{{ $dx->exercise->gif_url }}"
+                                     alt="{{ $dx->exercise->title }}"
+                                     loading="lazy">
+                            @else
+                                <div class="ex-gif-placeholder">💪</div>
+                            @endif
+
+                            <div class="ex-info">
+                                <div class="ex-row">
+                                    <div class="ex-name">{{ $dx->exercise->title }}</div>
+                                    <div class="ex-actions">
+                                        @if ($dx->exercise->video_url)
+                                            <button class="btn-video"
+                                                onclick="openVideo('{{ $dx->exercise->video_url }}', '{{ addslashes($dx->exercise->title) }}')">
+                                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+                                                Video
+                                            </button>
+                                        @endif
+                                        <a class="ex-link" href="{{ route('client.progress.exercise', $dx->exercise_id) }}">
+                                            Progreso →
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="ex-meta">
+                                    <span class="ex-meta-item">Series <b>{{ $dx->sets }}</b></span>
+                                    <span class="ex-meta-item">Reps <b>{{ $dx->reps }}</b></span>
+                                    @if ($dx->rest)
+                                        <span class="ex-meta-item">Descanso <b>{{ $dx->rest }}</b></span>
+                                    @endif
+                                </div>
+                                @if ($dx->notes)
+                                    <div class="ex-notes">{{ $dx->notes }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endforeach
-        @endif
-    </div>
+        </div>
+    @endforeach
 
 </div>
-
-@if (!$logs->isEmpty())
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
-@php
-    $chartData = $logs->sortBy('logged_at')->values()->map(function($l) {
-        return [
-            'date'   => $l->logged_at->format('d/m H:i'),
-            'weight' => (float) ($l->weight ?? 0),
-            'reps'   => (int)   ($l->reps   ?? 0),
-        ];
-    });
-@endphp
-
-const rawLogs  = {!! json_encode($chartData) !!};
-const labels   = rawLogs.map(l => l.date);
-const weights  = rawLogs.map(l => l.weight);
-const repsData = rawLogs.map(l => l.reps);
-
-const ctx = document.getElementById('progressChart').getContext('2d');
-
-const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { display: false },
-        tooltip: {
-            backgroundColor: '#1f1f1f',
-            borderColor: '#333',
-            borderWidth: 1,
-            titleColor: '#888',
-            bodyColor: '#f0f0f0',
-            titleFont: { family: 'Montserrat', size: 10, weight: '700' },
-            bodyFont: { family: 'Montserrat', size: 13, weight: '700' },
-            padding: 10,
-        },
-    },
-    scales: {
-        x: {
-            ticks: { color: '#444', font: { family: 'Montserrat', size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
-            grid: { color: '#1e1e1e' },
-            border: { color: '#222' },
-        },
-        y: {
-            ticks: { color: '#444', font: { family: 'Montserrat', size: 10 } },
-            grid: { color: '#1e1e1e' },
-            border: { color: '#222' },
-        },
-    },
-};
-
-function makeDataset(data) {
-    return {
-        data,
-        borderColor: '#e63946',
-        backgroundColor: 'rgba(230,57,70,0.06)',
-        pointBackgroundColor: '#e63946',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2,
-        fill: true,
-        tension: 0.35,
-    };
-}
-
-const chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets: [makeDataset(weights)] },
-    options: commonOptions,
-});
-
-function switchChart(type, btn) {
-    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    chart.data.datasets[0] = makeDataset(type === 'weight' ? weights : repsData);
-    chart.update();
-}
-</script>
-@endif
 
 <script>
 function getYoutubeId(url) {
