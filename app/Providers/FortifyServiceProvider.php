@@ -63,16 +63,25 @@ class FortifyServiceProvider extends ServiceProvider
      * Configure Fortify views.
      */
     private function configureViews(): void
-    {
-        Fortify::loginView(fn () => view('livewire.auth.login'));
-        Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
-        Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
-        Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
-        Fortify::registerView(fn () => view('livewire.auth.register'));
-        Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
-        Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
-    }
+{
+    Fortify::loginView(function () {
+        if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->role === 'client') {
+                return redirect()->route('client.dashboard');
+            }
+            return redirect('/admin');
+        }
+        return view('livewire.auth.login');
+    });
 
+    Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
+    Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
+    Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
+    Fortify::registerView(fn () => view('livewire.auth.register'));
+    Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
+    Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
+}
     /**
      * Configure rate limiting.
      */
