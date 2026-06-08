@@ -8,7 +8,13 @@
 <body>
 
     <nav class="app-nav">
-        <div class="app-nav-logo">Gym App</div>
+        <div class="app-nav-logo">
+    @if(auth()->user()->gym?->logo)
+        <img src="{{ auth()->user()->gym->logo }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
+    @else
+        {{ auth()->user()->gym?->name ?? 'VisionFit' }}
+    @endif
+</div>
         <div class="app-nav-right">
             <span class="app-nav-user">{{ auth()->user()->name }}</span>
             <form method="POST" action="{{ route('logout') }}">
