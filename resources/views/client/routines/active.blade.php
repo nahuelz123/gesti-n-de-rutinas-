@@ -14,7 +14,7 @@
 </div>
 
 <div class="rw">
-
+    <a class="back-link" href="{{ route('client.dashboard') }}">← Inicio</a>
     @if (session('success'))
         <div class="alert-ok">{{ session('success') }}</div>
     @endif
