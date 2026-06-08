@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -105,5 +107,9 @@ class User extends Authenticatable
             throw new \RuntimeException('No autorizado: no podés asignar el rol super_admin.');
         }
     });
+}
+    public function canAccessPanel(Panel $panel): bool
+{
+    return in_array($this->role, ['super_admin', 'admin', 'coach']);
 }
 }
