@@ -1,7 +1,7 @@
 <x-layouts.client>
 
 <div class="rw">
-
+    <a class="back-link" href="{{ route('client.dashboard') }}">← Inicio</a>
     <p class="pg-label">Mis rutinas</p>
     <h1 class="pg-title">Historial</h1>
 
