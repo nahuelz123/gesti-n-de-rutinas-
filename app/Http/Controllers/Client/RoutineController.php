@@ -10,27 +10,24 @@ use App\Models\ExerciseLog;
 
 class RoutineController extends Controller
 {
-    public function active(Request $request)
-    {
-        $user = $request->user();
+  public function active(Request $request)
+{
+    $user = $request->user();
+    $assignment = Assignment::query()
+        ->with([
+            'routine.days.exercises.exercise',
+            'logs' => fn($q) => $q
+                ->whereDate('logged_at', today())
+                ->latest('logged_at'),
+        ])
+        ->where('client_id', $user->id)
+        ->where('status', 'active')
+        ->whereNull('end_date')
+        ->latest('assigned_at')
+        ->first();
 
-        $assignment = Assignment::query()
-            ->with([
-                'routine.days.exercises.exercise',
-                // Solo logs de HOY para no llenar la vista
-                'logs' => fn($q) => $q
-                    ->whereDate('logged_at', today())
-                    ->latest('logged_at'),
-            ])
-            ->where('client_id', $user->id)
-            ->where('status', 'active')
-            ->whereNull('end_date')
-            ->latest('assigned_at')
-            ->first();
-
-        return view('client.routines.active', compact('assignment'));
-    }
-
+    return view('client.routines.active', compact('assignment'));
+}
     public function history(Request $request)
     {
         $user = $request->user();
