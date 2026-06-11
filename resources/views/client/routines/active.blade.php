@@ -104,13 +104,14 @@
                             <button class="lf-btn" type="submit">Guardar</button>
                         </form>
 
-                        @php
-                            $logs = $assignment->logs
-                                ->where('routine_day_exercise_id', $dx->id)
-                                ->sortByDesc('logged_at')
-                                ->take(5);
-                        @endphp
-
+                       @php
+                     $logs = \App\Models\ExerciseLog::query()
+                     ->whereHas('assignment', fn($q) => $q->where('client_id', $assignment->client_id))
+                     ->where('routine_day_exercise_id', $dx->id)
+                     ->orderByDesc('logged_at')
+                     ->take(5)
+                     ->get();
+                       @endphp
                         @if ($logs->count())
                             <div class="logs-wrap">
                                 <div class="logs-label">Últimos registros</div>
