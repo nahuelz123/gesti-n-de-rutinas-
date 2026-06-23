@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-    <head>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">  
+    <head>  
+        <script>
+    // Forzar modo oscuro siempre
+    document.documentElement.classList.add('dark');
+    window.localStorage.setItem('flux.appearance', 'dark');
+</script>
         @include('partials.head')
     </head>
 <body class="min-h-screen bg-linear-to-b from-neutral-950 to-neutral-900 antialiased">       
