@@ -24,6 +24,12 @@ class ExerciseResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $modelLabel = 'Ejercicio';
+
+    protected static ?string $pluralModelLabel = 'Ejercicios';
+
+    protected static ?string $navigationLabel = 'Ejercicios';
+
     public static function form(Schema $schema): Schema
     {
         return ExerciseForm::configure($schema);

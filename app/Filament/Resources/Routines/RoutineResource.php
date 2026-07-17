@@ -25,6 +25,12 @@ class RoutineResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected static ?string $modelLabel = 'Rutina';
+
+    protected static ?string $pluralModelLabel = 'Rutinas';
+
+    protected static ?string $navigationLabel = 'Rutinas';
+
     public static function form(Schema $schema): Schema
     {
         return RoutineForm::configure($schema);

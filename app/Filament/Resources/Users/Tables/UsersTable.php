@@ -15,6 +15,7 @@ class UsersTable
     return $table
         ->columns([
             TextColumn::make('name')
+                ->label('Nombre')
                 ->searchable()
                 ->sortable(),
 
@@ -24,7 +25,15 @@ class UsersTable
                 ->sortable(),
 
             TextColumn::make('role')
+                ->label('Rol')
                 ->badge()
+                ->formatStateUsing(fn (string $state): string => match ($state) {
+                    'super_admin' => 'Super Admin',
+                    'admin' => 'Administrador',
+                    'coach' => 'Coach',
+                    'client' => 'Cliente',
+                    default => $state,
+                })
                 ->colors([
                     'primary' => 'admin',
                     'warning' => 'coach',
@@ -33,16 +42,18 @@ class UsersTable
                 ->sortable(),
 
             TextColumn::make('created_at')
+                ->label('Creado')
                 ->dateTime()
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
         ])
         ->filters([
             \Filament\Tables\Filters\SelectFilter::make('role')
+                ->label('Rol')
                 ->options([
-                    'admin' => 'Admin',
+                    'admin' => 'Administrador',
                     'coach' => 'Coach',
-                    'client' => 'Client',
+                    'client' => 'Cliente',
                 ]),
         ])
         ->recordActions([

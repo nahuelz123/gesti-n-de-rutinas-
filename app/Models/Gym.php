@@ -33,4 +33,14 @@ class Gym extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    public function dietPlans(): HasMany
+    {
+        return $this->hasMany(DietPlan::class);
+    }
+
+    public function dietAssignments(): HasMany
+    {
+        return $this->hasMany(DietAssignment::class);
+    }
 }

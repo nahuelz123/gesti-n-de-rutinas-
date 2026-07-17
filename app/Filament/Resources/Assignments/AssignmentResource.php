@@ -25,6 +25,12 @@ class AssignmentResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
 
+    protected static ?string $modelLabel = 'Asignación';
+
+    protected static ?string $pluralModelLabel = 'Asignaciones';
+
+    protected static ?string $navigationLabel = 'Asignaciones';
+
     public static function form(Schema $schema): Schema
     {
         return AssignmentForm::configure($schema);

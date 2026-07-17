@@ -90,6 +90,24 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Assignment::class, 'assigned_by');
     }
 
+    // Planes de dieta creados (si es coach/admin)
+    public function createdDietPlans(): HasMany
+    {
+        return $this->hasMany(DietPlan::class, 'coach_id');
+    }
+
+    // Asignaciones de dieta donde el user es cliente
+    public function dietAssignments(): HasMany
+    {
+        return $this->hasMany(DietAssignment::class, 'client_id');
+    }
+
+    // Recetas creadas por el user
+    public function createdRecipes(): HasMany
+    {
+        return $this->hasMany(Recipe::class, 'created_by_id');
+    }
+
     protected static function booted(): void
 {
     static::saving(function (User $model) {

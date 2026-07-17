@@ -36,20 +36,20 @@ class UserForm
         $roleOptions = match ($user?->role) {
             'super_admin' => [
                 'super_admin' => 'Super Admin',
-                'admin' => 'Admin',
+                'admin' => 'Administrador',
                 'coach' => 'Coach',
-                'client' => 'Client',
+                'client' => 'Cliente',
             ],
             'admin' => [
-                'admin' => 'Admin',
+                'admin' => 'Administrador',
                 'coach' => 'Coach',
-                'client' => 'Client',
+                'client' => 'Cliente',
             ],
             'coach' => [
-                'client' => 'Client',
+                'client' => 'Cliente',
             ],
             default => [
-                'client' => 'Client',
+                'client' => 'Cliente',
             ],
         };
 
@@ -58,6 +58,7 @@ class UserForm
             $gymField,
 
             TextInput::make('name')
+                ->label('Nombre')
                 ->required()
                 ->maxLength(255),
 

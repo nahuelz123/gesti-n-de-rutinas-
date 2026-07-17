@@ -16,23 +16,28 @@ class GymsTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('plan')
+                    ->label('Plan')
                     ->sortable(),
 
                 IconColumn::make('active')
+                    ->label('Activo')
                     ->boolean()
                     ->sortable(),
 
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\TernaryFilter::make('active'),
+                \Filament\Tables\Filters\TernaryFilter::make('active')
+                    ->label('Activo'),
             ])
             ->recordActions([
                 EditAction::make(),

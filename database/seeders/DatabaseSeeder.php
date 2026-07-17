@@ -15,6 +15,10 @@ class DatabaseSeeder extends Seeder
             RoutineSeeder::class,
             AssignmentSeeder::class,
             ExerciseLogSeeder::class,
+            RecipeSeeder::class,
+            DietPlanSeeder::class,
+            DietAssignmentSeeder::class,
+            MealLogSeeder::class,
         ]);
     }
 }

@@ -15,17 +15,22 @@ class RoutineDaysTable
         return $table
             ->columns([
                 TextColumn::make('routine.title')
+                    ->label('Rutina')
                     ->searchable(),
                 TextColumn::make('day_number')
+                    ->label('Día')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('title')
+                    ->label('Título')
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

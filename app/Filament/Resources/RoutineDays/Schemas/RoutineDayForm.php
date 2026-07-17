@@ -13,12 +13,15 @@ class RoutineDayForm
         return $schema
             ->components([
                 Select::make('routine_id')
+                    ->label('Rutina')
                     ->relationship('routine', 'title')
                     ->required(),
                 TextInput::make('day_number')
+                    ->label('Número de día')
                     ->required()
                     ->numeric(),
                 TextInput::make('title')
+                    ->label('Título')
                     ->required(),
             ]);
     }

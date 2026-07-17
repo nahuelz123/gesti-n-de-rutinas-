@@ -13,18 +13,22 @@ class GymForm
     return $schema
         ->components([
             TextInput::make('name')
+                ->label('Nombre')
                 ->required()
                 ->maxLength(255),
 
             TextInput::make('plan')
+                ->label('Plan')
                 ->required()
                 ->default('basic')
                 ->maxLength(50),
 
             Toggle::make('active')
+                ->label('Activo')
                 ->default(true),
 
             TextInput::make('logo')
+                ->label('Logo')
                 ->nullable()
                 ->maxLength(255),
         ]);

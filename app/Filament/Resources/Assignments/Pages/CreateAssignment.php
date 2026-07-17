@@ -10,6 +10,15 @@ class CreateAssignment extends CreateRecord
 {
     protected static string $resource = AssignmentResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        if ($clientId = request()->query('client_id')) {
+            $this->form->fill(['client_id' => (int) $clientId]);
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Si se crea una asignación ACTIVA,

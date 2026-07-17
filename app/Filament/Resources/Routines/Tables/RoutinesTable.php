@@ -18,20 +18,26 @@ class RoutinesTable
         return $table
             ->columns([
                 TextColumn::make('gym.name')
+                    ->label('Gimnasio')
                     ->searchable(),
                 TextColumn::make('coach.name')
+                    ->label('Coach')
                     ->searchable(),
                 TextColumn::make('title')
+                    ->label('Título')
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
+                    ->label('Eliminado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

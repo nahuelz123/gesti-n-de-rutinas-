@@ -25,6 +25,12 @@ class RoutineDayResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    protected static ?string $modelLabel = 'Día de rutina';
+
+    protected static ?string $pluralModelLabel = 'Días de rutina';
+
+    protected static ?string $navigationLabel = 'Días de rutina';
+
     public static function form(Schema $schema): Schema
     {
         return RoutineDayForm::configure($schema);

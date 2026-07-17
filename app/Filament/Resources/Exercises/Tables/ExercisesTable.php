@@ -15,6 +15,7 @@ class ExercisesTable
     return $table
         ->columns([
             TextColumn::make('title')
+                ->label('Título')
                 ->searchable()
                 ->sortable(),
 
@@ -24,6 +25,7 @@ class ExercisesTable
                 ->sortable(),
 
             TextColumn::make('created_at')
+                ->label('Creado')
                 ->dateTime()
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
