@@ -108,6 +108,54 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Recipe::class, 'created_by_id');
     }
 
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
+    }
+
+    /**
+     * Para un cliente: devuelve el coach/admin con el que debería chatear.
+     * Prioridad: quien le asignó la rutina activa > quien le asignó la dieta activa > primer coach del gym.
+     */
+    public function myCoach(): ?self
+    {
+        if ($this->role !== 'client') {
+            return null;
+        }
+
+        $fromRoutine = $this->assignments()
+            ->where('status', 'active')
+            ->whereNull('end_date')
+            ->whereNotNull('assigned_by_id')
+            ->latest('assigned_at')
+            ->value('assigned_by_id');
+
+        if ($fromRoutine) {
+            return static::find($fromRoutine);
+        }
+
+        $fromDiet = $this->dietAssignments()
+            ->where('status', 'active')
+            ->whereNull('end_date')
+            ->whereNotNull('assigned_by_id')
+            ->latest('assigned_at')
+            ->value('assigned_by_id');
+
+        if ($fromDiet) {
+            return static::find($fromDiet);
+        }
+
+        return static::where('gym_id', $this->gym_id)
+            ->whereIn('role', ['coach', 'admin'])
+            ->orderBy('id')
+            ->first();
+    }
+
     protected static function booted(): void
 {
     static::saving(function (User $model) {

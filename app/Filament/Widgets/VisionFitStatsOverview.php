@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Assignment;
+use App\Models\DietAssignment;
+use App\Models\DietPlan;
 use App\Models\Gym;
 use App\Models\Routine;
 use App\Models\User;
@@ -47,6 +49,13 @@ class VisionFitStatsOverview extends BaseWidget
             Stat::make('Asignaciones activas', Assignment::where('status', 'active')->count())
                 ->description('Total de asignaciones: '.Assignment::count())
                 ->color('success'),
+
+            Stat::make('Planes de dieta', DietPlan::count())
+                ->color('warning'),
+
+            Stat::make('Dietas asignadas', DietAssignment::where('status', 'active')->count())
+                ->description('Total de asignaciones: '.DietAssignment::count())
+                ->color('success'),
         ];
     }
 
@@ -65,12 +74,24 @@ class VisionFitStatsOverview extends BaseWidget
             Stat::make('Asignaciones activas', Assignment::where('gym_id', $gymId)->where('status', 'active')->count())
                 ->description('Total: '.Assignment::where('gym_id', $gymId)->count())
                 ->color('success'),
+
+            Stat::make('Planes de dieta', DietPlan::where('gym_id', $gymId)->count())
+                ->color('warning'),
+
+            Stat::make('Dietas asignadas', DietAssignment::where('gym_id', $gymId)->where('status', 'active')->count())
+                ->description('Total: '.DietAssignment::where('gym_id', $gymId)->count())
+                ->color('success'),
         ];
     }
 
     protected function coachStats(User $user): array
     {
         $clientesAsignados = Assignment::where('gym_id', $user->gym_id)
+            ->where('assigned_by_id', $user->id)
+            ->distinct('client_id')
+            ->count('client_id');
+
+        $clientesConDieta = DietAssignment::where('gym_id', $user->gym_id)
             ->where('assigned_by_id', $user->id)
             ->distinct('client_id')
             ->count('client_id');
@@ -86,6 +107,12 @@ class VisionFitStatsOverview extends BaseWidget
                 ->where('assigned_by_id', $user->id)
                 ->where('status', 'active')
                 ->count())
+                ->color('success'),
+
+            Stat::make('Planes de dieta creados', DietPlan::where('coach_id', $user->id)->count())
+                ->color('warning'),
+
+            Stat::make('Clientes con dieta activa', $clientesConDieta)
                 ->color('success'),
         ];
     }

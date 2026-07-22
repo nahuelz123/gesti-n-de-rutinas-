@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
                 \App\Filament\Widgets\VisionFitStatsOverview::class,
                 \App\Filament\Widgets\ClientsWithoutActiveRoutine::class,
+                \App\Filament\Widgets\ClientsWithoutActiveDiet::class,
             ])
             ->middleware([
                 EncryptCookies::class,

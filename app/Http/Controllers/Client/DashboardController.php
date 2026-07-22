@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use App\Services\NutritionCalculator;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -31,6 +32,23 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('client.dashboard', compact('active', 'history'));
+        // Nutrición: widget de hoy
+        $dietAssignment = NutritionCalculator::activeAssignmentFor($user->id);
+        $todayDietDay = $dietAssignment
+            ? NutritionCalculator::planDayFor($dietAssignment, NutritionCalculator::todayKey())
+            : null;
+        $nutritionSummary = ($dietAssignment && $todayDietDay)
+            ? NutritionCalculator::summaryFor($dietAssignment, $todayDietDay)
+            : null;
+        $goalLabels = NutritionCalculator::$goalLabels;
+
+        return view('client.dashboard', compact(
+            'active',
+            'history',
+            'dietAssignment',
+            'todayDietDay',
+            'nutritionSummary',
+            'goalLabels'
+        ));
     }
 }

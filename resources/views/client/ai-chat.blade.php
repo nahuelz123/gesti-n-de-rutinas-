@@ -1,0 +1,37 @@
+<x-layouts.client>
+
+<div class="rw">
+    <a class="back-link" href="{{ route('client.dashboard') }}">← Inicio</a>
+
+    <p class="pg-label">Asistente virtual</p>
+    <h1 class="pg-title">Preguntale a VisionFit AI</h1>
+
+    <div class="chat-box">
+        <div class="chat-messages">
+            @forelse ($history as $m)
+                <div class="chat-bubble-row {{ $m['role'] === 'user' ? 'mine' : '' }}">
+                    <div class="chat-bubble">{{ $m['content'] }}</div>
+                </div>
+            @empty
+                <div class="empty-text" style="text-align:center; margin-top:20px;">
+                    Preguntame lo que quieras sobre tu rutina o tu dieta 💪
+                </div>
+            @endforelse
+        </div>
+
+        <form method="POST" action="{{ route('client.ai-chat.send') }}" class="chat-input-row">
+            @csrf
+            <input type="text" name="message" class="chat-input" placeholder="Escribí tu pregunta..." autocomplete="off" maxlength="1000" required>
+            <button type="submit" class="chat-send-btn">Enviar</button>
+        </form>
+    </div>
+
+    @if (count($history))
+        <form method="POST" action="{{ route('client.ai-chat.reset') }}" style="margin-top:10px;">
+            @csrf
+            <button type="submit" class="link-btn">Empezar de nuevo</button>
+        </form>
+    @endif
+</div>
+
+</x-layouts.client>
