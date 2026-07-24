@@ -26,15 +26,17 @@ class DeepSeekClient
 
         try {
             $response = Http::withToken($apiKey)
-                ->timeout(30)
-                ->post('https://api.deepseek.com/chat/completions', [
+                ->connectTimeout(15)
+                ->timeout(60)
+                ->retry(2, 1500, throw: false)
+                ->post(config('services.deepseek.base_url'), [
                     'model' => config('services.deepseek.model', 'deepseek-chat'),
                     'messages' => array_merge(
                         [['role' => 'system', 'content' => $systemPrompt]],
                         $messages
                     ),
                     'temperature' => 0.6,
-                    'max_tokens' => 600,
+                    'max_tokens' => config('services.deepseek.max_tokens', 1000),
                 ]);
 
             if ($response->failed()) {

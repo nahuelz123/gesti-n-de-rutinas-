@@ -37,7 +37,9 @@ return [
 
     'deepseek' => [
         'key' => env('DEEPSEEK_API_KEY'),
-        'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
+        'model' => env('DEEPSEEK_MODEL', 'deepseek-ai/deepseek-v4-pro'),
+        'base_url' => env('DEEPSEEK_BASE_URL', 'https://integrate.api.nvidia.com/v1/chat/completions'),
+        'max_tokens' => env('DEEPSEEK_MAX_TOKENS', 2000),
     ],
 
 ];
