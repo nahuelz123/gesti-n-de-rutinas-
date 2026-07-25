@@ -66,12 +66,16 @@
 
             @foreach ($mealTypeOrder as $type)
                 @if ($grouped->has($type))
+                    @php $options = $grouped->get($type)->sortBy('order'); @endphp
                     <div class="meal-group">
                         <div class="meal-group-header">
                             <span class="day-badge">{{ $mealTypeLabels[$type] }}</span>
+                            @if ($options->count() > 1)
+                                <span style="font-size:11px; color:#666; margin-left:8px;">Elegí una opción</span>
+                            @endif
                         </div>
 
-                        @foreach ($grouped->get($type)->sortBy('order') as $dpr)
+                        @foreach ($options as $i => $dpr)
                             @php
                                 $log = $summary['logs']->get($dpr->id);
                                 $isDone = $log && $log->completed;
@@ -87,7 +91,16 @@
                                     @endif
 
                                     <div class="meal-info">
-                                        <div class="meal-name">{{ $recipe?->title ?? 'Receta eliminada' }}</div>
+                                        <div class="meal-name">
+                                            @if ($options->count() > 1)
+                                                <span style="color:#666; font-size:11px; font-weight:700;">Opción {{ $i + 1 }} · </span>
+                                            @endif
+                                            @if ($recipe)
+                                                <a href="{{ route('client.recipes.show', $recipe) }}" style="color:inherit; text-decoration:none;">{{ $recipe->title }} →</a>
+                                            @else
+                                                Receta eliminada
+                                            @endif
+                                        </div>
                                         @if ($recipe)
                                             <div class="meal-macros">
                                                 <span class="meal-macro-item"><b>{{ round(($recipe->calories ?? 0) * $dpr->servings) }}</b> kcal</span>
@@ -111,9 +124,9 @@
                                         class="meal-check-btn {{ $isDone ? 'done' : '' }}"
                                         {{ $isToday ? '' : 'disabled' }}>
                                         @if ($isDone)
-                                            ✓ Comida registrada
+                                            ✓ Elegida
                                         @elseif ($isToday)
-                                            Marcar como hecha
+                                            {{ $options->count() > 1 ? 'Elegir esta opción' : 'Marcar como hecha' }}
                                         @else
                                             Solo se registra en el día de hoy
                                         @endif

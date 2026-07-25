@@ -49,14 +49,14 @@
                 </span>
             </div>
             @if ($active)
-                <div class="active-row">
+                <a class="active-row" href="{{ route('client.routines.active') }}">
                     <div style="flex:1; min-width:0;">
                         <div class="active-name">{{ $active->routine->title }}</div>
                         <div class="active-date">Asignada el {{ $active->assigned_at?->format('d/m/Y') }}</div>
                     </div>
                     <span class="active-badge">Activa</span>
-                    <a class="card-link" href="{{ route('client.routines.active') }}">Ver →</a>
-                </div>
+                    <span class="card-link">Ver →</span>
+                </a>
             @else
                 <div class="empty-text">No tenés una rutina activa.</div>
             @endif
@@ -88,7 +88,7 @@
             @if (!$dietAssignment)
                 <div class="empty-text">No tenés un plan de dieta activo.</div>
             @else
-                <div class="active-row">
+                <a class="active-row" href="{{ route('client.nutrition.index') }}">
                     <div style="flex:1; min-width:0;">
                         <div class="active-name">{{ $dietAssignment->dietPlan->title }}</div>
                         <div class="active-date">
@@ -99,7 +99,7 @@
                         </div>
                     </div>
                     <span class="active-badge">Activo</span>
-                </div>
+                </a>
 
                 @if (!$todayDietDay)
                     <div class="empty-text">Hoy no tenés comidas planificadas en tu plan.</div>
@@ -164,7 +164,7 @@
                 <a class="card-link" href="{{ route('client.routines.history') }}">Ver todo →</a>
             </div>
             @forelse ($history as $a)
-                <div class="history-row">
+                <a class="history-row" href="{{ route('client.routines.show', $a) }}">
                     <div style="flex:1; min-width:0;">
                         <div class="history-name">{{ $a->routine->title }}</div>
                         <div class="history-meta">
@@ -174,8 +174,8 @@
                             </span>
                         </div>
                     </div>
-                    <a class="card-link" href="{{ route('client.routines.show', $a) }}">Ver →</a>
-                </div>
+                    <span class="card-link">Ver →</span>
+                </a>
             @empty
                 <div class="empty-text">Todavía no hay historial.</div>
             @endforelse

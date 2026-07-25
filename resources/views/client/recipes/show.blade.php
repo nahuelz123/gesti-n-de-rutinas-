@@ -1,5 +1,18 @@
 <x-layouts.client>
 
+{{-- Video modal --}}
+<div class="modal-overlay" id="videoModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle"></span>
+            <button class="modal-close" onclick="closeVideo()">✕</button>
+        </div>
+        <div class="modal-body">
+            <iframe id="modalIframe" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
 <div class="rw">
     <a class="back-link" href="{{ route('client.recipes.index') }}">← Catálogo de recetas</a>
 
@@ -7,8 +20,19 @@
         <img src="{{ $recipe->photo_url }}" alt="{{ $recipe->title }}" style="width:100%; height:200px; object-fit:cover; border-radius:18px; margin-bottom:16px;">
     @endif
 
-    <p class="pg-label">{{ \App\Services\NutritionCalculator::$mealTypeLabels[$recipe->meal_type] ?? 'Receta' }}</p>
-    <h1 class="pg-title" style="font-size:30px; margin-bottom:16px;">{{ $recipe->title }}</h1>
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <div>
+            <p class="pg-label">{{ \App\Services\NutritionCalculator::$mealTypeLabels[$recipe->meal_type] ?? 'Receta' }}</p>
+            <h1 class="pg-title" style="font-size:30px; margin-bottom:16px;">{{ $recipe->title }}</h1>
+        </div>
+        @if ($recipe->video_url)
+            <button class="btn-video" style="flex-shrink:0; margin-top:4px;"
+                onclick="openVideo('{{ $recipe->video_url }}', '{{ addslashes($recipe->title) }}')">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+                Ver tutorial
+            </button>
+        @endif
+    </div>
 
     @if ($recipe->description)
         <p style="color:#999; font-size:14px; line-height:1.5; margin-bottom:20px;">{{ $recipe->description }}</p>
@@ -78,5 +102,26 @@
         </div>
     @endif
 </div>
+
+<script>
+function getYoutubeId(url) {
+    const match = url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/);
+    return match ? match[1] : null;
+}
+function openVideo(url, title) {
+    const id = getYoutubeId(url);
+    if (!id) return;
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalIframe').src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+    document.getElementById('videoModal').classList.add('open');
+}
+function closeVideo() {
+    document.getElementById('modalIframe').src = '';
+    document.getElementById('videoModal').classList.remove('open');
+}
+document.getElementById('videoModal').addEventListener('click', function(e) {
+    if (e.target === this) closeVideo();
+});
+</script>
 
 </x-layouts.client>

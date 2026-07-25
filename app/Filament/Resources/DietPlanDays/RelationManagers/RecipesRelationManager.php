@@ -41,6 +41,7 @@ class RecipesRelationManager extends RelationManager
             Select::make('meal_type')
                 ->label('Tipo de comida')
                 ->native(false)
+                ->helperText('Si agregás más de una receta con el mismo tipo (ej: 2 opciones de "Almuerzo"), el cliente va a poder elegir cuál de las dos hizo.')
                 ->options([
                     'desayuno' => 'Desayuno',
                     'almuerzo' => 'Almuerzo',

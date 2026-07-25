@@ -108,13 +108,13 @@
                      $logs = \App\Models\ExerciseLog::query()
                      ->whereHas('assignment', fn($q) => $q->where('client_id', $assignment->client_id))
                      ->where('routine_day_exercise_id', $dx->id)
+                     ->whereDate('logged_at', today())
                      ->orderByDesc('logged_at')
-                     ->take(5)
                      ->get();
                        @endphp
                         @if ($logs->count())
                             <div class="logs-wrap">
-                                <div class="logs-label">Últimos registros</div>
+                                <div class="logs-label">Sets de hoy</div>
                                 @foreach ($logs as $log)
                                     <div class="log-row">
                                         <span class="log-time">{{ $log->logged_at->format('d/m H:i') }}</span>

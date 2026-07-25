@@ -238,6 +238,21 @@ class AiAssistant extends Page
             $lines[] = 'No tiene plan de dieta activo.';
         }
 
+        $lastMeasurement = $client->bodyMeasurements()->first();
+
+        if ($lastMeasurement) {
+            $lines[] = "Última medición corporal cargada ({$lastMeasurement->measured_at->format('d/m/Y')}):";
+            if ($lastMeasurement->weight) $lines[] = "- Peso: {$lastMeasurement->weight}kg";
+            if ($lastMeasurement->body_fat_percentage) $lines[] = "- % Grasa corporal: {$lastMeasurement->body_fat_percentage}%";
+            if ($lastMeasurement->waist) $lines[] = "- Cintura: {$lastMeasurement->waist}cm";
+            if ($lastMeasurement->chest) $lines[] = "- Pecho/busto: {$lastMeasurement->chest}cm";
+            if ($lastMeasurement->hip) $lines[] = "- Cadera: {$lastMeasurement->hip}cm";
+            if ($lastMeasurement->arm) $lines[] = "- Brazo: {$lastMeasurement->arm}cm";
+            if ($lastMeasurement->thigh) $lines[] = "- Muslo: {$lastMeasurement->thigh}cm";
+        } else {
+            $lines[] = 'El cliente todavía no cargó ninguna medición corporal.';
+        }
+
         return implode("\n", $lines);
     }
 

@@ -66,21 +66,34 @@ class NutritionCalculator
         $target = ['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0];
         $eaten = ['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0];
 
-        foreach ($day->recipes as $dpr) {
-            $recipe = $dpr->recipe;
-            if (! $recipe) continue;
+        // Agrupamos por meal_type: si hay varias opciones para la misma comida,
+        // el objetivo usa el promedio de esas opciones (no se suman como si comiera todas).
+        $groups = $day->recipes->groupBy('meal_type');
 
-            $servings = (float) $dpr->servings;
+        foreach ($groups as $options) {
+            $validOptions = $options->filter(fn ($dpr) => $dpr->recipe !== null);
+            $count = $validOptions->count();
 
-            $target['calories'] += ($recipe->calories ?? 0) * $servings;
-            $target['protein'] += ($recipe->protein ?? 0) * $servings;
-            $target['carbs'] += ($recipe->carbs ?? 0) * $servings;
-            $target['fat'] += ($recipe->fat ?? 0) * $servings;
+            if ($count === 0) continue;
 
-            $log = $logs->get($dpr->id);
+            foreach ($validOptions as $dpr) {
+                $servings = (float) $dpr->servings;
+                $recipe = $dpr->recipe;
 
-            if ($log && $log->completed) {
+                $target['calories'] += (($recipe->calories ?? 0) * $servings) / $count;
+                $target['protein'] += (($recipe->protein ?? 0) * $servings) / $count;
+                $target['carbs'] += (($recipe->carbs ?? 0) * $servings) / $count;
+                $target['fat'] += (($recipe->fat ?? 0) * $servings) / $count;
+            }
+
+            // Comido = la opción de este grupo que el cliente marcó como hecha (si eligió alguna)
+            $chosen = $validOptions->first(fn ($dpr) => optional($logs->get($dpr->id))->completed);
+
+            if ($chosen) {
+                $log = $logs->get($chosen->id);
+                $servings = (float) $chosen->servings;
                 $eatenServings = $log->servings_eaten !== null ? (float) $log->servings_eaten : $servings;
+                $recipe = $chosen->recipe;
 
                 $eaten['calories'] += ($recipe->calories ?? 0) * $eatenServings;
                 $eaten['protein'] += ($recipe->protein ?? 0) * $eatenServings;
@@ -89,8 +102,10 @@ class NutritionCalculator
             }
         }
 
-        $mealsTotal = $day->recipes->count();
-        $mealsDone = $day->recipes->filter(fn ($dpr) => optional($logs->get($dpr->id))->completed)->count();
+        $mealsTotal = $groups->count(); // cada meal_type cuenta como UNA comida, tenga 1 o varias opciones
+        $mealsDone = $groups->filter(
+            fn ($options) => $options->contains(fn ($dpr) => optional($logs->get($dpr->id))->completed)
+        )->count();
 
         return [
             'target' => $target,

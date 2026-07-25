@@ -95,7 +95,7 @@
             <span class="logs-card-title">Historial de mediciones</span>
         </div>
         @forelse ($measurements as $m)
-            <div class="log-row" style="justify-content:space-between;">
+            <div class="log-row" style="justify-content:space-between; padding:12px 16px;">
                 <span class="log-time" style="min-width:80px;">{{ $m->measured_at->format('d/m/Y') }}</span>
                 <span class="log-kg">{{ $m->weight ? $m->weight.'kg' : '—' }}</span>
                 <span class="log-reps">{{ $m->body_fat_percentage ? $m->body_fat_percentage.'% grasa' : '' }}</span>

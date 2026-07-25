@@ -31,6 +31,8 @@ class MealLogController extends Controller
 
         abort_unless($belongs, 403);
 
+        $dpr = \App\Models\DietPlanDayRecipe::query()->findOrFail($data['diet_plan_day_recipe_id']);
+
         MealLog::updateOrCreate(
             [
                 'diet_assignment_id' => $assignment->id,
@@ -42,6 +44,24 @@ class MealLogController extends Controller
                 'logged_at' => now(),
             ]
         );
+
+        // Si eligió esta opción, desmarcamos cualquier otra opción de la MISMA comida
+        // (mismo día + mismo meal_type) que haya quedado marcada como hecha antes.
+        if ($data['completed']) {
+            $siblingIds = \App\Models\DietPlanDayRecipe::query()
+                ->where('diet_plan_day_id', $dpr->diet_plan_day_id)
+                ->where('meal_type', $dpr->meal_type)
+                ->where('id', '!=', $dpr->id)
+                ->pluck('id');
+
+            if ($siblingIds->isNotEmpty()) {
+                MealLog::query()
+                    ->where('diet_assignment_id', $assignment->id)
+                    ->whereIn('diet_plan_day_recipe_id', $siblingIds)
+                    ->whereDate('logged_date', today())
+                    ->update(['completed' => false]);
+            }
+        }
 
         return back()->with('success', $data['completed'] ? '¡Comida registrada!' : 'Comida desmarcada.');
     }
