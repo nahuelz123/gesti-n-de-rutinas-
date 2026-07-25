@@ -9,6 +9,7 @@ use App\Http\Controllers\Client\ChatController;
 use App\Http\Controllers\Client\AiChatController;
 use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
+use App\Http\Controllers\Client\NotificationsController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -52,6 +53,8 @@ Route::middleware(['auth', 'client', 'no-back'])
 
         Route::get('/recipes', [RecipeCatalogController::class, 'index'])->name('recipes.index');
         Route::get('/recipes/{recipe}', [RecipeCatalogController::class, 'show'])->name('recipes.show');
+
+        Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     });
 
 require __DIR__ . '/settings.php';

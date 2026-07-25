@@ -2,12 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\AiConversation;
 use App\Models\Assignment;
 use App\Models\ExerciseLog;
 use App\Models\User;
+use App\Services\CoachAiTools;
 use App\Services\DeepSeekClient;
 use App\Services\NutritionCalculator;
 use BackedEnum;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
@@ -27,12 +30,13 @@ class AiAssistant extends Page
 
     public string $message = '';
 
-    /** @var array<int, array{role: string, content: string}> */
-    public array $history = [];
+    public Collection $history;
 
     public function mount(): void
     {
+        $this->history = collect();
         $this->selectedClientId = $this->getClients()->first()?->id;
+        $this->loadHistory();
     }
 
     public function getClients(): Collection
@@ -49,7 +53,22 @@ class AiAssistant extends Page
     public function selectClient(int $clientId): void
     {
         $this->selectedClientId = $clientId;
-        $this->history = [];
+        $this->loadHistory();
+    }
+
+    private function loadHistory(): void
+    {
+        if (! $this->selectedClientId) {
+            $this->history = collect();
+
+            return;
+        }
+
+        $this->history = AiConversation::query()
+            ->where('user_id', Auth::id())
+            ->where('client_id', $this->selectedClientId)
+            ->orderBy('id')
+            ->get();
     }
 
     public function send(DeepSeekClient $deepSeek): void
@@ -62,46 +81,115 @@ class AiAssistant extends Page
             return;
         }
 
-        $this->history[] = ['role' => 'user', 'content' => $this->message];
+        $coach = Auth::user();
+        $client = User::find($this->selectedClientId);
+
+        if (! $client) {
+            return;
+        }
+
+        AiConversation::create([
+            'user_id' => $coach->id,
+            'client_id' => $client->id,
+            'role' => 'user',
+            'content' => $this->message,
+        ]);
+
         $this->message = '';
 
-        $systemPrompt = $this->buildSystemPrompt();
+        $systemPrompt = $this->buildSystemPrompt($coach, $client);
 
-        $recent = array_slice($this->history, -12);
+        $recent = AiConversation::query()
+            ->where('user_id', $coach->id)
+            ->where('client_id', $client->id)
+            ->orderByDesc('id')
+            ->take(12)
+            ->get()
+            ->sortBy('id')
+            ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+            ->values()
+            ->toArray();
 
-        $reply = $deepSeek->chat($systemPrompt, $recent)
-            ?? 'No pude conectarme con el asistente en este momento. Probá de nuevo en un rato.';
+        $result = $deepSeek->chatWithTools($systemPrompt, $recent, CoachAiTools::definitions());
 
-        $this->history[] = ['role' => 'assistant', 'content' => $reply];
+        if ($result === null) {
+            $reply = 'No pude conectarme con el asistente en este momento. Probá de nuevo en un rato.';
+        } elseif (! empty($result['tool_calls'])) {
+            $toolResults = [];
+
+            foreach ($result['tool_calls'] as $call) {
+                $fnName = $call['function']['name'] ?? '';
+                $argsJson = $call['function']['arguments'] ?? '{}';
+                $args = json_decode($argsJson, true) ?? [];
+
+                $resultText = CoachAiTools::execute($fnName, $args, $coach, $client);
+
+                $toolResults[] = [
+                    'tool_call_id' => $call['id'] ?? '',
+                    'role' => 'tool',
+                    'content' => $resultText,
+                ];
+            }
+
+            $followUpMessages = array_merge(
+                $recent,
+                [[
+                    'role' => 'assistant',
+                    'content' => $result['content'] ?? '',
+                    'tool_calls' => $result['tool_calls'],
+                ]],
+                $toolResults
+            );
+
+            $followUp = $deepSeek->chatWithTools($systemPrompt, $followUpMessages, []);
+            $reply = $followUp['content'] ?? implode("\n", array_column($toolResults, 'content'));
+
+            Notification::make()
+                ->title('El asistente ejecutó una acción')
+                ->body(implode(' / ', array_column($toolResults, 'content')))
+                ->success()
+                ->send();
+        } else {
+            $reply = $result['content'] ?? 'No pude generar una respuesta.';
+        }
+
+        AiConversation::create([
+            'user_id' => $coach->id,
+            'client_id' => $client->id,
+            'role' => 'assistant',
+            'content' => $reply,
+        ]);
+
+        $this->loadHistory();
     }
 
     public function newChat(): void
     {
-        $this->history = [];
+        if (! $this->selectedClientId) {
+            return;
+        }
+
+        AiConversation::query()
+            ->where('user_id', Auth::id())
+            ->where('client_id', $this->selectedClientId)
+            ->delete();
+
+        $this->loadHistory();
     }
 
-    private function buildSystemPrompt(): string
+    private function buildSystemPrompt(User $coach, User $client): string
     {
-        $coach = Auth::user();
-        $client = User::find($this->selectedClientId);
-
         $lines = [
             "Sos el asistente virtual de VisionFit, una app de gestión de gimnasios.",
             "Estás ayudando a {$coach->name}, que es coach/admin del gimnasio, a analizar a un cliente puntual.",
             "Respondé en español rioplatense (Argentina), de forma breve y accionable — el coach está apurado.",
-            "Podés sugerir ajustes de rutina o dieta, pero aclará que la decisión final es del coach.",
+            "Podés usar las herramientas disponibles (enviar notificación, crear y asignar rutina) cuando el coach te lo pida explícitamente. No las uses si solo te está preguntando algo, sin pedir una acción.",
+            "Después de ejecutar una herramienta, confirmale al coach en una frase qué hiciste.",
             "No inventes datos que no te haya dado el sistema.",
         ];
 
-        if (! $client) {
-            $lines[] = 'No hay un cliente seleccionado.';
-
-            return implode("\n", $lines);
-        }
-
         $lines[] = "Cliente: {$client->name} ({$client->email}).";
 
-        // Rutina activa + progreso reciente
         $activeAssignment = Assignment::query()
             ->with(['routine.days.exercises.exercise'])
             ->where('client_id', $client->id)
@@ -122,7 +210,6 @@ class AiAssistant extends Page
             }
 
             $recentLogs = ExerciseLog::query()
-                ->whereHas('routineDayExercise', fn ($q) => $q->whereHas('exercise'))
                 ->where('assignment_id', $activeAssignment->id)
                 ->with('routineDayExercise.exercise')
                 ->latest('logged_at')
@@ -140,7 +227,6 @@ class AiAssistant extends Page
             $lines[] = 'No tiene rutina activa.';
         }
 
-        // Plan de dieta activo
         $dietAssignment = NutritionCalculator::activeAssignmentFor($client->id);
 
         if ($dietAssignment) {

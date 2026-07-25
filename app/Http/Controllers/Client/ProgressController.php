@@ -12,12 +12,17 @@ class ProgressController extends Controller
     {
         $user = $request->user();
 
-        $measurements = $user->bodyMeasurements()->get(); // ya viene ordenado desc por measured_at
+        $measurements = $user->bodyMeasurements()->get(); // desc por measured_at
+
+        $latest = $measurements->first();
+        $previous = $measurements->get(1);
 
         return view('client.progress.index', [
             'measurements' => $measurements,
             'chartData' => $measurements->sortBy('measured_at')->values(), // asc para el gráfico
             'hasProfile' => (bool) ($user->height_cm && $user->sex),
+            'latest' => $latest,
+            'previous' => $previous,
         ]);
     }
 

@@ -9,8 +9,8 @@
     <div class="chat-box">
         <div class="chat-messages">
             @forelse ($history as $m)
-                <div class="chat-bubble-row {{ $m['role'] === 'user' ? 'mine' : '' }}">
-                    <div class="chat-bubble">{{ $m['content'] }}</div>
+                <div class="chat-bubble-row {{ $m->role === 'user' ? 'mine' : '' }}">
+                    <div class="chat-bubble">{{ $m->content }}</div>
                 </div>
             @empty
                 <div class="empty-text" style="text-align:center; margin-top:20px;">
@@ -26,10 +26,10 @@
         </form>
     </div>
 
-    @if (count($history))
-        <form method="POST" action="{{ route('client.ai-chat.reset') }}" style="margin-top:10px;">
+    @if ($history->count())
+        <form method="POST" action="{{ route('client.ai-chat.reset') }}" style="margin-top:10px;" onsubmit="return confirm('¿Borrar todo el historial de esta conversación?')">
             @csrf
-            <button type="submit" class="link-btn">Empezar de nuevo</button>
+            <button type="submit" class="link-btn">🗑️ Borrar historial</button>
         </form>
     @endif
 </div>

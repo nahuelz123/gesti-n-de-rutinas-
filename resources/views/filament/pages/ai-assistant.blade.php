@@ -23,17 +23,17 @@
                 <span style="font-size:0.8rem; opacity:0.6;">
                     Preguntale a la IA sobre el progreso, rutina o dieta de este cliente.
                 </span>
-                <x-filament::button color="gray" size="sm" wire:click="newChat">
-                    Nuevo chat
+                <x-filament::button color="danger" size="sm" wire:click="newChat" wire:confirm="¿Borrar todo el historial con este cliente?">
+                    🗑️ Vaciar historial
                 </x-filament::button>
             </div>
 
             <div style="flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.5rem;" wire:loading.class="opacity-50" wire:target="send">
                 @forelse ($history as $m)
-                    @php $mine = $m['role'] === 'user'; @endphp
+                    @php $mine = $m->role === 'user'; @endphp
                     <div style="display:flex; justify-content: {{ $mine ? 'flex-end' : 'flex-start' }};">
                         <div style="max-width:75%; padding:0.5rem 0.75rem; border-radius:0.75rem; background: {{ $mine ? 'rgb(245,158,11)' : 'rgb(39 39 42)' }}; color: {{ $mine ? '#000' : '#fff' }}; font-size:0.875rem; white-space:pre-wrap;">
-                            {{ $m['content'] }}
+                            {{ $m->content }}
                         </div>
                     </div>
                 @empty

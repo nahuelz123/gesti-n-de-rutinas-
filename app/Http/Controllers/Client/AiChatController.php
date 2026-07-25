@@ -4,18 +4,22 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use App\Models\AiConversation;
 use App\Services\DeepSeekClient;
 use App\Services\NutritionCalculator;
 use Illuminate\Http\Request;
 
 class AiChatController extends Controller
 {
-    private const SESSION_KEY = 'ai_chat_history';
-    private const MAX_HISTORY = 12; // mensajes (user+assistant) que se mandan de contexto
+    private const MAX_HISTORY = 12; // mensajes de contexto que se mandan al modelo
 
     public function index(Request $request)
     {
-        $history = session(self::SESSION_KEY, []);
+        $history = AiConversation::query()
+            ->where('user_id', $request->user()->id)
+            ->whereNull('client_id')
+            ->orderBy('id')
+            ->get();
 
         return view('client.ai-chat', ['history' => $history]);
     }
@@ -28,13 +32,25 @@ class AiChatController extends Controller
 
         $user = $request->user();
 
-        $history = session(self::SESSION_KEY, []);
-        $history[] = ['role' => 'user', 'content' => $data['message']];
+        AiConversation::create([
+            'user_id' => $user->id,
+            'client_id' => null,
+            'role' => 'user',
+            'content' => $data['message'],
+        ]);
 
         $systemPrompt = $this->buildSystemPrompt($user);
 
-        // Solo mandamos los últimos N mensajes como contexto (para no gastar tokens de más)
-        $recent = array_slice($history, -self::MAX_HISTORY);
+        $recent = AiConversation::query()
+            ->where('user_id', $user->id)
+            ->whereNull('client_id')
+            ->orderByDesc('id')
+            ->take(self::MAX_HISTORY)
+            ->get()
+            ->sortBy('id')
+            ->map(fn ($m) => ['role' => $m->role, 'content' => $m->content])
+            ->values()
+            ->toArray();
 
         $reply = $deepSeek->chat($systemPrompt, $recent);
 
@@ -42,16 +58,22 @@ class AiChatController extends Controller
             $reply = 'Uy, no pude conectarme con el asistente en este momento. Probá de nuevo en un rato.';
         }
 
-        $history[] = ['role' => 'assistant', 'content' => $reply];
-
-        session([self::SESSION_KEY => $history]);
+        AiConversation::create([
+            'user_id' => $user->id,
+            'client_id' => null,
+            'role' => 'assistant',
+            'content' => $reply,
+        ]);
 
         return back();
     }
 
     public function reset(Request $request)
     {
-        session()->forget(self::SESSION_KEY);
+        AiConversation::query()
+            ->where('user_id', $request->user()->id)
+            ->whereNull('client_id')
+            ->delete();
 
         return back();
     }
@@ -66,7 +88,6 @@ class AiChatController extends Controller
             "No inventes datos de la rutina o dieta del cliente que no te haya dado el sistema.",
         ];
 
-        // Rutina activa
         $activeAssignment = Assignment::query()
             ->with(['routine.days.exercises.exercise'])
             ->where('client_id', $user->id)
@@ -89,7 +110,6 @@ class AiChatController extends Controller
             $lines[] = 'El cliente no tiene una rutina activa asignada.';
         }
 
-        // Plan de dieta activo
         $dietAssignment = NutritionCalculator::activeAssignmentFor($user->id);
 
         if ($dietAssignment) {
