@@ -10,6 +10,8 @@
     <p class="pg-label">Mi alimentación</p>
     <h1 class="pg-title">Plan de nutrición</h1>
 
+    <a href="{{ route('client.recipes.index') }}" class="card-link" style="display:inline-block; margin-bottom:20px;">🍽️ Ver catálogo de recetas →</a>
+
     @if (!$assignment)
         <div class="empty">No tenés un plan de dieta activo.</div>
     @else

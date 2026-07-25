@@ -28,6 +28,8 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'height_cm',
+        'sex',
     ];
 
     /**
@@ -111,6 +113,11 @@ class User extends Authenticatable implements FilamentUser
     public function sentMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function bodyMeasurements(): HasMany
+    {
+        return $this->hasMany(BodyMeasurement::class, 'client_id')->orderByDesc('measured_at');
     }
 
     public function receivedMessages(): HasMany

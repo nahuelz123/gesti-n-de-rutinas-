@@ -17,6 +17,7 @@
     @endif
 </a>
         <div class="app-nav-right">
+            <a href="{{ route('client.progress.index') }}" class="app-nav-link" title="Mi progreso">📊</a>
             <a href="{{ route('client.chat.index') }}" class="app-nav-link" title="Chat con tu coach">💬</a>
             <a href="{{ route('client.ai-chat.index') }}" class="app-nav-link" title="Asistente IA">🤖</a>
             <span class="app-nav-user">{{ auth()->user()->name }}</span>

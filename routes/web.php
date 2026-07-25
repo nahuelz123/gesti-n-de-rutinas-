@@ -7,6 +7,8 @@ use App\Http\Controllers\Client\NutritionController;
 use App\Http\Controllers\Client\MealLogController;
 use App\Http\Controllers\Client\ChatController;
 use App\Http\Controllers\Client\AiChatController;
+use App\Http\Controllers\Client\ProgressController;
+use App\Http\Controllers\Client\RecipeCatalogController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -42,6 +44,14 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::get('/ai-chat', [AiChatController::class, 'index'])->name('ai-chat.index');
         Route::post('/ai-chat/send', [AiChatController::class, 'send'])->name('ai-chat.send');
         Route::post('/ai-chat/reset', [AiChatController::class, 'reset'])->name('ai-chat.reset');
+
+        Route::get('/progress', [ProgressController::class, 'index'])->name('progress.index');
+        Route::post('/progress/profile', [ProgressController::class, 'updateProfile'])->name('progress.profile');
+        Route::post('/progress', [ProgressController::class, 'store'])->name('progress.store');
+        Route::delete('/progress/{measurement}', [ProgressController::class, 'destroy'])->name('progress.destroy');
+
+        Route::get('/recipes', [RecipeCatalogController::class, 'index'])->name('recipes.index');
+        Route::get('/recipes/{recipe}', [RecipeCatalogController::class, 'show'])->name('recipes.show');
     });
 
 require __DIR__ . '/settings.php';

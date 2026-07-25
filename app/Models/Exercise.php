@@ -15,6 +15,13 @@ class Exercise extends Model
         'description',
         'tips',
         'video_url',
+        'gif_url',
+        'is_global',
+        'created_by_id',
+    ];
+
+    protected $casts = [
+        'is_global' => 'boolean',
     ];
 
     public function gym(): BelongsTo

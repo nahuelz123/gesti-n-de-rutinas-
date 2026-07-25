@@ -11,31 +11,32 @@ body {
 
 /* ── NAV ──────────────────────────────────────────── */
 .app-nav {
-    background: #111;
-    border-bottom: 1px solid #222;
-    padding: 12px 16px;
+    background: #0d0d0d;
+    border-bottom: 1px solid #1a1a1a;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 10;
+    backdrop-filter: blur(8px);
 }
 .app-nav-logo {
     font-weight: 900;
-    font-size: 15px;
-    letter-spacing: 0.15em;
+    font-size: 16px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #e63946;
+    color: #f5f5f5;
 }
 .app-nav-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 .app-nav-user {
     font-size: 12px;
-    color: #555;
+    color: #666;
     font-weight: 500;
 }
 .app-nav-logout {
@@ -46,12 +47,12 @@ body {
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #555;
+    color: #666;
     cursor: pointer;
     transition: color 0.15s;
 }
 .app-nav-logout:hover { color: #e63946; }
-.app-main { padding: 16px 12px 60px; }
+.app-main { padding: 28px 16px 72px; }
 
 /* ── WRAPPER ──────────────────────────────────────── */
 .rw { max-width: 640px; margin: 0 auto; }
@@ -63,26 +64,27 @@ body {
     color: #e63946;
     font-size: 13px;
     font-weight: 500;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 16px;
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
 }
 
 /* ── PAGE HEADER ──────────────────────────────────── */
 .pg-label {
-    font-size: 10px;
-    letter-spacing: 0.18em;
+    font-size: 11px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #555;
-    margin-bottom: 2px;
+    color: #666;
+    margin-bottom: 4px;
+    font-weight: 600;
 }
 .pg-title {
-    font-size: 38px;
+    font-size: 40px;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
-    line-height: 1;
-    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+    margin-bottom: 28px;
 }
 
 /* ── BACK LINK ────────────────────────────────────── */
@@ -105,7 +107,7 @@ body {
 .routine-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 14px 16px;
     margin-bottom: 20px;
 }
@@ -154,7 +156,7 @@ body {
 .ex-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     margin-bottom: 8px;
     transition: border-color 0.2s;
@@ -174,7 +176,7 @@ body {
 .ex-gif {
     width: 64px;
     height: 64px;
-    border-radius: 8px;
+    border-radius: 100px;
     object-fit: cover;
     background: #1f1f1f;
     border: 1px solid #2a2a2a;
@@ -183,7 +185,7 @@ body {
 .ex-gif-placeholder {
     width: 64px;
     height: 64px;
-    border-radius: 8px;
+    border-radius: 100px;
     background: #1a1a1a;
     border: 1px dashed #2a2a2a;
     flex-shrink: 0;
@@ -298,7 +300,7 @@ body {
 .lf-field input {
     background: #111;
     border: 1px solid #2a2a2a;
-    border-radius: 8px;
+    border-radius: 100px;
     color: #f0f0f0;
     font-family: 'Montserrat', sans-serif;
     font-size: 15px;
@@ -315,7 +317,7 @@ body {
     background: #e63946;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 100px;
     font-family: 'Montserrat', sans-serif;
     font-size: 11px;
     font-weight: 900;
@@ -359,72 +361,73 @@ body {
 .log-reps  { color: #555; font-size: 11px; }
 
 /* ── SECTION CARDS (dashboard / history) ─────────── */
-.section { margin-bottom: 16px; }
+.section { margin-bottom: 20px; }
 .section-card {
-    background: #161616;
-    border: 1px solid #222;
-    border-radius: 12px;
+    background: #131313;
+    border: 1px solid #1c1c1c;
+    border-radius: 18px;
     overflow: hidden;
 }
 .section-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid #1e1e1e;
+    padding: 16px 20px;
+    border-bottom: 1px solid #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 .section-title {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: #555;
+    color: #777;
 }
 .card-link {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #e63946;
     text-decoration: none;
-    opacity: 0.7;
     white-space: nowrap;
     flex-shrink: 0;
     transition: opacity 0.15s;
 }
-.card-link:hover { opacity: 1; }
+.card-link:hover { opacity: 0.7; }
 .empty-text {
-    padding: 20px 16px;
+    padding: 28px 20px;
     font-size: 13px;
-    color: #444;
+    color: #4a4a4a;
     font-weight: 500;
+    text-align: center;
 }
 
 /* ── ACTIVE ROUTINE ROW ───────────────────────────── */
 .active-row {
-    padding: 14px 16px;
+    padding: 18px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
 }
 .active-name {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+    margin-bottom: 5px;
+    line-height: 1.15;
 }
-.active-date { font-size: 11px; color: #555; font-weight: 500; }
+.active-date { font-size: 12px; color: #666; font-weight: 500; }
 .active-badge {
     font-size: 9px;
     font-weight: 900;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #e63946;
-    background: rgba(230,57,70,0.1);
-    padding: 3px 9px;
-    border-radius: 5px;
+    background: rgba(230,57,70,0.12);
+    padding: 5px 11px;
+    border-radius: 100px;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -468,7 +471,7 @@ body {
 .pr-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px 18px;
     margin-bottom: 14px;
     display: flex;
@@ -503,7 +506,7 @@ body {
 .last-log {
     background: #1a1a1a;
     border: 1px solid #222;
-    border-radius: 8px;
+    border-radius: 14px;
     padding: 10px 14px;
     flex-shrink: 0;
 }
@@ -522,7 +525,7 @@ body {
 .chart-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     margin-bottom: 14px;
 }
@@ -562,7 +565,7 @@ body {
 .logs-card {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
 }
 .logs-card-header {
@@ -635,7 +638,7 @@ body {
 .empty {
     background: #161616;
     border: 1px dashed #222;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 40px;
     text-align: center;
     color: #444;
@@ -671,14 +674,14 @@ body {
 .day-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 18px; }
 .day-tab {
     flex-shrink: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 8px 13px; border-radius: 8px; border: 1px solid #222; background: #161616; color: #555;
+    padding: 8px 13px; border-radius: 100px; border: 1px solid #222; background: #161616; color: #555;
     text-decoration: none; transition: all 0.15s; white-space: nowrap;
 }
 .day-tab.active { background: rgba(230,57,70,0.1); border-color: #e63946; color: #e63946; }
 .day-tab:hover:not(.active) { border-color: #333; color: #888; }
 
 .day-summary-card {
-    background: #161616; border: 1px solid #222; border-radius: 12px; padding: 14px 16px;
+    background: #161616; border: 1px solid #222; border-radius: 16px; padding: 14px 16px;
     margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
     flex-wrap: wrap; gap: 10px;
 }
@@ -689,12 +692,12 @@ body {
 /* ── MEAL GROUP / CARD (página de nutrición) ──────── */
 .meal-group { margin-bottom: 20px; }
 .meal-group-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #222; margin-bottom: 10px; }
-.meal-card { background: #161616; border: 1px solid #222; border-radius: 12px; overflow: hidden; margin-bottom: 8px; transition: border-color 0.2s; }
+.meal-card { background: #161616; border: 1px solid #222; border-radius: 16px; overflow: hidden; margin-bottom: 8px; transition: border-color 0.2s; }
 .meal-card.done { border-color: rgba(230,57,70,0.4); }
 .meal-top { padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
-.meal-photo { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; background: #1f1f1f; border: 1px solid #2a2a2a; flex-shrink: 0; }
+.meal-photo { width: 64px; height: 64px; border-radius: 100px; object-fit: cover; background: #1f1f1f; border: 1px solid #2a2a2a; flex-shrink: 0; }
 .meal-photo-placeholder {
-    width: 64px; height: 64px; border-radius: 8px; background: #1a1a1a; border: 1px dashed #2a2a2a;
+    width: 64px; height: 64px; border-radius: 100px; background: #1a1a1a; border: 1px dashed #2a2a2a;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #333; font-size: 18px;
 }
 .meal-info { flex: 1; min-width: 0; }
@@ -704,7 +707,7 @@ body {
 .meal-macro-item b { color: #f0f0f0; font-weight: 700; }
 .meal-check-form { border-top: 1px solid #222; padding: 10px 14px; }
 .meal-check-btn {
-    width: 100%; background: transparent; border: 1px solid #2a2a2a; color: #555; border-radius: 8px;
+    width: 100%; background: transparent; border: 1px solid #2a2a2a; color: #555; border-radius: 100px;
     font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.1em;
     text-transform: uppercase; padding: 10px; cursor: pointer; transition: all 0.15s;
 }
@@ -717,7 +720,7 @@ body {
     font-size: 18px;
     text-decoration: none;
     padding: 6px 8px;
-    border-radius: 8px;
+    border-radius: 100px;
     transition: background 0.15s;
     line-height: 1;
 }
@@ -727,7 +730,7 @@ body {
 .chat-box {
     background: #161616;
     border: 1px solid #222;
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     height: 65vh;
@@ -749,7 +752,7 @@ body {
     border: 1px solid #2a2a2a;
     color: #f0f0f0;
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: 16px;
     font-size: 13px;
     line-height: 1.4;
     white-space: pre-wrap;
@@ -775,7 +778,7 @@ body {
     flex: 1;
     background: #1a1a1a;
     border: 1px solid #2a2a2a;
-    border-radius: 8px;
+    border-radius: 100px;
     padding: 10px 12px;
     color: #f0f0f0;
     font-size: 13px;
@@ -786,7 +789,7 @@ body {
     background: #e63946;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 100px;
     padding: 10px 18px;
     font-family: 'Montserrat', sans-serif;
     font-size: 11px;

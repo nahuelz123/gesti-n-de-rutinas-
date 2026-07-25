@@ -62,6 +62,13 @@ class ExerciseForm
                 ->url()
                 ->maxLength(255)
                 ->nullable(),
+
+            TextInput::make('gif_url')
+                ->label('GIF animado (URL)')
+                ->url()
+                ->maxLength(255)
+                ->helperText('Se muestra como demostración visual en la app del cliente.')
+                ->nullable(),
         ]);
     }
 }
