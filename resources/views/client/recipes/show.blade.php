@@ -14,7 +14,7 @@
 </div>
 
 <div class="rw">
-    <a class="back-link" href="{{ route('client.recipes.index') }}">← Catálogo de recetas</a>
+    <a class="back-link" href="{{ url()->previous() }}">← Volver</a>
 
     @if ($recipe->photo_url)
         <img src="{{ $recipe->photo_url }}" alt="{{ $recipe->title }}" style="width:100%; height:200px; object-fit:cover; border-radius:18px; margin-bottom:16px;">
