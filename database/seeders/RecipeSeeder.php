@@ -16,8 +16,6 @@ class RecipeSeeder extends Seeder
                     ['title' => $item['title']],
                     [
                         'description' => $item['description'] ?? null,
-                        'photo_url' => null,
-                        'video_url' => null,
                         'calories' => $item['calories'],
                         'protein' => $item['protein'],
                         'carbs' => $item['carbs'],

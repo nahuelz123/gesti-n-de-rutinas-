@@ -1,51 +1,53 @@
 <x-filament-panels::page>
-    <div wire:poll.4s="$refresh" class="fi-chat-wrapper" style="display:flex; gap:1rem; height:70vh;">
+    <div wire:poll.4s="$refresh" class="fi-chat-wrapper flex flex-col md:flex-row gap-4">
 
         {{-- Lista de clientes --}}
-        <div style="width:260px; flex-shrink:0; overflow-y:auto; border:1px solid rgb(39 39 42); border-radius:0.75rem;">
+        <div class="w-full md:w-64 flex-shrink-0 max-h-48 md:max-h-[70vh] overflow-y-auto border rounded-xl" style="border-color: rgb(39 39 42);">
             @forelse ($this->getClients() as $client)
                 <button
                     wire:click="selectClient({{ $client->id }})"
                     type="button"
-                    style="width:100%; text-align:left; padding:0.75rem 1rem; border:none; border-bottom:1px solid rgb(39 39 42); cursor:pointer; background: {{ $selectedClientId === $client->id ? 'rgba(245,158,11,0.1)' : 'transparent' }}; color: {{ $selectedClientId === $client->id ? 'rgb(245,158,11)' : 'inherit' }};"
+                    class="w-full text-left px-4 py-3 border-b"
+                    style="border-color: rgb(39 39 42); background: {{ $selectedClientId === $client->id ? 'rgba(245,158,11,0.1)' : 'transparent' }}; color: {{ $selectedClientId === $client->id ? 'rgb(245,158,11)' : 'inherit' }};"
                 >
-                    <div style="font-weight:700; font-size:0.875rem;">{{ $client->name }}</div>
-                    <div style="font-size:0.75rem; opacity:0.6;">{{ $client->email }}</div>
+                    <div class="font-bold text-sm">{{ $client->name }}</div>
+                    <div class="text-xs opacity-60">{{ $client->email }}</div>
                 </button>
             @empty
-                <div style="padding:1rem; opacity:0.6; font-size:0.875rem;">No hay clientes todavía.</div>
+                <div class="p-4 text-sm opacity-60">No hay clientes todavía.</div>
             @endforelse
         </div>
 
         {{-- Conversación --}}
-        <div style="flex:1; display:flex; flex-direction:column; border:1px solid rgb(39 39 42); border-radius:0.75rem; overflow:hidden;">
+        <div class="flex-1 flex flex-col border rounded-xl overflow-hidden h-[65vh] md:h-[70vh]" style="border-color: rgb(39 39 42);">
             @if (!$selectedClientId)
-                <div style="flex:1; display:flex; align-items:center; justify-content:center; opacity:0.5;">
+                <div class="flex-1 flex items-center justify-center opacity-50 text-sm px-4 text-center">
                     Elegí un cliente para empezar a chatear.
                 </div>
             @else
-                <div style="flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.5rem;" id="chat-scroll">
+                <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="chat-scroll">
                     @forelse ($this->messages as $message)
                         @php $mine = $message->sender_id === auth()->id(); @endphp
-                        <div style="display:flex; justify-content: {{ $mine ? 'flex-end' : 'flex-start' }};">
-                            <div style="max-width:70%; padding:0.5rem 0.75rem; border-radius:0.75rem; background: {{ $mine ? 'rgb(245,158,11)' : 'rgb(39 39 42)' }}; color: {{ $mine ? '#000' : '#fff' }}; font-size:0.875rem;">
+                        <div class="flex {{ $mine ? 'justify-end' : 'justify-start' }}">
+                            <div class="max-w-[85%] sm:max-w-[70%] px-3 py-2 rounded-xl text-sm" style="background: {{ $mine ? 'rgb(245,158,11)' : 'rgb(39 39 42)' }}; color: {{ $mine ? '#000' : '#fff' }};">
                                 {{ $message->body }}
-                                <div style="font-size:0.65rem; opacity:0.6; margin-top:0.15rem;">
+                                <div class="text-[10px] opacity-60 mt-0.5">
                                     {{ $message->created_at->format('H:i') }}
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div style="opacity:0.5; text-align:center; margin-top:2rem;">Todavía no hay mensajes con este cliente.</div>
+                        <div class="opacity-50 text-center mt-8 text-sm px-2">Todavía no hay mensajes con este cliente.</div>
                     @endforelse
                 </div>
 
-                <form wire:submit="send" style="display:flex; gap:0.5rem; padding:0.75rem; border-top:1px solid rgb(39 39 42);">
+                <form wire:submit="send" class="flex gap-2 p-3 border-t" style="border-color: rgb(39 39 42);">
                     <input
                         type="text"
                         wire:model="body"
                         placeholder="Escribí un mensaje..."
-                        style="flex:1; background:rgb(24 24 27); border:1px solid rgb(63 63 70); border-radius:0.5rem; padding:0.5rem 0.75rem; color:#fff; font-size:0.875rem;"
+                        class="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm"
+                        style="background:rgb(24 24 27); border:1px solid rgb(63 63 70); color:#fff;"
                         autocomplete="off"
                     >
                     <x-filament::button type="submit">

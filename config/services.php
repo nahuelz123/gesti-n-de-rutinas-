@@ -42,4 +42,8 @@ return [
         'max_tokens' => env('DEEPSEEK_MAX_TOKENS', 2000),
     ],
 
+    'pexels' => [
+        'key' => env('PEXELS_API_KEY'),
+    ],
+
 ];
