@@ -658,6 +658,40 @@ body {
 /* ── PAGINATION ───────────────────────────────────── */
 .pagination-wrap { padding: 14px 16px; border-top: 1px solid #1e1e1e; }
 .pagination-wrap nav { display: flex; justify-content: center; }
+
+.vf-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 0;
+}
+.vf-page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #161616;
+    border: 1px solid #222;
+    color: #f0f0f0;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    transition: border-color 0.15s, color 0.15s;
+}
+.vf-page-btn:hover { border-color: #e63946; color: #e63946; }
+.vf-page-btn.vf-page-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+.vf-page-info {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #888;
+}
 /* ── NUTRITION WIDGET (dashboard) ─────────────────── */
 .nutri-ring-row { padding: 16px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .nutri-ring { position: relative; width: 108px; height: 108px; flex-shrink: 0; }
@@ -723,6 +757,77 @@ body {
 .meal-check-btn:hover { border-color: #e63946; color: #e63946; }
 .meal-check-btn.done { background: rgba(230,57,70,0.1); border-color: #e63946; color: #e63946; }
 .meal-check-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── DIARIO LIBRE DE COMIDAS (registro por gramos) ─── */
+.free-log-section { margin-top: 28px; margin-bottom: 20px; }
+.free-log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.free-log-title { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: #f0f0f0; }
+.free-log-hint { font-size: 10px; color: #555; margin-top: 2px; }
+
+.free-log-form {
+    background: #161616; border: 1px solid #222; border-radius: 16px; padding: 14px; margin-bottom: 14px;
+}
+.food-search-wrap { position: relative; margin-bottom: 10px; }
+.food-search-input {
+    width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 10px; padding: 11px 13px;
+    color: #f0f0f0; font-size: 13px; font-family: 'Montserrat', sans-serif;
+}
+.food-search-input:focus { outline: none; border-color: #e63946; }
+.food-search-results {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin-top: 4px;
+    background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 12px; max-height: 220px; overflow-y: auto;
+    display: none;
+}
+.food-search-results.open { display: block; }
+.food-search-item {
+    width: 100%; text-align: left; background: transparent; border: none; border-bottom: 1px solid #262626;
+    padding: 10px 13px; cursor: pointer; color: #f0f0f0; font-family: 'Montserrat', sans-serif;
+}
+.food-search-item:last-child { border-bottom: none; }
+.food-search-item:hover, .food-search-item.active-option { background: rgba(230,57,70,0.1); }
+.food-search-item-name { font-size: 12px; font-weight: 700; }
+.food-search-item-macros { font-size: 10px; color: #666; margin-top: 2px; }
+
+.free-log-selected {
+    display: none; align-items: center; justify-content: space-between; gap: 8px;
+    background: rgba(230,57,70,0.08); border: 1px solid rgba(230,57,70,0.4); border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 10px; font-size: 12px; font-weight: 700;
+}
+.free-log-selected.visible { display: flex; }
+.free-log-selected button { background: none; border: none; color: #e63946; font-size: 16px; cursor: pointer; line-height: 1; }
+
+.free-log-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.free-log-qty-field { flex: 0 0 120px; }
+.free-log-qty-field label { display: block; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #555; margin-bottom: 5px; font-weight: 700; }
+.free-log-qty-field input {
+    width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 10px; padding: 10px 12px;
+    color: #f0f0f0; font-size: 13px; font-family: 'Montserrat', sans-serif;
+}
+.free-log-preview { flex: 1; min-width: 160px; font-size: 11px; color: #888; }
+.free-log-preview b { color: #f0f0f0; }
+.free-log-submit-btn {
+    background: #e63946; border: none; color: #fff; border-radius: 100px; padding: 10px 20px;
+    font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+}
+.free-log-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.free-log-custom-toggle { font-size: 10px; color: #666; text-decoration: underline; cursor: pointer; margin-bottom: 10px; display: inline-block; }
+.free-log-custom-fields { display: none; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+.free-log-custom-fields.visible { display: grid; }
+.free-log-custom-fields input {
+    width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px 9px;
+    color: #f0f0f0; font-size: 11px; font-family: 'Montserrat', sans-serif;
+}
+.free-log-custom-fields label { display: block; font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; color: #555; margin-bottom: 3px; }
+
+.free-log-list-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: #161616; border: 1px solid #222; border-radius: 12px; padding: 10px 14px; margin-bottom: 6px;
+}
+.free-log-list-name { font-size: 12px; font-weight: 700; }
+.free-log-list-macros { font-size: 10px; color: #666; margin-top: 2px; }
+.free-log-delete-btn { background: none; border: none; color: #444; font-size: 15px; cursor: pointer; padding: 4px; }
+.free-log-delete-btn:hover { color: #e63946; }
 
 /* ── NAV LINKS (chat / IA) ─────────────────────────── */
 .app-nav-link {

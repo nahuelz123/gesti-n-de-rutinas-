@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DietAssignment;
 use App\Models\DietPlanDay;
+use App\Models\FreeMealLog;
 use App\Models\MealLog;
 
 class NutritionCalculator
@@ -53,6 +54,29 @@ class NutritionCalculator
     public static function planDayFor(DietAssignment $assignment, string $dayKey): ?DietPlanDay
     {
         return $assignment->dietPlan?->days?->firstWhere('day_of_week', $dayKey);
+    }
+
+    /**
+     * Registro libre de hoy para un cliente, tenga o no un plan de dieta asignado.
+     */
+    public static function freeLogsToday(int $clientId): array
+    {
+        $freeLogs = FreeMealLog::query()
+            ->where('client_id', $clientId)
+            ->whereDate('logged_date', today())
+            ->with('foodItem')
+            ->orderBy('logged_at')
+            ->get();
+
+        return [
+            'logs' => $freeLogs,
+            'totals' => [
+                'calories' => (float) $freeLogs->sum('calories'),
+                'protein' => (float) $freeLogs->sum('protein'),
+                'carbs' => (float) $freeLogs->sum('carbs'),
+                'fat' => (float) $freeLogs->sum('fat'),
+            ],
+        ];
     }
 
     public static function summaryFor(DietAssignment $assignment, DietPlanDay $day): array
@@ -107,12 +131,24 @@ class NutritionCalculator
             fn ($options) => $options->contains(fn ($dpr) => optional($logs->get($dpr->id))->completed)
         )->count();
 
+        // Sumamos también lo que el alumno registró "a mano" en el diario libre de hoy.
+        $free = static::freeLogsToday($assignment->client_id);
+        $freeLogs = $free['logs'];
+        $freeTotals = $free['totals'];
+
+        $eaten['calories'] += $freeTotals['calories'];
+        $eaten['protein'] += $freeTotals['protein'];
+        $eaten['carbs'] += $freeTotals['carbs'];
+        $eaten['fat'] += $freeTotals['fat'];
+
         return [
             'target' => $target,
             'eaten' => $eaten,
             'logs' => $logs,
             'meals_total' => $mealsTotal,
             'meals_done' => $mealsDone,
+            'free_logs' => $freeLogs,
+            'free_totals' => $freeTotals,
         ];
     }
 }

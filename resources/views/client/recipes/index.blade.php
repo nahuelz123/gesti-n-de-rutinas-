@@ -52,7 +52,7 @@
     @endforelse
 
     <div style="margin-top:20px;">
-        {{ $recipes->onEachSide(1)->links() }}
+        {{ $recipes->onEachSide(1)->links('vendor.pagination.visionfit') }}
     </div>
 </div>
 

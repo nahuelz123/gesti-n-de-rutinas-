@@ -10,6 +10,7 @@ use App\Http\Controllers\Client\AiChatController;
 use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\NotificationsController;
+use App\Http\Controllers\Client\FreeMealLogController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -37,6 +38,10 @@ Route::middleware(['auth', 'client', 'no-back'])
 
         Route::get('/nutrition', [NutritionController::class, 'index'])->name('nutrition.index');
         Route::post('/nutrition/logs', [MealLogController::class, 'store'])->name('nutrition.logs.store');
+
+        Route::get('/nutrition/foods/search', [FreeMealLogController::class, 'searchFoods'])->name('nutrition.foods.search');
+        Route::post('/nutrition/free-logs', [FreeMealLogController::class, 'store'])->name('nutrition.free-logs.store');
+        Route::delete('/nutrition/free-logs/{freeMealLog}', [FreeMealLogController::class, 'destroy'])->name('nutrition.free-logs.destroy');
 
         Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
         Route::get('/chat/fetch', [ChatController::class, 'fetch'])->name('chat.fetch');

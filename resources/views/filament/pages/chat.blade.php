@@ -1,53 +1,132 @@
 <x-filament-panels::page>
-    <div wire:poll.4s="$refresh" class="fi-chat-wrapper flex flex-col md:flex-row gap-4">
+    <style>
+        .vfc-wrap { display: flex; flex-direction: column; gap: 16px; font-family: inherit; }
+        @media (min-width: 768px) { .vfc-wrap { flex-direction: row; } }
+
+        .vfc-sidebar {
+            width: 100%; flex-shrink: 0;
+            display: flex; flex-direction: column;
+            border: 1px solid #27272a; border-radius: 12px; overflow: hidden;
+            background: #0d0d0d;
+        }
+        @media (min-width: 768px) { .vfc-sidebar { width: 260px; } }
+
+        .vfc-search-box { padding: 8px; border-bottom: 1px solid #27272a; }
+        .vfc-search-input {
+            width: 100%; box-sizing: border-box; background: #18181b; border: 1px solid #3f3f46;
+            border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #fff;
+        }
+        .vfc-search-input::placeholder { color: #71717a; }
+
+        .vfc-client-list { max-height: 220px; overflow-y: auto; }
+        @media (min-width: 768px) { .vfc-client-list { max-height: 65vh; } }
+
+        .vfc-client-btn {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            width: 100%; box-sizing: border-box; text-align: left;
+            padding: 12px 16px; border: none; border-bottom: 1px solid #1f1f22;
+            background: transparent; cursor: pointer; font-family: inherit;
+        }
+        .vfc-client-btn:hover { background: #161616; }
+        .vfc-client-btn.active { background: rgba(230,57,70,0.12); }
+        .vfc-client-name { font-size: 13px; font-weight: 700; color: #f0f0f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vfc-client-btn.active .vfc-client-name { color: #e63946; }
+        .vfc-client-email { font-size: 11px; color: #71717a; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vfc-unread-badge {
+            flex-shrink: 0; background: #e63946; color: #fff; font-size: 10px; font-weight: 800;
+            border-radius: 100px; padding: 2px 7px;
+        }
+        .vfc-empty { padding: 16px; font-size: 13px; color: #71717a; }
+
+        .vfc-panel {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column;
+            border: 1px solid #27272a; border-radius: 12px; overflow: hidden;
+            background: #0d0d0d;
+            height: 65vh;
+        }
+        @media (min-width: 768px) { .vfc-panel { height: 70vh; } }
+
+        .vfc-empty-state { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: #71717a; font-size: 13px; }
+
+        .vfc-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .vfc-msg-row { display: flex; }
+        .vfc-msg-row.mine { justify-content: flex-end; }
+        .vfc-msg-row.theirs { justify-content: flex-start; }
+        .vfc-bubble { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 13px; color: #fff; }
+        .vfc-msg-row.mine .vfc-bubble { background: #e63946; border-bottom-right-radius: 4px; }
+        .vfc-msg-row.theirs .vfc-bubble { background: #27272a; border-bottom-left-radius: 4px; }
+        .vfc-msg-time { font-size: 10px; opacity: 0.65; margin-top: 3px; }
+
+        .vfc-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #27272a; }
+        .vfc-msg-input {
+            flex: 1; min-width: 0; box-sizing: border-box; background: #18181b; border: 1px solid #3f3f46;
+            border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #fff;
+        }
+        .vfc-msg-input::placeholder { color: #71717a; }
+    </style>
+
+    <div wire:poll.4s="$refresh" class="vfc-wrap">
 
         {{-- Lista de clientes --}}
-        <div class="w-full md:w-64 flex-shrink-0 max-h-48 md:max-h-[70vh] overflow-y-auto border rounded-xl" style="border-color: rgb(39 39 42);">
-            @forelse ($this->getClients() as $client)
-                <button
-                    wire:click="selectClient({{ $client->id }})"
-                    type="button"
-                    class="w-full text-left px-4 py-3 border-b"
-                    style="border-color: rgb(39 39 42); background: {{ $selectedClientId === $client->id ? 'rgba(245,158,11,0.1)' : 'transparent' }}; color: {{ $selectedClientId === $client->id ? 'rgb(245,158,11)' : 'inherit' }};"
+        <div class="vfc-sidebar">
+            <div class="vfc-search-box">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="clientSearch"
+                    placeholder="🔎 Buscar cliente..."
+                    class="vfc-search-input"
+                    autocomplete="off"
                 >
-                    <div class="font-bold text-sm">{{ $client->name }}</div>
-                    <div class="text-xs opacity-60">{{ $client->email }}</div>
-                </button>
-            @empty
-                <div class="p-4 text-sm opacity-60">No hay clientes todavía.</div>
-            @endforelse
+            </div>
+
+            <div class="vfc-client-list">
+                @forelse ($this->getClients() as $client)
+                    @php $unread = $this->unreadCounts[$client->id] ?? 0; @endphp
+                    <button
+                        wire:click="selectClient({{ $client->id }})"
+                        type="button"
+                        class="vfc-client-btn {{ $selectedClientId === $client->id ? 'active' : '' }}"
+                    >
+                        <div style="min-width:0;">
+                            <div class="vfc-client-name">{{ $client->name }}</div>
+                            <div class="vfc-client-email">{{ $client->email }}</div>
+                        </div>
+                        @if ($unread > 0)
+                            <span class="vfc-unread-badge">{{ $unread }}</span>
+                        @endif
+                    </button>
+                @empty
+                    <div class="vfc-empty">No hay clientes que coincidan con la búsqueda.</div>
+                @endforelse
+            </div>
         </div>
 
         {{-- Conversación --}}
-        <div class="flex-1 flex flex-col border rounded-xl overflow-hidden h-[65vh] md:h-[70vh]" style="border-color: rgb(39 39 42);">
+        <div class="vfc-panel">
             @if (!$selectedClientId)
-                <div class="flex-1 flex items-center justify-center opacity-50 text-sm px-4 text-center">
-                    Elegí un cliente para empezar a chatear.
-                </div>
+                <div class="vfc-empty-state">Elegí un cliente para empezar a chatear.</div>
             @else
-                <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="chat-scroll">
+                <div class="vfc-messages" id="chat-scroll">
                     @forelse ($this->messages as $message)
                         @php $mine = $message->sender_id === auth()->id(); @endphp
-                        <div class="flex {{ $mine ? 'justify-end' : 'justify-start' }}">
-                            <div class="max-w-[85%] sm:max-w-[70%] px-3 py-2 rounded-xl text-sm" style="background: {{ $mine ? 'rgb(245,158,11)' : 'rgb(39 39 42)' }}; color: {{ $mine ? '#000' : '#fff' }};">
+                        <div class="vfc-msg-row {{ $mine ? 'mine' : 'theirs' }}">
+                            <div class="vfc-bubble">
                                 {{ $message->body }}
-                                <div class="text-[10px] opacity-60 mt-0.5">
-                                    {{ $message->created_at->format('H:i') }}
-                                </div>
+                                <div class="vfc-msg-time">{{ $message->created_at->format('H:i') }}</div>
                             </div>
                         </div>
                     @empty
-                        <div class="opacity-50 text-center mt-8 text-sm px-2">Todavía no hay mensajes con este cliente.</div>
+                        <div class="vfc-empty" style="text-align:center; margin-top:24px;">Todavía no hay mensajes con este cliente.</div>
                     @endforelse
                 </div>
 
-                <form wire:submit="send" class="flex gap-2 p-3 border-t" style="border-color: rgb(39 39 42);">
+                <form wire:submit="send" class="vfc-form">
                     <input
                         type="text"
                         wire:model="body"
                         placeholder="Escribí un mensaje..."
-                        class="flex-1 min-w-0 rounded-lg px-3 py-2 text-sm"
-                        style="background:rgb(24 24 27); border:1px solid rgb(63 63 70); color:#fff;"
+                        class="vfc-msg-input"
                         autocomplete="off"
                     >
                     <x-filament::button type="submit">

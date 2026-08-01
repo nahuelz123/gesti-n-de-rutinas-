@@ -24,6 +24,8 @@ class Chat extends Page
 
     public string $body = '';
 
+    public string $clientSearch = '';
+
     public function mount(): void
     {
         $clients = $this->getClients();
@@ -35,11 +37,30 @@ class Chat extends Page
     {
         $user = Auth::user();
 
-        return User::query()
+        $query = User::query()
             ->where('role', 'client')
-            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
-            ->orderBy('name')
-            ->get();
+            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id));
+
+        if (trim($this->clientSearch) !== '') {
+            $query->where(fn ($q) => $q
+                ->where('name', 'like', '%'.$this->clientSearch.'%')
+                ->orWhere('email', 'like', '%'.$this->clientSearch.'%'));
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    public function getUnreadCountsProperty(): array
+    {
+        $user = Auth::user();
+
+        return Message::query()
+            ->where('recipient_id', $user->id)
+            ->whereNull('read_at')
+            ->selectRaw('sender_id, count(*) as total')
+            ->groupBy('sender_id')
+            ->pluck('total', 'sender_id')
+            ->toArray();
     }
 
     public function getMessagesProperty(): Collection

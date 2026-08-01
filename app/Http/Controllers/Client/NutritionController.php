@@ -28,6 +28,9 @@ class NutritionController extends Controller
 
         $grouped = $day ? $day->recipes->groupBy('meal_type') : collect();
 
+        // El diario libre funciona tenga o no el cliente un plan de dieta activo.
+        $free = NutritionCalculator::freeLogsToday($user->id);
+
         return view('client.nutrition.index', [
             'assignment' => $assignment,
             'day' => $day,
@@ -35,6 +38,8 @@ class NutritionController extends Controller
             'isToday' => $isToday,
             'summary' => $summary,
             'grouped' => $grouped,
+            'freeLogs' => $free['logs'],
+            'freeTotals' => $free['totals'],
             'dayMap' => NutritionCalculator::$dayMap,
             'dayLabels' => NutritionCalculator::$dayLabels,
             'mealTypeOrder' => NutritionCalculator::$mealTypeOrder,

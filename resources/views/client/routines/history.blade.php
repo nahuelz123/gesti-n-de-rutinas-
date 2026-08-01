@@ -26,7 +26,7 @@
 
             @if ($assignments->hasPages())
                 <div class="pagination-wrap">
-                    {{ $assignments->links() }}
+                    {{ $assignments->links('vendor.pagination.visionfit') }}
                 </div>
             @endif
         </div>

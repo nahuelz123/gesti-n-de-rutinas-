@@ -22,7 +22,7 @@
     </div>
 
     <div style="margin-top:20px;">
-        {{ $notifications->links() }}
+        {{ $notifications->links('vendor.pagination.visionfit') }}
     </div>
 </div>
 

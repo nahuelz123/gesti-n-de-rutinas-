@@ -26,16 +26,23 @@ class AiAssistant extends Page
 
     protected string $view = 'filament.pages.ai-assistant';
 
+    // null = "Chat general" (sin cliente puntual seleccionado)
     public ?int $selectedClientId = null;
 
     public string $message = '';
 
+    public string $clientSearch = '';
+
     public Collection $history;
+
+    /** @var array{type: string, client_id: ?int, client_name: ?string, args: array}|null */
+    public ?array $pendingAction = null;
 
     public function mount(): void
     {
         $this->history = collect();
-        $this->selectedClientId = $this->getClients()->first()?->id;
+        // Arranca en el chat general, no en un cliente puntual.
+        $this->selectedClientId = null;
         $this->loadHistory();
     }
 
@@ -43,27 +50,28 @@ class AiAssistant extends Page
     {
         $user = Auth::user();
 
-        return User::query()
+        $query = User::query()
             ->where('role', 'client')
-            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
-            ->orderBy('name')
-            ->get();
+            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id));
+
+        if (trim($this->clientSearch) !== '') {
+            $query->where(fn ($q) => $q
+                ->where('name', 'like', '%'.$this->clientSearch.'%')
+                ->orWhere('email', 'like', '%'.$this->clientSearch.'%'));
+        }
+
+        return $query->orderBy('name')->get();
     }
 
-    public function selectClient(int $clientId): void
+    public function selectClient(?int $clientId): void
     {
         $this->selectedClientId = $clientId;
+        $this->pendingAction = null;
         $this->loadHistory();
     }
 
     private function loadHistory(): void
     {
-        if (! $this->selectedClientId) {
-            $this->history = collect();
-
-            return;
-        }
-
         $this->history = AiConversation::query()
             ->where('user_id', Auth::id())
             ->where('client_id', $this->selectedClientId)
@@ -77,31 +85,24 @@ class AiAssistant extends Page
             'message' => ['required', 'string', 'max:1000'],
         ]);
 
-        if (! $this->selectedClientId) {
-            return;
-        }
-
         $coach = Auth::user();
-        $client = User::find($this->selectedClientId);
-
-        if (! $client) {
-            return;
-        }
+        $client = $this->selectedClientId ? User::find($this->selectedClientId) : null;
 
         AiConversation::create([
             'user_id' => $coach->id,
-            'client_id' => $client->id,
+            'client_id' => $client?->id,
             'role' => 'user',
             'content' => $this->message,
         ]);
 
         $this->message = '';
 
-        $systemPrompt = $this->buildSystemPrompt($coach, $client);
+        $generalChat = $client === null;
+        $systemPrompt = $this->buildSystemPrompt($coach, $client, $generalChat);
 
         $recent = AiConversation::query()
             ->where('user_id', $coach->id)
-            ->where('client_id', $client->id)
+            ->where('client_id', $client?->id)
             ->orderByDesc('id')
             ->take(12)
             ->get()
@@ -110,7 +111,7 @@ class AiAssistant extends Page
             ->values()
             ->toArray();
 
-        $result = $deepSeek->chatWithTools($systemPrompt, $recent, CoachAiTools::definitions());
+        $result = $deepSeek->chatWithTools($systemPrompt, $recent, CoachAiTools::definitions($generalChat));
 
         if ($result === null) {
             $reply = 'No pude conectarme con el asistente en este momento. Probá de nuevo en un rato.';
@@ -122,12 +123,17 @@ class AiAssistant extends Page
                 $argsJson = $call['function']['arguments'] ?? '{}';
                 $args = json_decode($argsJson, true) ?? [];
 
-                $resultText = CoachAiTools::execute($fnName, $args, $coach, $client);
+                $toolOutcome = CoachAiTools::execute($fnName, $args, $coach, $client);
+
+                if ($toolOutcome['pending']) {
+                    // Solo dejamos una propuesta pendiente a la vez.
+                    $this->pendingAction = $toolOutcome['pending'];
+                }
 
                 $toolResults[] = [
                     'tool_call_id' => $call['id'] ?? '',
                     'role' => 'tool',
-                    'content' => $resultText,
+                    'content' => $toolOutcome['content'],
                 ];
             }
 
@@ -143,19 +149,13 @@ class AiAssistant extends Page
 
             $followUp = $deepSeek->chatWithTools($systemPrompt, $followUpMessages, []);
             $reply = $followUp['content'] ?? implode("\n", array_column($toolResults, 'content'));
-
-            Notification::make()
-                ->title('El asistente ejecutó una acción')
-                ->body(implode(' / ', array_column($toolResults, 'content')))
-                ->success()
-                ->send();
         } else {
             $reply = $result['content'] ?? 'No pude generar una respuesta.';
         }
 
         AiConversation::create([
             'user_id' => $coach->id,
-            'client_id' => $client->id,
+            'client_id' => $client?->id,
             'role' => 'assistant',
             'content' => $reply,
         ]);
@@ -163,32 +163,73 @@ class AiAssistant extends Page
         $this->loadHistory();
     }
 
-    public function newChat(): void
+    public function confirmPendingAction(): void
     {
-        if (! $this->selectedClientId) {
+        if (! $this->pendingAction) {
             return;
         }
 
+        $coach = Auth::user();
+        $pending = $this->pendingAction;
+        $summary = CoachAiTools::confirmAction($pending, $coach);
+
+        AiConversation::create([
+            'user_id' => $coach->id,
+            'client_id' => $pending['client_id'],
+            'role' => 'assistant',
+            'content' => "✅ {$summary}",
+        ]);
+
+        Notification::make()
+            ->title('Acción confirmada')
+            ->body($summary)
+            ->success()
+            ->send();
+
+        $this->pendingAction = null;
+        $this->loadHistory();
+    }
+
+    public function cancelPendingAction(): void
+    {
+        $this->pendingAction = null;
+
+        Notification::make()
+            ->title('Propuesta descartada')
+            ->body('Podés pedirle a la IA una versión distinta cuando quieras.')
+            ->send();
+    }
+
+    public function newChat(): void
+    {
         AiConversation::query()
             ->where('user_id', Auth::id())
             ->where('client_id', $this->selectedClientId)
             ->delete();
 
+        $this->pendingAction = null;
         $this->loadHistory();
     }
 
-    private function buildSystemPrompt(User $coach, User $client): string
+    private function buildSystemPrompt(User $coach, ?User $client, bool $generalChat): string
     {
         $lines = [
-            "Sos el asistente virtual de VisionFit, una app de gestión de gimnasios.",
-            "Estás ayudando a {$coach->name}, que es coach/admin del gimnasio, a analizar a un cliente puntual.",
-            "Respondé en español rioplatense (Argentina), de forma breve y accionable — el coach está apurado.",
-            "Podés usar las herramientas disponibles (enviar notificación, crear y asignar rutina) cuando el coach te lo pida explícitamente. No las uses si solo te está preguntando algo, sin pedir una acción.",
-            "Después de ejecutar una herramienta, confirmale al coach en una frase qué hiciste.",
-            "No inventes datos que no te haya dado el sistema.",
+            'Sos el asistente virtual de VisionFit, una app de gestión de gimnasios.',
+            "Estás ayudando a {$coach->name}, que es coach/admin del gimnasio.",
+            'Respondé en español rioplatense (Argentina), de forma breve y accionable — el coach está apurado.',
+            'IMPORTANTE sobre acciones que crean o modifican datos (rutinas, ediciones de rutina, planes de dieta, recetas): NUNCA se ejecutan solas. Cuando el coach te pida crear o editar algo, usá las herramientas "propose_*" correspondientes, que solo arman una propuesta visible para que el coach la apruebe a mano. No digas que "ya quedó creada/asignada" hasta que el coach la haya aprobado explícitamente (vas a recibir un mensaje de confirmación cuando eso pase).',
+            'Si el coach pide cambios sobre una propuesta que ya armaste, volvé a llamar la herramienta propose_* correspondiente con la versión corregida completa (no un parche).',
+            'send_notification es la única acción que SÍ se ejecuta directo, sin aprobación previa.',
+            'No inventes datos que no te haya dado el sistema.',
         ];
 
-        $lines[] = "Cliente: {$client->name} ({$client->email}).";
+        if ($generalChat) {
+            $lines[] = 'Estás en el CHAT GENERAL: no hay un cliente puntual seleccionado. El coach te puede pedir cosas para clientes específicos nombrándolos. Antes de proponer o hacer algo para un cliente, asegurate de saber a cuál se refiere (usá search_client si hay dudas o nombres parecidos) y pasá client_query en las herramientas que lo piden.';
+
+            return implode("\n", $lines);
+        }
+
+        $lines[] = "Estás analizando puntualmente a este cliente: {$client->name} ({$client->email}).";
 
         $activeAssignment = Assignment::query()
             ->with(['routine.days.exercises.exercise'])
