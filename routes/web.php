@@ -11,10 +11,17 @@ use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\NotificationsController;
 use App\Http\Controllers\Client\FreeMealLogController;
+use App\Http\Controllers\GymJoinController;
 
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
+
+// Alta por QR: el alumno escanea el código de SU gimnasio, elige iniciar sesión
+// (si ya tiene cuenta) o registrarse (entra siempre como cliente, ya con el
+// gym_id correcto). Público, sin auth.
+Route::get('/unirse/{inviteCode}', [GymJoinController::class, 'show'])->name('gym-join.show');
+Route::post('/unirse/{inviteCode}', [GymJoinController::class, 'register'])->name('gym-join.register');
 
 Route::get('dashboard', function () {
     $user = auth()->user();

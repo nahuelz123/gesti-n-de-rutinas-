@@ -21,6 +21,8 @@ class AdminChatOversight extends Page
 
     public ?string $selectedKey = null;
 
+    public string $search = '';
+
     /**
      * Agrupa todos los mensajes del gym en conversaciones únicas coach↔cliente,
      * ordenadas por el mensaje más reciente.
@@ -35,7 +37,7 @@ class AdminChatOversight extends Page
             ->orderByDesc('id')
             ->get();
 
-        return $messages
+        $conversations = $messages
             ->groupBy(fn (Message $m) => $this->pairKey($m->sender_id, $m->recipient_id))
             ->map(function (Collection $group) {
                 $last = $group->first(); // ya viene ordenado desc por id
@@ -55,6 +57,17 @@ class AdminChatOversight extends Page
             })
             ->sortByDesc('last_at')
             ->values();
+
+        if (trim($this->search) === '') {
+            return $conversations;
+        }
+
+        $needle = mb_strtolower(trim($this->search));
+
+        return $conversations->filter(
+            fn ($conv) => str_contains(mb_strtolower($conv['coach']->name), $needle)
+                || str_contains(mb_strtolower($conv['client']->name), $needle)
+        )->values();
     }
 
     public function getThreadProperty(): Collection

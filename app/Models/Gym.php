@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Gym extends Model
 {
@@ -12,7 +13,39 @@ class Gym extends Model
         'logo',
         'plan',
         'active',
+        'invite_code',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Gym $gym) {
+            if (! $gym->invite_code) {
+                $gym->invite_code = static::generateUniqueInviteCode();
+            }
+        });
+    }
+
+    public static function generateUniqueInviteCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (static::where('invite_code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Link que se codifica en el QR del gimnasio para que el alumno se una directo.
+     */
+    public function joinUrl(): string
+    {
+        return route('gym-join.show', $this->invite_code);
+    }
+
+    public function qrImageUrl(): string
+    {
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data='.urlencode($this->joinUrl());
+    }
 
     public function users(): HasMany
     {

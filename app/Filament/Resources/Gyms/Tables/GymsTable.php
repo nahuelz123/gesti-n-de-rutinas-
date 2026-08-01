@@ -24,6 +24,12 @@ class GymsTable
                     ->label('Plan')
                     ->sortable(),
 
+                TextColumn::make('invite_code')
+                    ->label('Código de alta')
+                    ->copyable()
+                    ->copyMessage('Código copiado')
+                    ->fontFamily('mono'),
+
                 IconColumn::make('active')
                     ->label('Activo')
                     ->boolean()

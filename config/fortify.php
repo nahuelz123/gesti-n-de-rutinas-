@@ -144,7 +144,10 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Registro genérico desactivado: no pedía gimnasio ni rol y explotaba
+        // (users.gym_id es obligatorio). El alta ahora es por QR: ver
+        // GymJoinController y las rutas /unirse/{inviteCode}.
+        // Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
         // Features::updateProfileInformation(),
