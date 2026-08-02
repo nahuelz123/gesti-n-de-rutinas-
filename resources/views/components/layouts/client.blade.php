@@ -16,30 +16,67 @@
         {{ auth()->user()->gym?->name ?? 'VisionFit' }}
     @endif
 </a>
-        <div class="app-nav-right">
+
+        <div class="app-nav-quick">
+            @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
             <a href="{{ route('client.notifications.index') }}" class="app-nav-link" title="Notificaciones" style="position:relative;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
-                @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
                 @if($unread)
-                    <span style="position:absolute; top:2px; right:2px; background:#e63946; color:#fff; font-size:9px; font-weight:800; min-width:15px; height:15px; border-radius:100px; display:flex; align-items:center; justify-content:center; padding:0 3px;">{{ $unread > 9 ? '9+' : $unread }}</span>
+                    <span class="app-nav-badge">{{ $unread > 9 ? '9+' : $unread }}</span>
                 @endif
             </a>
+
+            <button type="button" class="app-nav-burger" id="navBurgerBtn" aria-label="Menú" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+            </button>
+        </div>
+
+        <div class="app-nav-right" id="navRightPanel">
             <a href="{{ route('client.progress.index') }}" class="app-nav-link" title="Mi progreso">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                <span class="app-nav-link-label">Mi progreso</span>
             </a>
             <a href="{{ route('client.chat.index') }}" class="app-nav-link" title="Chat con tu coach">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-.72 0-1.437-.023-2.148-.069m8.148-6.573V6.75c0-1.108-.806-2.057-1.907-2.185a48.507 48.507 0 0 0-11.186 0c-1.1.128-1.907 1.077-1.907 2.185v4.286c0 1.108.806 2.057 1.907 2.185.106.012.213.023.32.033m9.166-4.5H3.75"/></svg>
+                <span class="app-nav-link-label">Chat con tu coach</span>
             </a>
-            <a href="{{ route('client.ai-chat.index') }}" class="app-nav-link" title="Asistente IA">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"/></svg>
-            </a>
+
+            <div class="app-nav-divider"></div>
+
             <span class="app-nav-user">{{ auth()->user()->name }}</span>
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('logout') }}" class="app-nav-logout-form">
                 @csrf
                 <button class="app-nav-logout">Salir</button>
             </form>
         </div>
     </nav>
+
+    {{-- Botón flotante del asistente IA, estilo burbuja de WhatsApp --}}
+    <a href="{{ route('client.ai-chat.index') }}" class="ai-fab" title="Asistente IA">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"/></svg>
+    </a>
+
+    <script>
+        (function () {
+            const btn = document.getElementById('navBurgerBtn');
+            const panel = document.getElementById('navRightPanel');
+            if (!btn || !panel) return;
+
+            btn.addEventListener('click', function () {
+                const open = panel.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.classList.toggle('open', open);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                    panel.classList.remove('open');
+                    btn.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        })();
+    </script>
 
     <main class="app-main">
         {{ $slot }}
