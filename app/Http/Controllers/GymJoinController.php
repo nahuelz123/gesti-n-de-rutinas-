@@ -30,6 +30,10 @@ class GymJoinController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::defaults()],
+            'age' => ['nullable', 'integer', 'min:10', 'max:100'],
+            'activity_level' => ['nullable', Rule::in(array_keys(User::ACTIVITY_LEVELS))],
+            'goals' => ['nullable', 'string', 'max:1000'],
+            'medical_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Por seguridad, el alta por QR SIEMPRE entra como cliente.
@@ -41,6 +45,10 @@ class GymJoinController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => 'client',
+            'age' => $data['age'] ?? null,
+            'activity_level' => $data['activity_level'] ?? null,
+            'goals' => $data['goals'] ?? null,
+            'medical_notes' => $data['medical_notes'] ?? null,
         ]);
 
         Auth::login($user);

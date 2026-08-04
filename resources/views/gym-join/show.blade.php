@@ -91,6 +91,35 @@
                         viewable
                     />
 
+                    <div style="border-top:1px solid rgb(63 63 70); padding-top:14px; margin-top:2px;">
+                        <p style="font-size:11px; opacity:0.6; margin-bottom:12px;">
+                            Esto es opcional, pero ayuda mucho a tu coach a armarte la rutina y la dieta desde el día 1. Si no lo sabés ahora, lo podés cargar después desde "Mi cuenta".
+                        </p>
+
+                        <div style="display:flex; gap:10px; margin-bottom:14px;">
+                            <div style="flex:1;">
+                                <flux:input name="age" label="Edad" type="number" min="10" max="100" :value="old('age')" placeholder="Ej: 28" />
+                            </div>
+                            <div style="flex:2;">
+                                <label style="display:block; font-size:12px; margin-bottom:6px; color:#a1a1aa;">Nivel de actividad</label>
+                                <select name="activity_level" style="width:100%; background:#18181b; border:1px solid rgb(63 63 70); border-radius:8px; padding:9px 10px; color:#fff; font-size:13px;">
+                                    <option value="">Sin especificar</option>
+                                    @foreach (\App\Models\User::ACTIVITY_LEVELS as $key => $label)
+                                        <option value="{{ $key }}" @selected(old('activity_level') === $key)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:#a1a1aa;">Tus objetivos</label>
+                        <textarea name="goals" rows="2" placeholder="Ej: bajar grasa, ganar masa muscular..." style="width:100%; box-sizing:border-box; background:#18181b; border:1px solid rgb(63 63 70); border-radius:8px; padding:9px 10px; color:#fff; font-size:13px; font-family:inherit; resize:vertical;">{{ old('goals') }}</textarea>
+
+                        <div style="height:12px;"></div>
+
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:#a1a1aa;">¿Alguna lesión u observación?</label>
+                        <textarea name="medical_notes" rows="2" placeholder="Ej: dolor lumbar, cirugía de rodilla..." style="width:100%; box-sizing:border-box; background:#18181b; border:1px solid rgb(63 63 70); border-radius:8px; padding:9px 10px; color:#fff; font-size:13px; font-family:inherit; resize:vertical;">{{ old('medical_notes') }}</textarea>
+                    </div>
+
                     <flux:button type="submit" variant="primary" class="w-full">
                         Crear mi cuenta en {{ $gym->name }}
                     </flux:button>

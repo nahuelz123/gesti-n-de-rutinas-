@@ -17,6 +17,7 @@
     @endif
 </a>
 
+        <div class="app-nav-actions">
         <div class="app-nav-quick">
             @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
             <a href="{{ route('client.notifications.index') }}" class="app-nav-link" title="Notificaciones" style="position:relative;">
@@ -43,11 +44,27 @@
 
             <div class="app-nav-divider"></div>
 
-            <span class="app-nav-user">{{ auth()->user()->name }}</span>
-            <form method="POST" action="{{ route('logout') }}" class="app-nav-logout-form">
-                @csrf
-                <button class="app-nav-logout">Salir</button>
-            </form>
+            <div class="app-nav-account" id="navAccountWrap">
+                <button type="button" class="app-nav-user-btn" id="navAccountBtn" aria-expanded="false">
+                    <span class="app-nav-user">{{ auth()->user()->name }}</span>
+                    <svg class="app-nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                </button>
+
+                <div class="app-nav-account-menu" id="navAccountMenu">
+                    <a href="{{ route('client.account.edit') }}" class="app-nav-account-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                        Mi cuenta
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="app-nav-logout-form">
+                        @csrf
+                        <button type="submit" class="app-nav-account-item danger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 -3h12m0 0-3-3m3 3-3 3"/></svg>
+                            Cerrar sesión
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
         </div>
     </nav>
 
@@ -73,6 +90,26 @@
                     panel.classList.remove('open');
                     btn.classList.remove('open');
                     btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        })();
+
+        (function () {
+            const wrap = document.getElementById('navAccountWrap');
+            const accBtn = document.getElementById('navAccountBtn');
+            const menu = document.getElementById('navAccountMenu');
+            if (!wrap || !accBtn || !menu) return;
+
+            accBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const open = menu.classList.toggle('open');
+                accBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!wrap.contains(e.target)) {
+                    menu.classList.remove('open');
+                    accBtn.setAttribute('aria-expanded', 'false');
                 }
             });
         })();

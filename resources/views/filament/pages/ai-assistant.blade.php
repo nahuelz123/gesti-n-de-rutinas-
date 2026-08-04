@@ -51,6 +51,7 @@
         .vfai-header-hint { font-size: 11px; color: #71717a; }
 
         .vfai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .vfai-messages.vfai-loading { opacity: 0.5; transition: opacity 0.15s; }
         .vfai-msg-row { display: flex; }
         .vfai-msg-row.mine { justify-content: flex-end; }
         .vfai-msg-row.theirs { justify-content: flex-start; }
@@ -146,7 +147,7 @@
                 </x-filament::button>
             </div>
 
-            <div class="vfai-messages" wire:loading.class="opacity-50" wire:target="send">
+            <div class="vfai-messages" wire:loading.class="vfai-loading" wire:target="send">
                 @forelse ($history as $m)
                     @php $mine = $m->role === 'user'; @endphp
                     <div class="vfai-msg-row {{ $mine ? 'mine' : 'theirs' }}">

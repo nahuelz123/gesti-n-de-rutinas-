@@ -221,15 +221,29 @@ class AiAssistant extends Page
             'Si el coach pide cambios sobre una propuesta que ya armaste, volvé a llamar la herramienta propose_* correspondiente con la versión corregida completa (no un parche).',
             'send_notification es la única acción que SÍ se ejecuta directo, sin aprobación previa.',
             'No inventes datos que no te haya dado el sistema.',
+            'Cuando propongas una rutina o dieta para un cliente puntual, tené SIEMPRE en cuenta su edad, nivel de actividad, objetivos y sobre todo sus notas médicas/lesiones si las tiene — evitá ejercicios contraindicados y avisale al coach en tu respuesta si hay algo a tener especial cuidado.',
         ];
 
         if ($generalChat) {
-            $lines[] = 'Estás en el CHAT GENERAL: no hay un cliente puntual seleccionado. El coach te puede pedir cosas para clientes específicos nombrándolos. Antes de proponer o hacer algo para un cliente, asegurate de saber a cuál se refiere (usá search_client si hay dudas o nombres parecidos) y pasá client_query en las herramientas que lo piden.';
+            $lines[] = 'Estás en el CHAT GENERAL: no hay un cliente puntual seleccionado. El coach te puede pedir cosas para clientes específicos nombrándolos. ANTES de proponer o hacer algo para un cliente, usá search_client — no es solo para desambiguar nombres parecidos, también te trae su edad, objetivos y notas médicas/lesiones, que necesitás saber antes de armar una rutina o dieta, no después. Después pasá client_query en las herramientas que lo piden.';
 
             return implode("\n", $lines);
         }
 
         $lines[] = "Estás analizando puntualmente a este cliente: {$client->name} ({$client->email}).";
+
+        if ($client->age) {
+            $lines[] = "Edad: {$client->age} años.";
+        }
+        if ($client->activityLevelLabel()) {
+            $lines[] = "Nivel de actividad diaria: {$client->activityLevelLabel()}.";
+        }
+        if ($client->goals) {
+            $lines[] = "Objetivos que puso el cliente: {$client->goals}";
+        }
+        if ($client->medical_notes) {
+            $lines[] = "⚠️ Notas médicas / lesiones (IMPORTANTE, tenelo en cuenta siempre al proponer ejercicios): {$client->medical_notes}";
+        }
 
         $activeAssignment = Assignment::query()
             ->with(['routine.days.exercises.exercise'])

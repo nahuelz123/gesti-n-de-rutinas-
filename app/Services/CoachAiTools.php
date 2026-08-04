@@ -331,7 +331,19 @@ class CoachAiTools
             return "No encontré clientes que coincidan con \"{$args['query']}\".";
         }
 
-        return 'Coincidencias: '.$matches->map(fn ($c) => "{$c->name} ({$c->email})")->implode(', ').'.';
+        if ($matches->count() === 1) {
+            $c = $matches->first();
+            $lines = ["Encontré a {$c->name} ({$c->email})."];
+
+            if ($c->age) $lines[] = "Edad: {$c->age} años.";
+            if ($c->activityLevelLabel()) $lines[] = "Actividad: {$c->activityLevelLabel()}.";
+            if ($c->goals) $lines[] = "Objetivos: {$c->goals}";
+            if ($c->medical_notes) $lines[] = "⚠️ Notas médicas/lesiones (tenelo en cuenta al proponer): {$c->medical_notes}";
+
+            return implode(' ', $lines);
+        }
+
+        return 'Coincidencias: '.$matches->map(fn ($c) => "{$c->name} ({$c->email})")->implode(', ').'. Pedile al coach que aclare cuál, antes de proponer nada.';
     }
 
     private static function sendNotification(array $args, User $coach, User $client): string

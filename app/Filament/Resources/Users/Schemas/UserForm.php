@@ -89,8 +89,30 @@ class UserForm
                 ->dehydrateStateUsing(fn($state) => Hash::make($state))
                 ->maxLength(255),
 
+            Textarea::make('goals')
+                ->label('Objetivos del cliente')
+                ->rows(3)
+                ->columnSpanFull()
+                ->visible(fn($get) => $get('role') === 'client')
+                ->nullable(),
+
+            Select::make('activity_level')
+                ->label('Nivel de actividad')
+                ->options(\App\Models\User::ACTIVITY_LEVELS)
+                ->native(false)
+                ->visible(fn($get) => $get('role') === 'client')
+                ->nullable(),
+
+            TextInput::make('age')
+                ->label('Edad')
+                ->numeric()
+                ->minValue(10)
+                ->maxValue(100)
+                ->visible(fn($get) => $get('role') === 'client')
+                ->nullable(),
+
             Textarea::make('medical_notes')
-                ->label('Notas médicas')
+                ->label('Notas médicas / lesiones')
                 ->rows(5)
                 ->columnSpanFull()
                 ->visible(fn($get) => $get('role') === 'client')

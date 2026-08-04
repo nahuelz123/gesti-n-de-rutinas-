@@ -11,6 +11,7 @@ use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\NotificationsController;
 use App\Http\Controllers\Client\FreeMealLogController;
+use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\GymJoinController;
 
 Route::get('/', function () {
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'client', 'no-back'])
 
         Route::get('/nutrition', [NutritionController::class, 'index'])->name('nutrition.index');
         Route::post('/nutrition/logs', [MealLogController::class, 'store'])->name('nutrition.logs.store');
+
+        Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
+        Route::put('/account', [AccountController::class, 'updateProfile'])->name('account.update');
+        Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
 
         Route::get('/nutrition/foods/search', [FreeMealLogController::class, 'searchFoods'])->name('nutrition.foods.search');
         Route::post('/nutrition/free-logs', [FreeMealLogController::class, 'store'])->name('nutrition.free-logs.store');

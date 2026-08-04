@@ -175,19 +175,19 @@ const bCommonOptions = {
             borderWidth: 1,
             titleColor: '#888',
             bodyColor: '#f0f0f0',
-            titleFont: { family: 'Montserrat', size: 10, weight: '700' },
-            bodyFont: { family: 'Montserrat', size: 13, weight: '700' },
+            titleFont: { family: 'Inter', size: 10, weight: '700' },
+            bodyFont: { family: 'Inter', size: 13, weight: '700' },
             padding: 10,
         },
     },
     scales: {
         x: {
-            ticks: { color: '#444', font: { family: 'Montserrat', size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
+            ticks: { color: '#444', font: { family: 'Inter', size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
             grid: { color: '#1e1e1e' },
             border: { color: '#222' },
         },
         y: {
-            ticks: { color: '#444', font: { family: 'Montserrat', size: 10 } },
+            ticks: { color: '#444', font: { family: 'Inter', size: 10 } },
             grid: { color: '#1e1e1e' },
             border: { color: '#222' },
         },

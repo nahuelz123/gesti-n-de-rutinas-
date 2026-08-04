@@ -28,8 +28,14 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
+        'gym_id',
         'height_cm',
         'sex',
+        'age',
+        'activity_level',
+        'goals',
+        'medical_notes',
     ];
 
     /**
@@ -55,6 +61,19 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public const ACTIVITY_LEVELS = [
+        'sedentario' => 'Sedentario (trabajo de oficina, poco o nada de ejercicio)',
+        'ligero' => 'Ligero (ejercicio suave 1-3 días/semana)',
+        'moderado' => 'Moderado (ejercicio moderado 3-5 días/semana)',
+        'activo' => 'Activo (ejercicio intenso 6-7 días/semana)',
+        'muy_activo' => 'Muy activo (trabajo físico + entrenamiento diario)',
+    ];
+
+    public function activityLevelLabel(): ?string
+    {
+        return self::ACTIVITY_LEVELS[$this->activity_level] ?? null;
     }
 
     /**
@@ -89,7 +108,7 @@ class User extends Authenticatable implements FilamentUser
     // Asignaciones hechas por el user (si es coach/admin)
     public function givenAssignments(): HasMany
     {
-        return $this->hasMany(Assignment::class, 'assigned_by');
+        return $this->hasMany(Assignment::class, 'assigned_by_id');
     }
 
     // Planes de dieta creados (si es coach/admin)
