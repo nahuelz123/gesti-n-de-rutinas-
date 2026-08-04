@@ -27,6 +27,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->brandName('VisionFit')
+            ->brandLogo(asset('images/visionfit-logo-navbar.svg'))
+            ->brandLogoHeight('1.75rem')
+            ->favicon(asset('favicon.svg'))
             ->login(\App\Filament\Pages\Auth\Login::class)
            ->colors([
            'primary' => Color::Amber,

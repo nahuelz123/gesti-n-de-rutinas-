@@ -81,6 +81,11 @@ class AiAssistant extends Page
 
     public function send(DeepSeekClient $deepSeek): void
     {
+        // Esta acción puede hacer hasta 2 llamadas seguidas a la IA (respuesta +
+        // follow-up si hay tool_calls). Le damos más margen que el default de
+        // PHP (60s) para que no la mate a mitad de camino.
+        set_time_limit(120);
+
         $this->validate([
             'message' => ['required', 'string', 'max:1000'],
         ]);

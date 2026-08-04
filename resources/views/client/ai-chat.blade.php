@@ -7,7 +7,7 @@
     <h1 class="pg-title">Preguntale a VisionFit AI</h1>
 
     <div class="chat-box">
-        <div class="chat-messages">
+        <div class="chat-messages" id="ai-chat-messages">
             @forelse ($history as $m)
                 <div class="chat-bubble-row {{ $m->role === 'user' ? 'mine' : '' }}">
                     <div class="chat-bubble">{{ $m->content }}</div>
@@ -33,5 +33,12 @@
         </form>
     @endif
 </div>
+
+<script>
+    (function () {
+        const el = document.getElementById('ai-chat-messages');
+        if (el) el.scrollTop = el.scrollHeight;
+    })();
+</script>
 
 </x-layouts.client>

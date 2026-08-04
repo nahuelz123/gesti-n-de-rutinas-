@@ -1,0 +1,7 @@
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#E63946" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(90, 10)">
+        <path d="M 25 45 L 55 85 L 90 35" />
+        <path d="M 65 35 L 90 35 L 90 60" />
+    </g>
+    <text x="150" y="160" font-family="'Inter', 'Helvetica Neue', 'Arial', sans-serif" font-size="56" font-weight="800" fill="#0D0D0D" text-anchor="middle" letter-spacing="-1">Vision<tspan font-weight="500">Fit</tspan></text>
+</svg>

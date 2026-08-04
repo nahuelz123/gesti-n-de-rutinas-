@@ -136,4 +136,25 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function () {
+            function scrollChatToBottom() {
+                const el = document.getElementById('chat-scroll');
+                if (el) el.scrollTop = el.scrollHeight;
+            }
+
+            // Al cargar la página / al navegar dentro del panel
+            document.addEventListener('DOMContentLoaded', scrollChatToBottom);
+            document.addEventListener('livewire:navigated', scrollChatToBottom);
+
+            // Después de cada actualización de Livewire (enviar mensaje, poll cada 4s,
+            // cambiar de cliente): así el chat siempre queda mostrando lo último.
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('commit', ({ succeed }) => {
+                    succeed(() => requestAnimationFrame(scrollChatToBottom));
+                });
+            });
+        })();
+    </script>
 </x-filament-panels::page>

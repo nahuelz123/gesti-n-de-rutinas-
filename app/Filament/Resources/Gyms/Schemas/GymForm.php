@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Gyms\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -29,10 +30,16 @@ class GymForm
                 ->label('Activo')
                 ->default(true),
 
-            TextInput::make('logo')
-                ->label('Logo')
-                ->nullable()
-                ->maxLength(255),
+            FileUpload::make('logo')
+                ->label('Logo del gimnasio')
+                ->image()
+                ->imageEditor()
+                ->disk('public')
+                ->directory('gym-logos')
+                ->visibility('public')
+                ->maxSize(2048)
+                ->helperText('PNG o JPG, fondo transparente recomendado. Se muestra en el navbar de los clientes de este gimnasio. Si no se sube uno, se usa el logo de VisionFit.')
+                ->nullable(),
 
             Placeholder::make('invite_qr')
                 ->label('QR de alta para este gimnasio')

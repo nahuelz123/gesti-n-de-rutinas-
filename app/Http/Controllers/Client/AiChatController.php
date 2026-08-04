@@ -26,6 +26,8 @@ class AiChatController extends Controller
 
     public function send(Request $request, DeepSeekClient $deepSeek)
     {
+        set_time_limit(90);
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1000'],
         ]);

@@ -4,16 +4,20 @@
     <title>Panel Cliente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ asset('favicon-16x16.png') }}" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/css/client.css', 'resources/js/app.js'])
 </head>
 <body>
 
     <nav class="app-nav">
         <a href="{{ route('client.dashboard') }}" class="app-nav-logo" style="text-decoration:none;">
-    @if(auth()->user()->gym?->logo)
-        <img src="{{ auth()->user()->gym->logo }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
+    @if(auth()->user()->gym?->logo_url)
+        <img src="{{ auth()->user()->gym->logo_url }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
     @else
-        {{ auth()->user()->gym?->name ?? 'VisionFit' }}
+        <img src="{{ asset('images/visionfit-logo-navbar.svg') }}" alt="VisionFit" style="height:26px; object-fit:contain; display:block;">
     @endif
 </a>
 

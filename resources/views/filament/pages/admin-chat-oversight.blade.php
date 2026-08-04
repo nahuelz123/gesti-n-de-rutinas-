@@ -101,7 +101,7 @@
                     👁️ Vista de solo lectura — este chat es entre el coach y el cliente.
                 </div>
 
-                <div class="vfo-messages">
+                <div class="vfo-messages" id="admin-chat-scroll">
                     @forelse ($this->thread as $message)
                         @php $isStaff = in_array($message->sender->role, ['coach', 'admin', 'super_admin']); @endphp
                         <div class="vfo-msg-row {{ $isStaff ? 'staff' : 'client' }}">
@@ -120,4 +120,22 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function () {
+            function scrollAdminChatToBottom() {
+                const el = document.getElementById('admin-chat-scroll');
+                if (el) el.scrollTop = el.scrollHeight;
+            }
+
+            document.addEventListener('DOMContentLoaded', scrollAdminChatToBottom);
+            document.addEventListener('livewire:navigated', scrollAdminChatToBottom);
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('commit', ({ succeed }) => {
+                    succeed(() => requestAnimationFrame(scrollAdminChatToBottom));
+                });
+            });
+        })();
+    </script>
 </x-filament-panels::page>

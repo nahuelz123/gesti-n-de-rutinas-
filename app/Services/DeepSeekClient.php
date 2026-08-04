@@ -2,11 +2,27 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class DeepSeekClient
 {
+    /**
+     * Solo reintentamos cuando Gemini devuelve 503 ("modelo saturado, es
+     * transitorio"). Un timeout real (ConnectionException) NO se reintenta:
+     * ya usamos el margen completo de tiempo en el primer intento, y
+     * reintentar ahí sí podría hacer que la request total supere el
+     * max_execution_time de PHP y vuelva el error 500 que tuvimos antes.
+     */
+    private static function retryOnlyOnServiceUnavailable(): \Closure
+    {
+        return function (\Throwable $exception) {
+            return $exception instanceof RequestException
+                && $exception->response->status() === 503;
+        };
+    }
+
     /**
      * Envía una conversación a DeepSeek y devuelve la respuesta del asistente.
      *
@@ -26,9 +42,9 @@ class DeepSeekClient
 
         try {
             $response = Http::withToken($apiKey)
-                ->connectTimeout(15)
-                ->timeout(60)
-                ->retry(2, 1500, throw: false)
+                ->connectTimeout(5)
+                ->timeout(45)
+                ->retry(3, fn (int $attempt) => $attempt * 1500, self::retryOnlyOnServiceUnavailable(), throw: false)
                 ->post(config('services.deepseek.base_url'), [
                     'model' => config('services.deepseek.model', 'deepseek-chat'),
                     'messages' => array_merge(
@@ -89,9 +105,9 @@ class DeepSeekClient
 
         try {
             $response = Http::withToken($apiKey)
-                ->connectTimeout(15)
-                ->timeout(60)
-                ->retry(2, 1500, throw: false)
+                ->connectTimeout(5)
+                ->timeout(45)
+                ->retry(3, fn (int $attempt) => $attempt * 1500, self::retryOnlyOnServiceUnavailable(), throw: false)
                 ->post(config('services.deepseek.base_url'), $payload);
 
             if ($response->failed()) {

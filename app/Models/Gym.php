@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Gym extends Model
@@ -45,6 +46,24 @@ class Gym extends Model
     public function qrImageUrl(): string
     {
         return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data='.urlencode($this->joinUrl());
+    }
+
+    /**
+     * URL completa del logo, lista para usar en un <img src="">.
+     * Soporta tanto archivos subidos por Filament (ruta relativa en el disco
+     * 'public') como URLs absolutas cargadas a mano en el pasado.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (! $this->logo) {
+            return null;
+        }
+
+        if (str_starts_with($this->logo, 'http://') || str_starts_with($this->logo, 'https://')) {
+            return $this->logo;
+        }
+
+        return Storage::disk('public')->url($this->logo);
     }
 
     public function users(): HasMany

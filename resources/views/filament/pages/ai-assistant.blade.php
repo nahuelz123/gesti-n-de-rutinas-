@@ -147,7 +147,7 @@
                 </x-filament::button>
             </div>
 
-            <div class="vfai-messages" wire:loading.class="vfai-loading" wire:target="send">
+            <div class="vfai-messages" id="ai-chat-scroll" wire:loading.class="vfai-loading" wire:target="send">
                 @forelse ($history as $m)
                     @php $mine = $m->role === 'user'; @endphp
                     <div class="vfai-msg-row {{ $mine ? 'mine' : 'theirs' }}">
@@ -307,4 +307,22 @@
             </script>
         </div>
     </div>
+
+    <script>
+        (function () {
+            function scrollAiChatToBottom() {
+                const el = document.getElementById('ai-chat-scroll');
+                if (el) el.scrollTop = el.scrollHeight;
+            }
+
+            document.addEventListener('DOMContentLoaded', scrollAiChatToBottom);
+            document.addEventListener('livewire:navigated', scrollAiChatToBottom);
+
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('commit', ({ succeed }) => {
+                    succeed(() => requestAnimationFrame(scrollAiChatToBottom));
+                });
+            });
+        })();
+    </script>
 </x-filament-panels::page>
