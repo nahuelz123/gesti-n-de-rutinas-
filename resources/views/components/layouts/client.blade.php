@@ -13,62 +13,52 @@
 <body>
 
     <nav class="app-nav">
-        <a href="{{ route('client.dashboard') }}" class="app-nav-logo" style="text-decoration:none;">
-    @if(auth()->user()->gym?->logo_url)
-        <img src="{{ auth()->user()->gym->logo_url }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
-    @else
-        <img src="{{ asset('images/visionfit-logo-navbar.svg') }}" alt="VisionFit" style="height:26px; object-fit:contain; display:block;">
-    @endif
-</a>
+        <a href="{{ route('client.dashboard') }}" class="app-nav-logo">
+            @if(auth()->user()->gym?->logo_url)
+                <img src="{{ auth()->user()->gym->logo_url }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
+            @else
+                <img src="{{ asset('images/visionfit-logo-navbar.svg') }}" alt="VisionFit" style="height:26px; object-fit:contain; display:block;">
+            @endif
+        </a>
 
         <div class="app-nav-actions">
-        <div class="app-nav-quick">
-            @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
-            <a href="{{ route('client.notifications.index') }}" class="app-nav-link" title="Notificaciones" style="position:relative;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
-                @if($unread)
-                    <span class="app-nav-badge">{{ $unread > 9 ? '9+' : $unread }}</span>
-                @endif
-            </a>
+            <div class="app-nav-quick">
+                @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
+                <a href="{{ route('client.notifications.index') }}" class="app-nav-link" title="Notificaciones" style="position:relative; color: var(--clr-text-muted);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:24px; height:24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+                    @if($unread)
+                        <span class="app-nav-badge" style="position:absolute; top:-2px; right:-2px; background:var(--clr-primary); color:#fff; font-size:10px; border-radius:10px; padding:0 4px;">{{ $unread > 9 ? '9+' : $unread }}</span>
+                    @endif
+                </a>
+            </div>
 
-            <button type="button" class="app-nav-burger" id="navBurgerBtn" aria-label="Menú" aria-expanded="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
-            </button>
-        </div>
+            <div class="app-nav-right">
+                <a href="{{ route('client.progress.index') }}" class="app-nav-user-btn" title="Mi progreso">
+                    Progreso
+                </a>
+                <a href="{{ route('client.chat.index') }}" class="app-nav-user-btn" title="Chat con tu coach">
+                    Chat
+                </a>
 
-        <div class="app-nav-right" id="navRightPanel">
-            <a href="{{ route('client.progress.index') }}" class="app-nav-link" title="Mi progreso">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
-                <span class="app-nav-link-label">Mi progreso</span>
-            </a>
-            <a href="{{ route('client.chat.index') }}" class="app-nav-link" title="Chat con tu coach">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-.72 0-1.437-.023-2.148-.069m8.148-6.573V6.75c0-1.108-.806-2.057-1.907-2.185a48.507 48.507 0 0 0-11.186 0c-1.1.128-1.907 1.077-1.907 2.185v4.286c0 1.108.806 2.057 1.907 2.185.106.012.213.023.32.033m9.166-4.5H3.75"/></svg>
-                <span class="app-nav-link-label">Chat con tu coach</span>
-            </a>
+                <div class="app-nav-account" id="navAccountWrap">
+                    <button type="button" class="app-nav-user-btn" id="navAccountBtn" aria-expanded="false">
+                        <span class="app-nav-user">{{ auth()->user()->name }}</span>
+                        <svg class="app-nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
 
-            <div class="app-nav-divider"></div>
-
-            <div class="app-nav-account" id="navAccountWrap">
-                <button type="button" class="app-nav-user-btn" id="navAccountBtn" aria-expanded="false">
-                    <span class="app-nav-user">{{ auth()->user()->name }}</span>
-                    <svg class="app-nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
-                </button>
-
-                <div class="app-nav-account-menu" id="navAccountMenu">
-                    <a href="{{ route('client.account.edit') }}" class="app-nav-account-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
-                        Mi cuenta
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}" class="app-nav-logout-form">
-                        @csrf
-                        <button type="submit" class="app-nav-account-item danger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 -3h12m0 0-3-3m3 3-3 3"/></svg>
-                            Cerrar sesión
-                        </button>
-                    </form>
+                    <div class="app-nav-account-menu" id="navAccountMenu">
+                        <a href="{{ route('client.account.edit') }}" class="app-nav-account-item">
+                            Mi cuenta
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="app-nav-account-item danger" style="width:100%;">
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     </nav>
 
@@ -78,50 +68,31 @@
     </a>
 
     <script>
-        (function () {
-            const btn = document.getElementById('navBurgerBtn');
-            const panel = document.getElementById('navRightPanel');
-            if (!btn || !panel) return;
-
-            btn.addEventListener('click', function () {
-                const open = panel.classList.toggle('open');
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                btn.classList.toggle('open', open);
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!panel.contains(e.target) && !btn.contains(e.target)) {
-                    panel.classList.remove('open');
-                    btn.classList.remove('open');
-                    btn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        })();
-
-        (function () {
+        document.addEventListener("DOMContentLoaded", function () {
             const wrap = document.getElementById('navAccountWrap');
             const accBtn = document.getElementById('navAccountBtn');
             const menu = document.getElementById('navAccountMenu');
-            if (!wrap || !accBtn || !menu) return;
-
-            accBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                const open = menu.classList.toggle('open');
-                accBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!wrap.contains(e.target)) {
-                    menu.classList.remove('open');
-                    accBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-        })();
+            if (wrap && accBtn && menu) {
+                accBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const open = menu.classList.toggle('open');
+                    accBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+                document.addEventListener('click', function (e) {
+                    if (!wrap.contains(e.target)) {
+                        menu.classList.remove('open');
+                        accBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
     </script>
 
     <main class="app-main">
         {{ $slot }}
     </main>
+
+    <x-client.bottom-nav />
 
 </body>
 </html>

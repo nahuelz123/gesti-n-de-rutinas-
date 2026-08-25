@@ -65,20 +65,24 @@ class Chat extends Page
 
     public function getMessagesProperty(): Collection
     {
-        if (! $this->selectedClientId) {
+        // Revalidar autorización: aunque selectClient() ya filtró,
+        // la propiedad pública podría ser manipulada vía Livewire.
+        $validClientId = $this->authorizeClientId($this->selectedClientId);
+
+        if (! $validClientId) {
             return collect();
         }
 
         $user = Auth::user();
 
         $messages = Message::query()
-            ->betweenUsers($user->id, $this->selectedClientId)
+            ->betweenUsers($user->id, $validClientId)
             ->orderBy('id')
             ->get();
 
         Message::query()
             ->where('recipient_id', $user->id)
-            ->where('sender_id', $this->selectedClientId)
+            ->where('sender_id', $validClientId)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
@@ -87,7 +91,7 @@ class Chat extends Page
 
     public function selectClient(int $clientId): void
     {
-        $this->selectedClientId = $clientId;
+        $this->selectedClientId = $this->authorizeClientId($clientId);
     }
 
     public function send(): void
@@ -96,7 +100,10 @@ class Chat extends Page
             'body' => ['required', 'string', 'max:2000'],
         ]);
 
-        if (! $this->selectedClientId) {
+        // Revalidar en el momento del envío (no confiar en que selectClient ya validó)
+        $validClientId = $this->authorizeClientId($this->selectedClientId);
+
+        if (! $validClientId) {
             return;
         }
 
@@ -105,7 +112,7 @@ class Chat extends Page
         Message::create([
             'gym_id' => $user->gym_id,
             'sender_id' => $user->id,
-            'recipient_id' => $this->selectedClientId,
+            'recipient_id' => $validClientId,
             'body' => $this->body,
         ]);
 
@@ -117,5 +124,27 @@ class Chat extends Page
         $user = Auth::user();
 
         return $user && in_array($user->role, ['super_admin', 'admin', 'coach']);
+    }
+
+    /**
+     * Verifica que un clientId pertenezca al mismo gym del usuario autenticado.
+     * super_admin puede acceder a cualquier cliente.
+     * Devuelve el ID validado, o null si no corresponde.
+     */
+    private function authorizeClientId(?int $clientId): ?int
+    {
+        if (! $clientId) {
+            return null;
+        }
+
+        $user = Auth::user();
+
+        $exists = User::query()
+            ->where('id', $clientId)
+            ->where('role', 'client')
+            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
+            ->exists();
+
+        return $exists ? $clientId : null;
     }
 }

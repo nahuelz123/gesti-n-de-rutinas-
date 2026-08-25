@@ -50,7 +50,7 @@ class RecipeResource extends Resource
             ->when($user && $user->role !== 'super_admin', function (Builder $q) use ($user) {
                 $q->where(function (Builder $qq) use ($user) {
                     $qq->where('is_global', true)
-                       ->orWhereHas('creator', fn (Builder $cq) => $cq->where('gym_id', $user->gym_id));
+                       ->orWhere('gym_id', $user->gym_id);
                 });
             });
     }

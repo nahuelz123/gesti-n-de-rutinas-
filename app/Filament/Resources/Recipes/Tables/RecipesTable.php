@@ -17,7 +17,11 @@ class RecipesTable
                 TextColumn::make('title')
                     ->label('Título')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->formatStateUsing(fn ($state, $record) => $record->is_global 
+                        ? '🌐 ' . $state . ' (Catálogo)'
+                        : '🏠 ' . $state . ' (Mi gym)'
+                    ),
 
                 TextColumn::make('meal_type')
                     ->label('Tipo de comida')
@@ -36,10 +40,6 @@ class RecipesTable
                     ->label('Calorías')
                     ->suffix(' kcal')
                     ->sortable(),
-
-                IconColumn::make('is_global')
-                    ->label('Global')
-                    ->boolean(),
 
                 TextColumn::make('creator.name')
                     ->label('Creada por')

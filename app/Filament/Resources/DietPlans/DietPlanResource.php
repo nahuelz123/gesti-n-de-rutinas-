@@ -53,9 +53,7 @@ class DietPlanResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            \App\Filament\Resources\DietPlans\RelationManagers\DaysRelationManager::class,
-        ];
+        return [];
     }
 
     public static function canViewAny(): bool

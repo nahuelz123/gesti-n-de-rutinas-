@@ -21,7 +21,12 @@
 
         <form method="POST" action="{{ route('client.ai-chat.send') }}" class="chat-input-row">
             @csrf
-            <input type="text" name="message" class="chat-input" placeholder="Escribí tu pregunta..." autocomplete="off" maxlength="1000" required>
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <input type="text" name="message" class="chat-input" placeholder="Escribí tu pregunta..." autocomplete="off" maxlength="1000" required>
+                @error('message')
+                    <span style="color: red; font-size: 0.85em; margin-top: 4px;">{{ $message }}</span>
+                @enderror
+            </div>
             <button type="submit" class="chat-send-btn">Enviar</button>
         </form>
     </div>

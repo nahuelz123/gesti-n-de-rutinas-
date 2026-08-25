@@ -48,11 +48,9 @@ class RoutineResource extends Resource
         ->when($user && $user->role !== 'super_admin', fn (Builder $q) => $q->where('gym_id', $user->gym_id));
 }
     public static function getRelations(): array
-{
-    return [
-        \App\Filament\Resources\Routines\RelationManagers\DaysRelationManager::class,
-    ];
-}
+    {
+        return [];
+    }
 public static function canViewAny(): bool
 {
     $user = Auth::user();

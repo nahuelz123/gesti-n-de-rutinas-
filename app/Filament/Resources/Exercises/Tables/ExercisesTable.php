@@ -25,16 +25,15 @@ class ExercisesTable
             TextColumn::make('title')
                 ->label('Título')
                 ->searchable()
-                ->sortable(),
+                ->sortable()
+                ->formatStateUsing(fn ($state, $record) => $record->is_global 
+                    ? '🌐 ' . $state . ' (Catálogo)'
+                    : '🏠 ' . $state . ' (Mi gym)'
+                ),
 
             TextColumn::make('muscle_group')
                 ->label('Músculo')
                 ->badge()
-                ->sortable(),
-
-            \Filament\Tables\Columns\IconColumn::make('is_global')
-                ->label('Global')
-                ->boolean()
                 ->sortable(),
 
             TextColumn::make('created_at')

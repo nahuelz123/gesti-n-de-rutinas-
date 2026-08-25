@@ -34,6 +34,21 @@ class AiChatController extends Controller
 
         $user = $request->user();
 
+        $keyMin = 'ai_client_min_' . $user->id;
+        $keyHr = 'ai_client_hr_' . $user->id;
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyMin, 10) || \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyHr, 50)) {
+            $seconds = max(
+                \Illuminate\Support\Facades\RateLimiter::availableIn($keyMin),
+                \Illuminate\Support\Facades\RateLimiter::availableIn($keyHr)
+            );
+            $minutes = ceil($seconds / 60);
+            return back()->withErrors(['message' => "Alcanzaste el límite de mensajes. Podés volver a intentar en $minutes minuto(s)."]);
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit($keyMin, 60);
+        \Illuminate\Support\Facades\RateLimiter::hit($keyHr, 3600);
+
         AiConversation::create([
             'user_id' => $user->id,
             'client_id' => null,

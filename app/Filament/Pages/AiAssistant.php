@@ -65,16 +65,18 @@ class AiAssistant extends Page
 
     public function selectClient(?int $clientId): void
     {
-        $this->selectedClientId = $clientId;
+        $this->selectedClientId = $clientId ? $this->authorizeClientId($clientId) : null;
         $this->pendingAction = null;
         $this->loadHistory();
     }
 
     private function loadHistory(): void
     {
+        $validClientId = $this->selectedClientId ? $this->authorizeClientId($this->selectedClientId) : null;
+
         $this->history = AiConversation::query()
             ->where('user_id', Auth::id())
-            ->where('client_id', $this->selectedClientId)
+            ->where('client_id', $validClientId)
             ->orderBy('id')
             ->get();
     }
@@ -91,7 +93,31 @@ class AiAssistant extends Page
         ]);
 
         $coach = Auth::user();
-        $client = $this->selectedClientId ? User::find($this->selectedClientId) : null;
+
+        $keyMin = 'ai_coach_min_' . $coach->id;
+        $keyHr = 'ai_coach_hr_' . $coach->id;
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyMin, 20) || \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyHr, 100)) {
+            $seconds = max(
+                \Illuminate\Support\Facades\RateLimiter::availableIn($keyMin),
+                \Illuminate\Support\Facades\RateLimiter::availableIn($keyHr)
+            );
+            $minutes = ceil($seconds / 60);
+            
+            Notification::make()
+                ->title('Límite alcanzado')
+                ->body("Alcanzaste el límite de uso del asistente IA. Podés volver a intentar en $minutes minuto(s).")
+                ->warning()
+                ->send();
+            return;
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit($keyMin, 60);
+        \Illuminate\Support\Facades\RateLimiter::hit($keyHr, 3600);
+
+        // Revalidar autorización al momento de enviar (no confiar en selectClient)
+        $validClientId = $this->selectedClientId ? $this->authorizeClientId($this->selectedClientId) : null;
+        $client = $validClientId ? User::find($validClientId) : null;
 
         AiConversation::create([
             'user_id' => $coach->id,
@@ -174,24 +200,45 @@ class AiAssistant extends Page
             return;
         }
 
+        $pendingClientId = $this->pendingAction['client_id'] ?? null;
+        if ($pendingClientId && ! $this->authorizeClientId($pendingClientId)) {
+            $this->pendingAction = null;
+            Notification::make()
+                ->title('Error de seguridad')
+                ->body('No tenés permisos para ejecutar acciones sobre este cliente.')
+                ->danger()
+                ->send();
+            return;
+        }
+
         $coach = Auth::user();
         $pending = $this->pendingAction;
-        $summary = CoachAiTools::confirmAction($pending, $coach);
 
-        AiConversation::create([
-            'user_id' => $coach->id,
-            'client_id' => $pending['client_id'],
-            'role' => 'assistant',
-            'content' => "✅ {$summary}",
-        ]);
+        try {
+            $summary = CoachAiTools::confirmAction($pending, $coach);
 
-        Notification::make()
-            ->title('Acción confirmada')
-            ->body($summary)
-            ->success()
-            ->send();
+            AiConversation::create([
+                'user_id' => $coach->id,
+                'client_id' => $pending['client_id'],
+                'role' => 'assistant',
+                'content' => "✅ {$summary}",
+            ]);
 
-        $this->pendingAction = null;
+            Notification::make()
+                ->title('Acción confirmada')
+                ->body($summary)
+                ->success()
+                ->send();
+
+            $this->pendingAction = null;
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('No se pudo confirmar')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+
         $this->loadHistory();
     }
 
@@ -207,9 +254,11 @@ class AiAssistant extends Page
 
     public function newChat(): void
     {
+        $validClientId = $this->selectedClientId ? $this->authorizeClientId($this->selectedClientId) : null;
+
         AiConversation::query()
             ->where('user_id', Auth::id())
-            ->where('client_id', $this->selectedClientId)
+            ->where('client_id', $validClientId)
             ->delete();
 
         $this->pendingAction = null;
@@ -321,5 +370,27 @@ class AiAssistant extends Page
         $user = Auth::user();
 
         return $user && in_array($user->role, ['super_admin', 'admin', 'coach']);
+    }
+
+    /**
+     * Verifica que un clientId pertenezca al mismo gym del usuario autenticado.
+     * super_admin puede acceder a cualquier cliente.
+     * Devuelve el ID validado, o null si no corresponde.
+     */
+    private function authorizeClientId(?int $clientId): ?int
+    {
+        if (! $clientId) {
+            return null;
+        }
+
+        $user = Auth::user();
+
+        $exists = User::query()
+            ->where('id', $clientId)
+            ->where('role', 'client')
+            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
+            ->exists();
+
+        return $exists ? $clientId : null;
     }
 }

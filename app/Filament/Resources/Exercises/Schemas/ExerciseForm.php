@@ -6,6 +6,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,12 +15,15 @@ class ExerciseForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            // Se setea automático al gym del usuario logueado
+            Toggle::make('is_global')
+                ->label('Ejercicio global (visible para todos los gimnasios)')
+                ->default(true)
+                ->visible(fn () => Auth::user()?->role === 'super_admin'),
+
             Hidden::make('gym_id')
                 ->default(fn () => Auth::user()?->gym_id)
-                ->required(),
+                ->required(fn () => Auth::user()?->role !== 'super_admin'),
 
-            // Guardamos quién lo creó (trazabilidad)
             Hidden::make('created_by_id')
                 ->default(fn () => Auth::id()),
 

@@ -302,8 +302,8 @@ class CoachAiTools
 
         return match ($name) {
             'send_notification' => ['content' => static::sendNotification($args, $coach, $resolvedClient), 'pending' => null, 'resolvedClient' => $resolvedClient],
-            'propose_routine' => static::buildRoutineProposal($args, $resolvedClient, edit: false),
-            'propose_routine_edit' => static::buildRoutineProposal($args, $resolvedClient, edit: true),
+            'propose_routine' => static::buildRoutineProposal($args, $resolvedClient, $coach, false),
+            'propose_routine_edit' => static::buildRoutineProposal($args, $resolvedClient, $coach, true),
             'propose_recipe' => static::buildRecipeProposal($args),
             'propose_diet_plan' => static::buildDietPlanProposal($args, $resolvedClient, $coach, edit: false),
             'propose_diet_plan_edit' => static::buildDietPlanProposal($args, $resolvedClient, $coach, edit: true),
@@ -348,6 +348,8 @@ class CoachAiTools
 
     private static function sendNotification(array $args, User $coach, User $client): string
     {
+        static::authorizeClient($coach, $client);
+
         $message = trim($args['message'] ?? '');
 
         if ($message === '') {
@@ -362,7 +364,7 @@ class CoachAiTools
     /**
      * Arma (sin guardar nada) la propuesta de rutina/edición y un resumen legible.
      */
-    private static function buildRoutineProposal(array $args, User $client, bool $edit): array
+    private static function buildRoutineProposal(array $args, User $client, User $coach, bool $edit): array
     {
         $title = trim($args['title'] ?? '');
         $days = $args['days'] ?? [];
@@ -384,10 +386,43 @@ class CoachAiTools
             }
         }
 
+        $missing = [];
+        $ambiguous = [];
+        
+        foreach ($days as $dayIndex => $day) {
+            foreach ($day['exercises'] ?? [] as $exIndex => $ex) {
+                $exTitle = trim($ex['exercise_title'] ?? '');
+                if ($exTitle === '') continue;
+
+                $res = static::resolveExerciseRobust($exTitle, $coach);
+                
+                if ($res['status'] === 'missing') {
+                    $missing[] = $exTitle;
+                } elseif ($res['status'] === 'ambiguous') {
+                    $ambiguous[$exTitle] = $res['matches'];
+                } elseif ($res['status'] === 'ok') {
+                    $args['days'][$dayIndex]['exercises'][$exIndex]['exercise_title'] = $res['exercise']->title;
+                }
+            }
+        }
+        
+        if (!empty($missing) || !empty($ambiguous)) {
+            $msg = "No puedo proponer esta rutina porque hay problemas con los ejercicios en el catálogo:\n";
+            if (!empty($missing)) {
+                $msg .= "- Faltan: " . implode(', ', array_unique($missing)) . ". Reemplazalos por similares.\n";
+            }
+            if (!empty($ambiguous)) {
+                foreach ($ambiguous as $ambTitle => $matches) {
+                    $msg .= "- '{$ambTitle}' es ambiguo. Podría ser: " . implode(', ', $matches) . ". Usá un nombre exacto.\n";
+                }
+            }
+            return ['content' => $msg, 'pending' => null, 'resolvedClient' => $client];
+        }
+
         $lines = [];
         $lines[] = ($edit ? 'Edición propuesta para la rutina activa de ' : 'Rutina nueva propuesta para ')."{$client->name}: \"{$title}\".";
 
-        foreach ($days as $day) {
+        foreach ($args['days'] as $day) {
             $exNames = collect($day['exercises'] ?? [])->map(fn ($e) => trim($e['exercise_title'] ?? ''))->filter()->implode(', ');
             $lines[] = "- Día {$day['day_number']} \"{$day['title']}\": {$exNames}";
         }
@@ -453,10 +488,43 @@ class CoachAiTools
             }
         }
 
+        $missing = [];
+        $ambiguous = [];
+        
+        foreach ($days as $dayIndex => $day) {
+            foreach ($day['meals'] ?? [] as $mealIndex => $meal) {
+                $recipeTitle = trim($meal['recipe_title'] ?? '');
+                if ($recipeTitle === '') continue;
+
+                $res = static::resolveRecipeRobust($recipeTitle, $coach);
+                
+                if ($res['status'] === 'missing') {
+                    $missing[] = $recipeTitle;
+                } elseif ($res['status'] === 'ambiguous') {
+                    $ambiguous[$recipeTitle] = $res['matches'];
+                } elseif ($res['status'] === 'ok') {
+                    $args['days'][$dayIndex]['meals'][$mealIndex]['recipe_title'] = $res['recipe']->title;
+                }
+            }
+        }
+        
+        if (!empty($missing) || !empty($ambiguous)) {
+            $msg = "No puedo proponer este plan porque hay problemas con las recetas en el catálogo:\n";
+            if (!empty($missing)) {
+                $msg .= "- Faltan: " . implode(', ', array_unique($missing)) . ". Reemplazalas por similares o crealas primero con propose_recipe.\n";
+            }
+            if (!empty($ambiguous)) {
+                foreach ($ambiguous as $ambTitle => $matches) {
+                    $msg .= "- '{$ambTitle}' es ambiguo. Podría ser: " . implode(', ', $matches) . ". Usá un nombre exacto.\n";
+                }
+            }
+            return ['content' => $msg, 'pending' => null, 'resolvedClient' => $client];
+        }
+
         $lines = [];
         $lines[] = ($edit ? 'Edición propuesta para el plan de dieta activo de ' : 'Plan de dieta nuevo propuesto para ')."{$client->name}: \"{$title}\".";
 
-        foreach ($days as $day) {
+        foreach ($args['days'] as $day) {
             $meals = collect($day['meals'] ?? [])->map(fn ($m) => trim($m['recipe_title'] ?? ''))->filter()->implode(', ');
             $lines[] = "- {$day['day_of_week']}: {$meals}";
         }
@@ -476,6 +544,34 @@ class CoachAiTools
     }
 
     /**
+     * Valida que un cliente exista, sea cliente, y pertenezca al mismo gym que el coach.
+     */
+    private static function authorizeClient(User $coach, User $client): void
+    {
+        if ($client->role !== 'client') {
+            throw new \RuntimeException('El usuario objetivo no es un cliente.');
+        }
+
+        if ($coach->role !== 'super_admin' && $client->gym_id !== $coach->gym_id) {
+            throw new \RuntimeException('Acceso denegado: el cliente no pertenece al gimnasio del coach.');
+        }
+    }
+
+    /**
+     * Valida que un recurso pertenezca al mismo gym que el coach.
+     */
+    private static function authorizeResource(User $coach, $resource): void
+    {
+        if (! $resource) {
+            throw new \RuntimeException('Recurso no encontrado.');
+        }
+
+        if ($coach->role !== 'super_admin' && $resource->gym_id !== $coach->gym_id) {
+            throw new \RuntimeException('Acceso denegado: el recurso no pertenece al gimnasio del coach.');
+        }
+    }
+
+    /**
      * El coach aprobó la propuesta: acá se ejecuta de verdad (crea/edita/asigna).
      */
     public static function confirmAction(array $pending, User $coach): string
@@ -492,6 +588,8 @@ class CoachAiTools
 
     private static function editActiveDietPlan(array $args, User $coach, User $client): string
     {
+        static::authorizeClient($coach, $client);
+
         $activeAssignment = DietAssignment::query()
             ->where('client_id', $client->id)
             ->where('status', 'active')
@@ -502,6 +600,9 @@ class CoachAiTools
         if (! $activeAssignment) {
             return "{$client->name} ya no tiene un plan de dieta activo (puede que haya cambiado desde que se armó la propuesta). No se aplicó ningún cambio.";
         }
+
+        static::authorizeResource($coach, $activeAssignment);
+        static::authorizeResource($coach, $activeAssignment->dietPlan);
 
         $plan = $activeAssignment->dietPlan;
         $days = $args['days'] ?? [];
@@ -532,18 +633,15 @@ class CoachAiTools
                     $recipeTitle = trim($mealData['recipe_title'] ?? '');
                     if ($recipeTitle === '') continue;
 
-                    $recipe = Recipe::query()
-                        ->where(fn ($q) => $q->where('is_global', true)->orWhereHas('creator', fn ($cq) => $cq->where('gym_id', $coach->gym_id)))
-                        ->where('title', 'like', '%'.$recipeTitle.'%')
-                        ->first();
+                    $res = static::resolveRecipeRobust($recipeTitle, $coach);
 
-                    if (! $recipe) {
+                    if ($res['status'] !== 'ok') {
                         $missingRecipes[] = $recipeTitle;
-                        continue;
+                        throw new \Exception("La receta '{$recipeTitle}' no fue resuelta en BD. Operación abortada.");
                     }
 
                     $day->recipes()->create([
-                        'recipe_id' => $recipe->id,
+                        'recipe_id' => $res['recipe']->id,
                         'meal_type' => $mealData['meal_type'],
                         'order' => $order++,
                         'servings' => $mealData['servings'] ?? 1,
@@ -561,25 +659,85 @@ class CoachAiTools
         return $summary;
     }
 
-    private static function resolveExercise(string $exerciseTitle, User $coach, array &$missing): ?Exercise
+    private static function resolveRecipeRobust(string $recipeTitle, User $coach): array
     {
-        $exerciseTitle = trim($exerciseTitle);
-        if ($exerciseTitle === '') return null;
+        $recipeTitle = trim($recipeTitle);
+        if ($recipeTitle === '') return ['status' => 'missing'];
 
-        $exercise = Exercise::query()
-            ->where(fn ($q) => $q->where('is_global', true)->orWhere('gym_id', $coach->gym_id))
-            ->where('title', 'like', '%'.$exerciseTitle.'%')
+        // 1. Exact match + Local
+        $exactLocal = Recipe::query()
+            ->where('gym_id', $coach->gym_id)
+            ->where('is_global', false)
+            ->where('title', $recipeTitle)
             ->first();
+        if ($exactLocal) return ['status' => 'ok', 'recipe' => $exactLocal];
 
-        if (! $exercise) {
-            $missing[] = $exerciseTitle;
-        }
+        // 2. Exact match + Global
+        $exactGlobal = Recipe::query()
+            ->where('is_global', true)
+            ->where('title', $recipeTitle)
+            ->first();
+        if ($exactGlobal) return ['status' => 'ok', 'recipe' => $exactGlobal];
 
-        return $exercise;
+        $matches = Recipe::query()
+            ->where(fn ($q) => $q->where('is_global', true)->orWhere('gym_id', $coach->gym_id))
+            ->where('title', 'like', '%'.$recipeTitle.'%')
+            ->get();
+
+        if ($matches->isEmpty()) return ['status' => 'missing'];
+
+        if ($matches->count() === 1) return ['status' => 'ok', 'recipe' => $matches->first()];
+
+        $localMatches = $matches->where('is_global', false)->where('gym_id', $coach->gym_id);
+        if ($localMatches->count() === 1) return ['status' => 'ok', 'recipe' => $localMatches->first()];
+
+        $globalMatches = $matches->where('is_global', true);
+        if ($localMatches->isEmpty() && $globalMatches->count() === 1) return ['status' => 'ok', 'recipe' => $globalMatches->first()];
+
+        return ['status' => 'ambiguous', 'matches' => $matches->pluck('title')->toArray()];
     }
 
+    private static function resolveExerciseRobust(string $exerciseTitle, User $coach): array
+    {
+        $exerciseTitle = trim($exerciseTitle);
+        if ($exerciseTitle === '') return ['status' => 'missing'];
+
+        // 1. Exact match + Local
+        $exactLocal = Exercise::query()
+            ->where('gym_id', $coach->gym_id)
+            ->where('is_global', false)
+            ->where('title', $exerciseTitle)
+            ->first();
+        if ($exactLocal) return ['status' => 'ok', 'exercise' => $exactLocal];
+
+        // 2. Exact match + Global
+        $exactGlobal = Exercise::query()
+            ->where('is_global', true)
+            ->where('title', $exerciseTitle)
+            ->first();
+        if ($exactGlobal) return ['status' => 'ok', 'exercise' => $exactGlobal];
+
+        $matches = Exercise::query()
+            ->where(fn ($q) => $q->where('is_global', true)->orWhere('gym_id', $coach->gym_id))
+            ->where('title', 'like', '%'.$exerciseTitle.'%')
+            ->get();
+
+        if ($matches->isEmpty()) return ['status' => 'missing'];
+
+        if ($matches->count() === 1) return ['status' => 'ok', 'exercise' => $matches->first()];
+
+        $localMatches = $matches->where('is_global', false)->where('gym_id', $coach->gym_id);
+        if ($localMatches->count() === 1) return ['status' => 'ok', 'exercise' => $localMatches->first()];
+
+        $globalMatches = $matches->where('is_global', true);
+        if ($localMatches->isEmpty() && $globalMatches->count() === 1) return ['status' => 'ok', 'exercise' => $globalMatches->first()];
+
+        return ['status' => 'ambiguous', 'matches' => $matches->pluck('title')->toArray()];
+    }
     private static function createAndAssignRoutine(array $args, User $coach, User $client): string
     {
+        static::authorizeClient($coach, $client);
+
         $title = trim($args['title'] ?? '');
         $days = $args['days'] ?? [];
         $missingExercises = [];
@@ -624,6 +782,8 @@ class CoachAiTools
 
     private static function editActiveRoutine(array $args, User $coach, User $client): string
     {
+        static::authorizeClient($coach, $client);
+
         $activeAssignment = Assignment::query()
             ->where('client_id', $client->id)
             ->where('status', 'active')
@@ -634,6 +794,9 @@ class CoachAiTools
         if (! $activeAssignment) {
             return "{$client->name} ya no tiene una rutina activa (puede que haya cambiado desde que se armó la propuesta). No se aplicó ningún cambio.";
         }
+
+        static::authorizeResource($coach, $activeAssignment);
+        static::authorizeResource($coach, $activeAssignment->routine);
 
         $routine = $activeAssignment->routine;
         $days = $args['days'] ?? [];
@@ -673,12 +836,18 @@ class CoachAiTools
 
             $order = 1;
             foreach ($dayData['exercises'] ?? [] as $exData) {
-                $exercise = static::resolveExercise($exData['exercise_title'] ?? '', $coach, $missingExercises);
+                $exTitle = $exData['exercise_title'] ?? '';
+                $res = static::resolveExerciseRobust($exTitle, $coach);
 
-                if (! $exercise) continue;
+                if ($res['status'] !== 'ok') {
+                    $missingExercises[] = $exTitle;
+                    // Fallback de seguridad, lanzamos excepción para que haga rollback
+                    // y no quede guardada la rutina incompleta.
+                    throw new \Exception("El ejercicio '{$exTitle}' no fue resuelto en BD. Operación abortada.");
+                }
 
                 $day->exercises()->create([
-                    'exercise_id' => $exercise->id,
+                    'exercise_id' => $res['exercise']->id,
                     'sets' => $exData['sets'] ?? 3,
                     'reps' => (string) ($exData['reps'] ?? '10'),
                     'rest' => $exData['rest'] ?? null,
@@ -734,6 +903,8 @@ class CoachAiTools
 
     private static function createAndAssignDietPlan(array $args, User $coach, User $client): string
     {
+        static::authorizeClient($coach, $client);
+
         $title = trim($args['title'] ?? '');
         $days = $args['days'] ?? [];
         $missingRecipes = [];
@@ -759,18 +930,15 @@ class CoachAiTools
                     $recipeTitle = trim($mealData['recipe_title'] ?? '');
                     if ($recipeTitle === '') continue;
 
-                    $recipe = Recipe::query()
-                        ->where(fn ($q) => $q->where('is_global', true)->orWhereHas('creator', fn ($cq) => $cq->where('gym_id', $coach->gym_id)))
-                        ->where('title', 'like', '%'.$recipeTitle.'%')
-                        ->first();
+                    $res = static::resolveRecipeRobust($recipeTitle, $coach);
 
-                    if (! $recipe) {
+                    if ($res['status'] !== 'ok') {
                         $missingRecipes[] = $recipeTitle;
-                        continue;
+                        throw new \Exception("La receta '{$recipeTitle}' no fue resuelta en BD. Operación abortada.");
                     }
 
                     $day->recipes()->create([
-                        'recipe_id' => $recipe->id,
+                        'recipe_id' => $res['recipe']->id,
                         'meal_type' => $mealData['meal_type'],
                         'order' => $order++,
                         'servings' => $mealData['servings'] ?? 1,

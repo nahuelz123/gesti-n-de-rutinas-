@@ -13,6 +13,7 @@ class Recipe extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'gym_id',
         'title',
         'description',
         'photo_url',
@@ -40,6 +41,11 @@ class Recipe extends Model
         return $this->belongsTo(User::class, 'created_by_id');
     }
 
+    public function gym(): BelongsTo
+    {
+        return $this->belongsTo(Gym::class);
+    }
+
     public function ingredients(): HasMany
     {
         return $this->hasMany(RecipeIngredient::class)->orderBy('order');
@@ -61,8 +67,8 @@ class Recipe extends Model
             $user = Auth::user();
             if (! $user) return;
 
-            // Solo super_admin puede crear recetas globales
             if ($user->role !== 'super_admin') {
+                $recipe->gym_id = $user->gym_id;
                 $recipe->is_global = false;
             }
 
