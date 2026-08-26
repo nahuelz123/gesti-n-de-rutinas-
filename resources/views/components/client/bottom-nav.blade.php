@@ -1,23 +1,23 @@
-﻿<nav class="client-bottom-nav">
+<nav class="client-bottom-nav">
     @php
         $currentRoute = request()->route()->getName();
     @endphp
 
-    <a href="{{ route('client.dashboard') }}" class="bottom-nav-item {{ $currentRoute === 'client.dashboard' ? 'active' : ' }}" aria-label="Inicio">
+    <a href="{{ route('client.dashboard') }}" class="bottom-nav-item {{ $currentRoute === 'client.dashboard' ? 'active' : '' }}" aria-label="Inicio">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.592 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
         <span class="bottom-nav-label">Inicio</span>
     </a>
 
-    <a href="{{ route('client.routines.active') }}" class="bottom-nav-item {{ Str::startsWith($currentRoute, 'client.routines') ? 'active' : ' }}" aria-label="Rutina">
+    <a href="{{ route('client.routines.active') }}" class="bottom-nav-item {{ Str::startsWith($currentRoute, 'client.routines') ? 'active' : '' }}" aria-label="Rutina">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
         </svg>
         <span class="bottom-nav-label">Rutina</span>
     </a>
 
-    <a href="{{ route('client.nutrition.index') }}" class="bottom-nav-item {{ Str::startsWith($currentRoute, 'client.nutrition') ? 'active' : ' }}" aria-label="Dieta">
+    <a href="{{ route('client.nutrition.index') }}" class="bottom-nav-item {{ Str::startsWith($currentRoute, 'client.nutrition') ? 'active' : '' }}" aria-label="Dieta">
         <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
         </svg>
