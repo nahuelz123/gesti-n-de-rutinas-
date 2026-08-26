@@ -169,7 +169,7 @@
                     {{-- Header Ejercicio --}}
                     <div style="margin-bottom: var(--space-6); text-align: center;">
                         <h2 style="font-size: 24px; font-weight: 800; color: var(--clr-text); margin-bottom: 8px;">{{ $current->exercise->title }}</h2>
-                        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:16px; font-size:13px; font-weight:600; color:var(--clr-text-muted);">
+                        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:16px; font-size:13px; font-weight:600; color:var(--clr-text-muted); margin-bottom: 16px;">
                             <span>{{ $current->sets }} series</span>
                             <span>&bull;</span>
                             <span>{{ $current->reps ?? '-' }} reps</span>
@@ -177,6 +177,24 @@
                                 <span>&bull;</span>
                                 <span>{{ $current->rest }}s desc.</span>
                             @endif
+                        </div>
+                        
+                        <div style="display: flex; gap: 8px; max-width: 320px; margin: 0 auto;">
+                            @if ($current->exercise->gif_url || $current->exercise->video_url)
+                                @php
+                                    $mediaType = $current->exercise->video_url ? 'video' : 'gif';
+                                    $mediaUrl = $current->exercise->video_url ?? $current->exercise->gif_url;
+                                @endphp
+                                <button type="button" x-data @click="$dispatch('open-tutorial', { type: '{{ $mediaType }}', url: '{{ $mediaUrl }}', title: '{{ addslashes($current->exercise->title) }}' })" style="flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 10px; color: var(--clr-text); font-size: 13px; font-weight: 600; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;"><path d="M8 5v14l11-7z"/></svg>
+                                    Tutorial
+                                </button>
+                            @endif
+                            
+                            <a href="{{ route('client.progress.exercise', $current->exercise_id) }}" style="flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 10px; color: var(--clr-text); font-size: 13px; font-weight: 600; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                                Progreso
+                            </a>
                         </div>
                     </div>
 
@@ -291,4 +309,30 @@
             </a>
         </div>
     @endif
+
+    {{-- Tutorial Modal --}}
+    <div x-data="{ open: false, type: '', url: '', title: '' }" 
+         @open-tutorial.window="open = true; type = $event.detail.type; url = $event.detail.url; title = $event.detail.title"
+         x-show="open" 
+         style="display:none;" 
+         class="modal-overlay" 
+         :class="{ 'open': open }"
+         @click.self="open = false; url = ''">
+        
+        <div class="modal-box" style="background: var(--clr-card); border: 1px solid var(--clr-border);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--clr-border);">
+                <span class="modal-title" x-text="title" style="color:var(--clr-text);"></span>
+                <button class="modal-close" @click="open = false; url = ''" style="color:var(--clr-text-muted);">âœ•</button>
+            </div>
+            <div class="modal-body" style="padding:0; background:#000;">
+                <template x-if="type === 'video' && url">
+                    <iframe :src="'https://www.youtube.com/embed/' + (url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/) ? url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/)[1] : '') + '?autoplay=1'" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; display:block;"></iframe>
+                </template>
+                <template x-if="type === 'gif' && url">
+                    <img :src="url" style="width:100%; max-height:70vh; object-fit:contain; display:block; margin:0 auto;" />
+                </template>
+            </div>
+        </div>
+    </div>
+
 </div>

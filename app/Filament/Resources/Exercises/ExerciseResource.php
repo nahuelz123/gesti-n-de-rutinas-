@@ -22,7 +22,7 @@ class ExerciseResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'title';
 
     protected static ?string $modelLabel = 'Ejercicio';
 

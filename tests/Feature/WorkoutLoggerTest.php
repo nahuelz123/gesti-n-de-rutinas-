@@ -128,5 +128,27 @@ class WorkoutLoggerTest extends TestCase
             ->call('logSet', 99) // Invalid set number
             ->assertHasErrors('set_99');
     }
+
+    public function test_tutorial_button_shows_when_media_exists()
+    {
+        $this->actingAs($this->client);
+        
+        $this->exercise->update(['gif_url' => 'https://example.com/test.gif']);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertSee('Tutorial');
+    }
+
+    public function test_tutorial_button_hidden_when_no_media()
+    {
+        $this->actingAs($this->client);
+        
+        $this->exercise->update(['gif_url' => null, 'video_url' => null]);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertDontSee('Tutorial');
+    }
 }
 
