@@ -115,4 +115,119 @@ class ClientProgressTest extends TestCase
         $response->assertSee('90'); // PR
         $response->assertSee('80'); // Historial
     }
+
+    public function test_client_can_edit_own_log()
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+        $exercise = Exercise::create(['title' => 'Curls', 'muscle_group' => 'biceps', 'is_global' => true]);
+        $routine = Routine::create(['gym_id' => $gym->id, 'title' => 'Rutina', 'coach_id' => $client->id]);
+        $day = RoutineDay::create(['routine_id' => $routine->id, 'day_number' => 1, 'title' => 'Dia 1']);
+        $rdExercise = RoutineDayExercise::create(['routine_day_id' => $day->id, 'exercise_id' => $exercise->id, 'order' => 1, 'sets' => 3, 'reps' => '10']);
+        $assignment = Assignment::create(['gym_id' => $gym->id, 'client_id' => $client->id, 'routine_id' => $routine->id, 'assigned_by_id' => $client->id]);
+        
+        $log = ExerciseLog::create([
+            'assignment_id' => $assignment->id,
+            'routine_day_exercise_id' => $rdExercise->id,
+            'set_number' => 1,
+            'weight' => 20,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $newDate = now()->subDays(1)->format('Y-m-d\TH:i');
+
+        $response = $this->actingAs($client)->put(route('client.logs.update', $log), [
+            'set_number' => 2,
+            'weight' => 25,
+            'reps' => 12,
+            'logged_at' => $newDate,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('exercise_logs', [
+            'id' => $log->id,
+            'set_number' => 2,
+            'weight' => 25,
+            'reps' => 12,
+            'logged_at' => \Carbon\Carbon::parse($newDate)->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    public function test_client_cannot_edit_other_clients_log()
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client1 = $this->createClient($gym->id);
+        $client2 = $this->createClient($gym->id);
+        $exercise = Exercise::create(['title' => 'Curls', 'muscle_group' => 'biceps', 'is_global' => true]);
+        $routine = Routine::create(['gym_id' => $gym->id, 'title' => 'Rutina', 'coach_id' => $client1->id]);
+        $day = RoutineDay::create(['routine_id' => $routine->id, 'day_number' => 1, 'title' => 'Dia 1']);
+        $rdExercise = RoutineDayExercise::create(['routine_day_id' => $day->id, 'exercise_id' => $exercise->id, 'order' => 1, 'sets' => 3, 'reps' => '10']);
+        $assignment = Assignment::create(['gym_id' => $gym->id, 'client_id' => $client2->id, 'routine_id' => $routine->id, 'assigned_by_id' => $client1->id]);
+        
+        $log = ExerciseLog::create([
+            'assignment_id' => $assignment->id,
+            'routine_day_exercise_id' => $rdExercise->id,
+            'set_number' => 1,
+            'weight' => 20,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $response = $this->actingAs($client1)->put(route('client.logs.update', $log), [
+            'set_number' => 2,
+            'weight' => 25,
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_client_can_delete_own_log()
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+        $exercise = Exercise::create(['title' => 'Curls', 'muscle_group' => 'biceps', 'is_global' => true]);
+        $routine = Routine::create(['gym_id' => $gym->id, 'title' => 'Rutina', 'coach_id' => $client->id]);
+        $day = RoutineDay::create(['routine_id' => $routine->id, 'day_number' => 1, 'title' => 'Dia 1']);
+        $rdExercise = RoutineDayExercise::create(['routine_day_id' => $day->id, 'exercise_id' => $exercise->id, 'order' => 1, 'sets' => 3, 'reps' => '10']);
+        $assignment = Assignment::create(['gym_id' => $gym->id, 'client_id' => $client->id, 'routine_id' => $routine->id, 'assigned_by_id' => $client->id]);
+        
+        $log = ExerciseLog::create([
+            'assignment_id' => $assignment->id,
+            'routine_day_exercise_id' => $rdExercise->id,
+            'set_number' => 1,
+            'weight' => 20,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $response = $this->actingAs($client)->delete(route('client.logs.destroy', $log));
+        
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseMissing('exercise_logs', ['id' => $log->id]);
+    }
+
+    public function test_client_cannot_delete_other_clients_log()
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client1 = $this->createClient($gym->id);
+        $client2 = $this->createClient($gym->id);
+        $exercise = Exercise::create(['title' => 'Curls', 'muscle_group' => 'biceps', 'is_global' => true]);
+        $routine = Routine::create(['gym_id' => $gym->id, 'title' => 'Rutina', 'coach_id' => $client1->id]);
+        $day = RoutineDay::create(['routine_id' => $routine->id, 'day_number' => 1, 'title' => 'Dia 1']);
+        $rdExercise = RoutineDayExercise::create(['routine_day_id' => $day->id, 'exercise_id' => $exercise->id, 'order' => 1, 'sets' => 3, 'reps' => '10']);
+        $assignment = Assignment::create(['gym_id' => $gym->id, 'client_id' => $client2->id, 'routine_id' => $routine->id, 'assigned_by_id' => $client1->id]);
+        
+        $log = ExerciseLog::create([
+            'assignment_id' => $assignment->id,
+            'routine_day_exercise_id' => $rdExercise->id,
+            'set_number' => 1,
+            'weight' => 20,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $response = $this->actingAs($client1)->delete(route('client.logs.destroy', $log));
+        $response->assertForbidden();
+    }
 }

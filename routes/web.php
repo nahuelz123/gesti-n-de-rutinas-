@@ -40,6 +40,8 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::get('/routines/active', [RoutineController::class, 'active'])->name('routines.active');
         Route::get('/routines/history', [RoutineController::class, 'history'])->name('routines.history');
         Route::get('/routines/{assignment}', [RoutineController::class, 'show'])->name('routines.show');
+        Route::post('/routines/{assignment}/replay', [RoutineController::class, 'replay'])->name('routines.replay');
+        Route::get('/routines/session/{assignment}', [RoutineController::class, 'session'])->name('routines.session');
         Route::get('/progress/exercise/{exercise}', [RoutineController::class, 'exerciseProgress'])
             ->name('progress.exercise');
         Route::post('/logs', [LogController::class, 'store'])->name('logs.store');

@@ -4,9 +4,16 @@
             <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--clr-text); margin-bottom: 2px;">
                 TU RUTINA
             </h1>
-            <p style="font-size: 14px; color: var(--clr-text-muted); font-weight: 500; margin-bottom: var(--space-6);">
+            <p style="font-size: 14px; color: var(--clr-text-muted); font-weight: 500; margin-bottom: 8px;">
                 {{ $assignment->routine->title }}
             </p>
+            @if($assignment->status === 'completed' && $assignment->end_date && \Carbon\Carbon::parse($assignment->end_date)->isToday())
+                <div style="display:inline-block; background:rgba(74,222,128,0.1); color:var(--clr-success); font-size:12px; font-weight:700; padding:4px 8px; border-radius:4px; margin-bottom:var(--space-6);">
+                    Sesión iniciada desde historial
+                </div>
+            @else
+                <div style="margin-bottom: var(--space-6);"></div>
+            @endif
 
             <div style="display: flex; flex-direction: column; gap: var(--space-4);">
                 @foreach($assignment->routine->days as $day)
@@ -302,11 +309,19 @@
                 Excelente trabajo. Completaste todos los ejercicios de {{ $this->day->title }}.
             </p>
             
-            <a href="{{ route('client.dashboard') }}" style="text-decoration:none; width: 100%; max-width: 300px;">
-                <x-client.action-button variant="primary">
-                    VOLVER AL INICIO
-                </x-client.action-button>
-            </a>
+            @if($assignment->status === 'completed' && $assignment->end_date && \Carbon\Carbon::parse($assignment->end_date)->isToday())
+                <a href="{{ route('client.routines.history') }}" style="text-decoration:none; width: 100%; max-width: 300px;">
+                    <x-client.action-button variant="primary">
+                        VOLVER AL HISTORIAL
+                    </x-client.action-button>
+                </a>
+            @else
+                <a href="{{ route('client.dashboard') }}" style="text-decoration:none; width: 100%; max-width: 300px;">
+                    <x-client.action-button variant="primary">
+                        VOLVER AL INICIO
+                    </x-client.action-button>
+                </a>
+            @endif
         </div>
     @endif
 

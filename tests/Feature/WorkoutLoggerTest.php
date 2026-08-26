@@ -150,5 +150,82 @@ class WorkoutLoggerTest extends TestCase
             ->call('selectDay', $this->day->id)
             ->assertDontSee('Tutorial');
     }
+
+    public function test_client_cannot_log_set_in_historical_routine()
+    {
+        $this->actingAs($this->client);
+        
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $this->gym->id]);
+
+        $historical = Assignment::create([
+            'gym_id' => $this->gym->id,
+            'client_id' => $this->client->id,
+            'assigned_by_id' => $coach->id,
+            'routine_id' => $this->routine->id,
+            'status' => 'completed',
+            'end_date' => now()->subDay(),
+        ]);
+
+        Livewire::test('client.workout-logger', ['assignment' => $historical])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', 80)
+            ->set('inputs.1.reps', 10)
+            ->call('logSet', 1)
+            ->assertForbidden();
+    }
+
+    public function test_client_can_log_set_in_replay_session()
+    {
+        $this->actingAs($this->client);
+        
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $this->gym->id]);
+
+        $replay = Assignment::create([
+            'gym_id' => $this->gym->id,
+            'client_id' => $this->client->id,
+            'assigned_by_id' => $coach->id,
+            'routine_id' => $this->routine->id,
+            'status' => 'completed',
+            'start_date' => today(),
+            'end_date' => today(),
+        ]);
+
+        Livewire::test('client.workout-logger', ['assignment' => $replay])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', 80)
+            ->set('inputs.1.reps', 10)
+            ->call('logSet', 1)
+            ->assertDispatched('set-logged');
+            
+        $this->assertDatabaseHas('exercise_logs', [
+            'assignment_id' => $replay->id,
+            'weight' => 80,
+            'reps' => 10,
+        ]);
+    }
+
+    public function test_client_cannot_log_set_in_expired_replay()
+    {
+        $this->actingAs($this->client);
+        
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $this->gym->id]);
+
+        $replay = Assignment::create([
+            'gym_id' => $this->gym->id,
+            'client_id' => $this->client->id,
+            'assigned_by_id' => $coach->id,
+            'routine_id' => $this->routine->id,
+            'status' => 'completed',
+            'start_date' => today()->subDay(),
+            'end_date' => today()->subDay(),
+        ]);
+
+        Livewire::test('client.workout-logger', ['assignment' => $replay])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', 80)
+            ->set('inputs.1.reps', 10)
+            ->call('logSet', 1)
+            ->assertForbidden();
+    }
 }
 

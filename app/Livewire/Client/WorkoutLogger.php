@@ -145,8 +145,14 @@ class WorkoutLogger extends Component
             abort(403);
         }
 
-        // 2) Solo rutina activa
-        if ($this->assignment->status !== 'active' || $this->assignment->end_date !== null) {
+        $isActive = $this->assignment->status === 'active' && $this->assignment->end_date === null;
+        $isReplay = $this->assignment->status === 'completed' && 
+                    $this->assignment->start_date !== null &&
+                    \Carbon\Carbon::parse($this->assignment->start_date)->isToday() && 
+                    $this->assignment->end_date !== null &&
+                    \Carbon\Carbon::parse($this->assignment->end_date)->isToday();
+
+        if (!$isActive && !$isReplay) {
             abort(403);
         }
 
