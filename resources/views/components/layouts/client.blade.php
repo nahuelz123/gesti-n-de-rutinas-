@@ -8,6 +8,8 @@
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" sizes="16x16" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     @vite(['resources/css/app.css', 'resources/css/client.css', 'resources/js/app.js'])
 </head>
 <body>
