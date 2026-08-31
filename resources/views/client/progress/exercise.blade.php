@@ -93,54 +93,59 @@
             @endforeach
 
             {{-- Modal Alpine para editar serie --}}
-            <div class="modal-overlay" :class="{ 'open': openLog }" style="display:none;" x-show="openLog">
-                <div class="modal-box" style="background: var(--clr-card); border: 1px solid var(--clr-border);" @click.away="openLog = false">
-                    <div class="modal-header" style="border-bottom: 1px solid var(--clr-border);">
-                        <span class="modal-title" style="color:var(--clr-text);">Editar Serie</span>
-                        <button class="modal-close" type="button" @click="openLog = false" style="color:var(--clr-text-muted);">✕</button>
+            <div x-show="openLog" x-cloak
+                style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;"
+                @click.self="openLog = false">
+                <div style="background:var(--clr-card);border:1px solid var(--clr-border);border-radius:12px;padding:20px;width:90%;max-width:400px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <span style="color:var(--clr-text);font-weight:600;">Editar Serie</span>
+                        <button type="button" @click="openLog = false" style="color:var(--clr-text-muted);background:none;border:none;cursor:pointer;font-size:18px;">✕</button>
                     </div>
-                    <div class="modal-body">
-                        <form :action="`/app/logs/${log.id}`" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div style="margin-bottom: 15px;">
-                                <label style="display:block; font-size:12px; color:var(--clr-text-muted); margin-bottom:4px;">Serie N°</label>
-                                <input type="number" name="set_number" x-model="log.set_number" required min="1" max="20" style="width:100%; background:var(--clr-bg); border:1px solid var(--clr-border); color:var(--clr-text); padding:8px; border-radius:6px;">
+                    <form x-bind:action="`/app/logs/${log.id}`" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <div style="margin-bottom:15px;">
+                            <label style="display:block;font-size:12px;color:var(--clr-text-muted);margin-bottom:4px;">Serie N°</label>
+                            <input type="number" name="set_number" x-model="log.set_number" required min="1" max="20"
+                                style="width:100%;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:8px;border-radius:6px;">
+                        </div>
+                        <div style="display:flex;gap:10px;margin-bottom:15px;">
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:12px;color:var(--clr-text-muted);margin-bottom:4px;">Peso (kg)</label>
+                                <input type="number" name="weight" x-model="log.weight" step="0.5" min="0"
+                                    style="width:100%;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:8px;border-radius:6px;">
                             </div>
-                            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                                <div style="flex:1;">
-                                    <label style="display:block; font-size:12px; color:var(--clr-text-muted); margin-bottom:4px;">Peso (kg)</label>
-                                    <input type="number" name="weight" x-model="log.weight" step="0.5" min="0" style="width:100%; background:var(--clr-bg); border:1px solid var(--clr-border); color:var(--clr-text); padding:8px; border-radius:6px;">
-                                </div>
-                                <div style="flex:1;">
-                                    <label style="display:block; font-size:12px; color:var(--clr-text-muted); margin-bottom:4px;">Repeticiones</label>
-                                    <input type="number" name="reps" x-model="log.reps" min="1" max="200" style="width:100%; background:var(--clr-bg); border:1px solid var(--clr-border); color:var(--clr-text); padding:8px; border-radius:6px;">
-                                </div>
+                            <div style="flex:1;">
+                                <label style="display:block;font-size:12px;color:var(--clr-text-muted);margin-bottom:4px;">Repeticiones</label>
+                                <input type="number" name="reps" x-model="log.reps" min="1" max="200"
+                                    style="width:100%;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:8px;border-radius:6px;">
                             </div>
-                            <div style="margin-bottom: 20px;">
-                                <label style="display:block; font-size:12px; color:var(--clr-text-muted); margin-bottom:4px;">Fecha y Hora</label>
-                                <input type="datetime-local" name="logged_at" x-model="log.logged_at" required style="width:100%; background:var(--clr-bg); border:1px solid var(--clr-border); color:var(--clr-text); padding:8px; border-radius:6px; color-scheme: dark;">
-                            </div>
-                            
-                            <div style="display:flex; gap:10px; justify-content:space-between;">
-                                <button type="button" @click="if(confirm('¿Eliminar esta serie?')) { document.getElementById('deleteForm' + log.id).submit(); }" style="background:transparent; color:#e63946; border:1px solid #e63946; padding:8px 16px; border-radius:6px; font-weight:600; cursor:pointer;">
-                                    Eliminar
-                                </button>
-                                <button type="submit" style="background:#e63946; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; cursor:pointer;">
-                                    Guardar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block;font-size:12px;color:var(--clr-text-muted);margin-bottom:4px;">Fecha y Hora</label>
+                            <input type="datetime-local" name="logged_at" x-model="log.logged_at" required
+                                style="width:100%;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:8px;border-radius:6px;color-scheme:dark;">
+                        </div>
+                        <div style="display:flex;gap:10px;justify-content:space-between;">
+                            <button type="button"
+                                @click="if(confirm('¿Eliminar esta serie?')) { $refs.deleteForm.action = `/app/logs/${log.id}`; $refs.deleteForm.submit(); }"
+                                style="background:transparent;color:#e63946;border:1px solid #e63946;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;">
+                                Eliminar
+                            </button>
+                            <button type="submit"
+                                style="background:#e63946;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;">
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            
-            @foreach ($logs as $log)
-                <form id="deleteForm{{ $log->id }}" action="{{ route('client.logs.destroy', $log) }}" method="POST" style="display:none;">
-                    @csrf
-                    @method('DELETE')
-                </form>
-            @endforeach
+
+            {{-- Form oculto para eliminar --}}
+            <form x-ref="deleteForm" method="POST" style="display:none;">
+                @csrf
+                @method('DELETE')
+            </form>
         </div>
         @endif
     </div>
