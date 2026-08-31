@@ -92,7 +92,7 @@
                 </div>
 
                 {{-- Vista edición inline --}}
-                <div x-show="editing" style="padding:12px 16px;border-bottom:1px solid var(--clr-border);background:var(--clr-card);">
+                <div x-show="editing" x-cloak style="padding:12px 16px;border-bottom:1px solid var(--clr-border);background:var(--clr-card);">
                     <form action="{{ route('client.logs.update', $log) }}" method="POST">
                         @csrf
                         @method('PUT')
