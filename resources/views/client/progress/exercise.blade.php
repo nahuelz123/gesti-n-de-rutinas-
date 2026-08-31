@@ -71,26 +71,74 @@
     @endif
 
     {{-- Historial --}}
-    <div class="logs-card">
-        <div class="logs-card-header">
-            <span class="logs-card-title">Historial de series</span>
+<div class="logs-card">
+    <div class="logs-card-header">
+        <span class="logs-card-title">Historial de series</span>
+    </div>
+    @if ($logs->isEmpty())
+        <div class="empty-text">Todavía no hay registros para este ejercicio.</div>
+    @else
+        @foreach ($logs as $log)
+        <div x-data="{ editing: false }">
+            {{-- Vista normal --}}
+            <div class="log-row" x-show="!editing">
+                <span class="log-time">{{ $log->logged_at->format('d/m H:i') }}</span>
+                <span class="log-set">Serie {{ $log->set_number }}</span>
+                <span class="log-kg">{{ $log->weight ?? '—' }} kg</span>
+                <span class="log-reps">{{ $log->reps ?? '—' }} reps</span>
+                <span style="opacity:0.5;margin-left:auto;cursor:pointer;" @click="editing = true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"></path></svg>
+                </span>
+            </div>
+
+            {{-- Vista edición inline --}}
+            <div x-show="editing" style="padding:12px 16px;border-bottom:1px solid var(--clr-border);background:var(--clr-card);">
+                <form action="{{ route('client.logs.update', $log) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <label style="font-size:10px;color:var(--clr-text-muted);">Serie</label>
+                            <input type="number" name="set_number" value="{{ $log->set_number }}" min="1" max="20" required
+                                style="width:60px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <label style="font-size:10px;color:var(--clr-text-muted);">Peso (kg)</label>
+                            <input type="number" name="weight" value="{{ $log->weight }}" step="0.5" min="0"
+                                style="width:80px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:3px;">
+                            <label style="font-size:10px;color:var(--clr-text-muted);">Reps</label>
+                            <input type="number" name="reps" value="{{ $log->reps }}" min="1" max="200"
+                                style="width:60px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
+                        </div>
+                    </div>
+                    <input type="hidden" name="logged_at" value="{{ $log->logged_at->format('Y-m-d H:i:s') }}">
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" @click="editing = false"
+                            style="flex:1;background:transparent;color:var(--clr-text-muted);border:1px solid var(--clr-border);padding:7px;border-radius:6px;font-size:13px;cursor:pointer;">
+                            Cancelar
+                        </button>
+                        <form action="{{ route('client.logs.destroy', $log) }}" method="POST" style="flex:1;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" onclick="return confirm('¿Eliminar?')"
+                                style="width:100%;background:transparent;color:#e63946;border:1px solid #e63946;padding:7px;border-radius:6px;font-size:13px;cursor:pointer;">
+                                Eliminar
+                            </button>
+                        </form>
+                        <button type="submit"
+                            style="flex:1;background:#e63946;color:#fff;border:none;padding:7px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        @if ($logs->isEmpty())
-            <div class="empty-text">Todavía no hay registros para este ejercicio.</div>
-        @else
-        <div x-data="{ openLog: false, log: {} }">
-            @foreach ($logs as $log)
-                <div class="log-row" style="cursor: pointer; position: relative;"
-                     @click="openLog = true; log = { id: {{ $log->id }}, set_number: {{ $log->set_number }}, weight: '{{ $log->weight }}', reps: '{{ $log->reps }}', logged_at: '{{ $log->logged_at->format('Y-m-d\TH:i') }}' }">
-                    <span class="log-time">{{ $log->logged_at->format('d/m H:i') }}</span>
-                    <span class="log-set">Serie {{ $log->set_number }}</span>
-                    <span class="log-kg">{{ $log->weight ?? '—' }} kg</span>
-                    <span class="log-reps">{{ $log->reps ?? '—' }} reps</span>
-                    <span style="opacity: 0.5; margin-left: auto;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"></path></svg>
-                    </span>
-                </div>
-            @endforeach
+        @endforeach
+    @endif
+</div>
+
 
             {{-- Modal Alpine para editar serie --}}
             <div x-show="openLog" x-cloak
