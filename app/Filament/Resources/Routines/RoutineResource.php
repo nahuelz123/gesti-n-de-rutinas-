@@ -60,7 +60,7 @@ public static function canViewAny(): bool
 public static function canCreate(): bool
 {
     $user = Auth::user();
-    return $user && in_array($user->role, ['admin', 'coach']);
+    return $user && in_array($user->role, ['super_admin','admin', 'coach']);
 }
 
 public static function canEdit($record): bool
