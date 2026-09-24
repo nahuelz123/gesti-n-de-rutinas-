@@ -48,7 +48,9 @@ class FreeMealLogController extends Controller
         $factor = $grams / 100;
 
         if (! empty($data['food_item_id'])) {
-            $foodItem = FoodItem::query()->findOrFail($data['food_item_id']);
+            $foodItem = FoodItem::query()->where(fn ($q) => $q->where('is_global', true)
+                ->orWhereHas('creator', fn ($cq) => $cq->where('gym_id', $user->gym_id)))
+                ->findOrFail($data['food_item_id']);
             $macros = $foodItem->macrosFor($grams);
 
             $log = FreeMealLog::create([

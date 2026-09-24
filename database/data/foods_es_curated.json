@@ -1,0 +1,506 @@
+[
+  {
+    "name": "Arroz blanco (crudo)",
+    "category": "carbohidrato",
+    "calories_per_100g": 350,
+    "protein_per_100g": 7.0,
+    "carbs_per_100g": 78.0,
+    "fat_per_100g": 0.9,
+    "source_id": "riz-blanc-cru"
+  },
+  {
+    "name": "Pasta (seca)",
+    "category": "carbohidrato",
+    "calories_per_100g": 350,
+    "protein_per_100g": 12.5,
+    "carbs_per_100g": 71.0,
+    "fat_per_100g": 1.5,
+    "source_id": "pates-crues"
+  },
+  {
+    "name": "Carne picada magra 5%",
+    "category": "proteína",
+    "calories_per_100g": 125,
+    "protein_per_100g": 21.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 5.0,
+    "source_id": "boeuf-hache-5"
+  },
+  {
+    "name": "Leche semidescremada",
+    "category": "otro",
+    "calories_per_100g": 47,
+    "protein_per_100g": 3.2,
+    "carbs_per_100g": 4.8,
+    "fat_per_100g": 1.6,
+    "source_id": "lait-demi-ecreme"
+  },
+  {
+    "name": "Queso blanco descremado",
+    "category": "lácteo",
+    "calories_per_100g": 48,
+    "protein_per_100g": 7.5,
+    "carbs_per_100g": 4.3,
+    "fat_per_100g": 0.2,
+    "source_id": "fromage-blanc-0"
+  },
+  {
+    "name": "Manteca de maní",
+    "category": "lácteo",
+    "calories_per_100g": 588,
+    "protein_per_100g": 25.0,
+    "carbs_per_100g": 12.0,
+    "fat_per_100g": 50.0,
+    "source_id": "beurre-de-cacahuete"
+  },
+  {
+    "name": "Pepino",
+    "category": "verdura",
+    "calories_per_100g": 15,
+    "protein_per_100g": 0.6,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 0.1,
+    "source_id": "concombre"
+  },
+  {
+    "name": "Kétchup",
+    "category": "otro",
+    "calories_per_100g": 100,
+    "protein_per_100g": 1.2,
+    "carbs_per_100g": 24.0,
+    "fat_per_100g": 0.2,
+    "source_id": "ketchup"
+  },
+  {
+    "name": "Mayonesa",
+    "category": "otro",
+    "calories_per_100g": 680,
+    "protein_per_100g": 1.1,
+    "carbs_per_100g": 1.5,
+    "fat_per_100g": 75.0,
+    "source_id": "mayonnaise"
+  },
+  {
+    "name": "Chocolate amargo 70%",
+    "category": "otro",
+    "calories_per_100g": 598,
+    "protein_per_100g": 9.0,
+    "carbs_per_100g": 33.0,
+    "fat_per_100g": 42.0,
+    "source_id": "chocolat-noir-70"
+  },
+  {
+    "name": "Jugo de naranja",
+    "category": "otro",
+    "calories_per_100g": 45,
+    "protein_per_100g": 0.7,
+    "carbs_per_100g": 10.0,
+    "fat_per_100g": 0.2,
+    "source_id": "jus-d-orange"
+  },
+  {
+    "name": "Frambuesa",
+    "category": "fruta",
+    "calories_per_100g": 52,
+    "protein_per_100g": 1.2,
+    "carbs_per_100g": 5.0,
+    "fat_per_100g": 0.7,
+    "source_id": "framboise"
+  },
+  {
+    "name": "Arándanos",
+    "category": "fruta",
+    "calories_per_100g": 57,
+    "protein_per_100g": 0.7,
+    "carbs_per_100g": 12.0,
+    "fat_per_100g": 0.3,
+    "source_id": "myrtille"
+  },
+  {
+    "name": "Durazno",
+    "category": "fruta",
+    "calories_per_100g": 39,
+    "protein_per_100g": 0.9,
+    "carbs_per_100g": 9.0,
+    "fat_per_100g": 0.2,
+    "source_id": "peche"
+  },
+  {
+    "name": "Damasco",
+    "category": "fruta",
+    "calories_per_100g": 48,
+    "protein_per_100g": 0.9,
+    "carbs_per_100g": 9.0,
+    "fat_per_100g": 0.2,
+    "source_id": "abricot"
+  },
+  {
+    "name": "Ciruela",
+    "category": "fruta",
+    "calories_per_100g": 46,
+    "protein_per_100g": 0.7,
+    "carbs_per_100g": 10.0,
+    "fat_per_100g": 0.3,
+    "source_id": "prune"
+  },
+  {
+    "name": "Cereza",
+    "category": "fruta",
+    "calories_per_100g": 50,
+    "protein_per_100g": 1.0,
+    "carbs_per_100g": 13.0,
+    "fat_per_100g": 0.3,
+    "source_id": "cerise"
+  },
+  {
+    "name": "Ananá",
+    "category": "fruta",
+    "calories_per_100g": 50,
+    "protein_per_100g": 0.5,
+    "carbs_per_100g": 11.0,
+    "fat_per_100g": 0.1,
+    "source_id": "ananas"
+  },
+  {
+    "name": "Mango",
+    "category": "fruta",
+    "calories_per_100g": 60,
+    "protein_per_100g": 0.8,
+    "carbs_per_100g": 14.0,
+    "fat_per_100g": 0.4,
+    "source_id": "mangue"
+  },
+  {
+    "name": "Kiwi",
+    "category": "fruta",
+    "calories_per_100g": 61,
+    "protein_per_100g": 1.1,
+    "carbs_per_100g": 10.0,
+    "fat_per_100g": 0.5,
+    "source_id": "kiwi"
+  },
+  {
+    "name": "Melón",
+    "category": "fruta",
+    "calories_per_100g": 34,
+    "protein_per_100g": 0.8,
+    "carbs_per_100g": 8.0,
+    "fat_per_100g": 0.2,
+    "source_id": "melon"
+  },
+  {
+    "name": "Sandía",
+    "category": "fruta",
+    "calories_per_100g": 30,
+    "protein_per_100g": 0.6,
+    "carbs_per_100g": 7.5,
+    "fat_per_100g": 0.2,
+    "source_id": "pasteque"
+  },
+  {
+    "name": "Pera",
+    "category": "fruta",
+    "calories_per_100g": 57,
+    "protein_per_100g": 0.4,
+    "carbs_per_100g": 12.0,
+    "fat_per_100g": 0.1,
+    "source_id": "poire"
+  },
+  {
+    "name": "Limón",
+    "category": "fruta",
+    "calories_per_100g": 29,
+    "protein_per_100g": 1.1,
+    "carbs_per_100g": 3.0,
+    "fat_per_100g": 0.3,
+    "source_id": "citron"
+  },
+  {
+    "name": "Pomelo",
+    "category": "fruta",
+    "calories_per_100g": 42,
+    "protein_per_100g": 0.8,
+    "carbs_per_100g": 8.0,
+    "fat_per_100g": 0.1,
+    "source_id": "pamplemousse"
+  },
+  {
+    "name": "Uva",
+    "category": "fruta",
+    "calories_per_100g": 69,
+    "protein_per_100g": 0.6,
+    "carbs_per_100g": 16.0,
+    "fat_per_100g": 0.2,
+    "source_id": "raisin"
+  },
+  {
+    "name": "Zapallito",
+    "category": "verdura",
+    "calories_per_100g": 17,
+    "protein_per_100g": 1.2,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 0.3,
+    "source_id": "courgette"
+  },
+  {
+    "name": "Berenjena",
+    "category": "verdura",
+    "calories_per_100g": 25,
+    "protein_per_100g": 1.0,
+    "carbs_per_100g": 3.0,
+    "fat_per_100g": 0.2,
+    "source_id": "aubergine"
+  },
+  {
+    "name": "Morrón rojo",
+    "category": "verdura",
+    "calories_per_100g": 31,
+    "protein_per_100g": 1.0,
+    "carbs_per_100g": 5.0,
+    "fat_per_100g": 0.3,
+    "source_id": "poivron-rouge"
+  },
+  {
+    "name": "Coliflor",
+    "category": "verdura",
+    "calories_per_100g": 25,
+    "protein_per_100g": 2.0,
+    "carbs_per_100g": 3.0,
+    "fat_per_100g": 0.3,
+    "source_id": "chou-fleur"
+  },
+  {
+    "name": "Ajo",
+    "category": "verdura",
+    "calories_per_100g": 149,
+    "protein_per_100g": 6.0,
+    "carbs_per_100g": 28.0,
+    "fat_per_100g": 0.5,
+    "source_id": "ail"
+  },
+  {
+    "name": "Puerro",
+    "category": "fruta",
+    "calories_per_100g": 61,
+    "protein_per_100g": 1.5,
+    "carbs_per_100g": 4.5,
+    "fat_per_100g": 0.3,
+    "source_id": "poireau"
+  },
+  {
+    "name": "Champiñón",
+    "category": "verdura",
+    "calories_per_100g": 22,
+    "protein_per_100g": 2.5,
+    "carbs_per_100g": 1.0,
+    "fat_per_100g": 0.3,
+    "source_id": "champignon-de-paris"
+  },
+  {
+    "name": "Rabanito",
+    "category": "verdura",
+    "calories_per_100g": 16,
+    "protein_per_100g": 0.7,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 0.1,
+    "source_id": "radis"
+  },
+  {
+    "name": "Remolacha",
+    "category": "verdura",
+    "calories_per_100g": 43,
+    "protein_per_100g": 1.6,
+    "carbs_per_100g": 7.0,
+    "fat_per_100g": 0.2,
+    "source_id": "betterave"
+  },
+  {
+    "name": "Apio",
+    "category": "verdura",
+    "calories_per_100g": 16,
+    "protein_per_100g": 0.7,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 0.2,
+    "source_id": "celeri"
+  },
+  {
+    "name": "Chuleta de cerdo",
+    "category": "proteína",
+    "calories_per_100g": 231,
+    "protein_per_100g": 22.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 9.0,
+    "source_id": "cote-de-porc"
+  },
+  {
+    "name": "Chorizo",
+    "category": "proteína",
+    "calories_per_100g": 455,
+    "protein_per_100g": 24.0,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 30.0,
+    "source_id": "chorizo"
+  },
+  {
+    "name": "Muslo de pollo",
+    "category": "proteína",
+    "calories_per_100g": 177,
+    "protein_per_100g": 19.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 9.0,
+    "source_id": "cuisse-de-poulet"
+  },
+  {
+    "name": "Bife ancho",
+    "category": "proteína",
+    "calories_per_100g": 291,
+    "protein_per_100g": 26.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 12.0,
+    "source_id": "entrecote"
+  },
+  {
+    "name": "Trucha",
+    "category": "proteína",
+    "calories_per_100g": 148,
+    "protein_per_100g": 20.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 6.0,
+    "source_id": "truite"
+  },
+  {
+    "name": "Camarón",
+    "category": "proteína",
+    "calories_per_100g": 99,
+    "protein_per_100g": 20.0,
+    "carbs_per_100g": 0.0,
+    "fat_per_100g": 1.0,
+    "source_id": "crevette"
+  },
+  {
+    "name": "Mejillón",
+    "category": "proteína",
+    "calories_per_100g": 86,
+    "protein_per_100g": 18.0,
+    "carbs_per_100g": 3.0,
+    "fat_per_100g": 2.5,
+    "source_id": "moule"
+  },
+  {
+    "name": "Ostra",
+    "category": "proteína",
+    "calories_per_100g": 68,
+    "protein_per_100g": 9.0,
+    "carbs_per_100g": 4.0,
+    "fat_per_100g": 2.0,
+    "source_id": "huitre"
+  },
+  {
+    "name": "Queso cheddar",
+    "category": "lácteo",
+    "calories_per_100g": 402,
+    "protein_per_100g": 25.0,
+    "carbs_per_100g": 1.3,
+    "fat_per_100g": 33.0,
+    "source_id": "cheddar"
+  },
+  {
+    "name": "Queso mozzarella",
+    "category": "lácteo",
+    "calories_per_100g": 280,
+    "protein_per_100g": 18.0,
+    "carbs_per_100g": 2.2,
+    "fat_per_100g": 20.0,
+    "source_id": "mozzarella"
+  },
+  {
+    "name": "Queso parmesano",
+    "category": "lácteo",
+    "calories_per_100g": 431,
+    "protein_per_100g": 36.0,
+    "carbs_per_100g": 1.0,
+    "fat_per_100g": 28.0,
+    "source_id": "parmesan"
+  },
+  {
+    "name": "Queso brie",
+    "category": "lácteo",
+    "calories_per_100g": 334,
+    "protein_per_100g": 19.0,
+    "carbs_per_100g": 1.0,
+    "fat_per_100g": 25.0,
+    "source_id": "brie"
+  },
+  {
+    "name": "Queso camembert",
+    "category": "lácteo",
+    "calories_per_100g": 300,
+    "protein_per_100g": 20.0,
+    "carbs_per_100g": 1.0,
+    "fat_per_100g": 22.0,
+    "source_id": "camembert"
+  },
+  {
+    "name": "Queso roquefort",
+    "category": "otro",
+    "calories_per_100g": 369,
+    "protein_per_100g": 19.0,
+    "carbs_per_100g": 2.0,
+    "fat_per_100g": 31.0,
+    "source_id": "roquefort"
+  },
+  {
+    "name": "Queso feta",
+    "category": "lácteo",
+    "calories_per_100g": 264,
+    "protein_per_100g": 14.0,
+    "carbs_per_100g": 1.5,
+    "fat_per_100g": 21.0,
+    "source_id": "feta"
+  },
+  {
+    "name": "Queso emmental",
+    "category": "otro",
+    "calories_per_100g": 380,
+    "protein_per_100g": 28.0,
+    "carbs_per_100g": 1.0,
+    "fat_per_100g": 28.0,
+    "source_id": "emmental"
+  },
+  {
+    "name": "Skyr",
+    "category": "lácteo",
+    "calories_per_100g": 57,
+    "protein_per_100g": 11.0,
+    "carbs_per_100g": 4.0,
+    "fat_per_100g": 0.2,
+    "source_id": "skyr"
+  },
+  {
+    "name": "Castañas de cajú",
+    "category": "grasa",
+    "calories_per_100g": 553,
+    "protein_per_100g": 18.0,
+    "carbs_per_100g": 27.0,
+    "fat_per_100g": 44.0,
+    "source_id": "noix-de-cajou"
+  },
+  {
+    "name": "Mostaza",
+    "category": "otro",
+    "calories_per_100g": 66,
+    "protein_per_100g": 6.0,
+    "carbs_per_100g": 4.0,
+    "fat_per_100g": 9.0,
+    "source_id": "moutarde"
+  },
+  {
+    "name": "Higo",
+    "category": "fruta",
+    "calories_per_100g": 74,
+    "protein_per_100g": 0.8,
+    "carbs_per_100g": 12.5,
+    "fat_per_100g": 0.3,
+    "source_id": "figue"
+  }
+]

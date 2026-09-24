@@ -47,5 +47,16 @@ class GlobalCatalogSeeder extends Seeder
                 ['muscle_group' => $ex['muscle_group'], 'created_by_id' => null]
             );
         }
+
+        // Los nombres y descripciones están versionados con la app. No se importan
+        // GIF externos: sus derechos de uso deben verificarse por separado.
+        $path = database_path('data/exercises_import.json');
+        $catalog = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        foreach ($catalog as $item) {
+            Exercise::updateOrCreate(
+                ['title' => $item['title'], 'is_global' => true, 'gym_id' => null],
+                ['muscle_group' => $item['muscle_group'], 'description' => $item['description'], 'created_by_id' => null]
+            );
+        }
     }
 }
