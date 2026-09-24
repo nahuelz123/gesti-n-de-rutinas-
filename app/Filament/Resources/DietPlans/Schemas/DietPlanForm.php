@@ -65,6 +65,7 @@ class DietPlanForm
                 ->schema([
                     Repeater::make('days')
                         ->relationship('days')
+                        ->defaultItems(0)
                         ->label('Días de Dieta')
                         ->addActionLabel('+ Agregar día')
                         ->collapsible()
@@ -94,6 +95,7 @@ class DietPlanForm
 
                             Repeater::make('recipes')
                                 ->relationship('recipes')
+                                ->defaultItems(0)
                                 ->label('Recetas')
                                 ->addActionLabel('+ Agregar receta')
                                 ->collapsible()
