@@ -61,7 +61,7 @@ class FoodItemSeeder extends Seeder
 
         foreach ($foods as [$name, $category, $kcal, $protein, $carbs, $fat]) {
             FoodItem::updateOrCreate(
-                ['name' => $name],
+                ['name' => $name, 'is_global' => true],
                 [
                     'category' => $category,
                     'calories_per_100g' => $kcal,

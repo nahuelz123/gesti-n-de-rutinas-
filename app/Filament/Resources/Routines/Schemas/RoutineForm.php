@@ -44,6 +44,7 @@ class RoutineForm
                 ->schema([
                     Repeater::make('days')
                         ->relationship('days')
+                        ->defaultItems(0)
                         ->label('Días de Entrenamiento')
                         ->addActionLabel('+ Agregar día')
                         ->collapsible()
@@ -58,6 +59,7 @@ class RoutineForm
 
                             Repeater::make('exercises')
                                 ->relationship('exercises')
+                                ->defaultItems(0)
                                 ->label('Ejercicios')
                                 ->addActionLabel('+ Agregar ejercicio')
                                 ->collapsible()

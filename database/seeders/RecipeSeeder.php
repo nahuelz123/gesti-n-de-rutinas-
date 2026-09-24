@@ -13,7 +13,7 @@ class RecipeSeeder extends Seeder
         DB::transaction(function () {
             foreach ($this->recipes() as $item) {
                 $recipe = Recipe::updateOrCreate(
-                    ['title' => $item['title']],
+                    ['title' => $item['title'], 'is_global' => true],
                     [
                         'description' => $item['description'] ?? null,
                         'calories' => $item['calories'],
