@@ -13,6 +13,7 @@ use App\Http\Controllers\Client\NotificationsController;
 use App\Http\Controllers\Client\FreeMealLogController;
 use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\GymJoinController;
+use App\Http\Controllers\RoutinePhotoController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -31,6 +32,11 @@ Route::get('dashboard', function () {
     }
     return redirect('/admin');
 })->middleware(['auth'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/rutinas/desde-foto', [RoutinePhotoController::class, 'show'])->name('routines.photo.show');
+    Route::post('/rutinas/desde-foto', [RoutinePhotoController::class, 'store'])->name('routines.photo.store');
+});
 
 Route::middleware(['auth', 'client', 'no-back'])
     ->prefix('app')

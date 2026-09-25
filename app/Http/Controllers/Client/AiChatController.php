@@ -43,13 +43,16 @@ class AiChatController extends Controller
                 \Illuminate\Support\Facades\RateLimiter::availableIn($keyHr)
             );
             $minutes = ceil($seconds / 60);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Alcanzaste el límite de mensajes. Podés volver a intentar en $minutes minuto(s)."], 429);
+            }
             return back()->withErrors(['message' => "Alcanzaste el límite de mensajes. Podés volver a intentar en $minutes minuto(s)."]);
         }
 
         \Illuminate\Support\Facades\RateLimiter::hit($keyMin, 60);
         \Illuminate\Support\Facades\RateLimiter::hit($keyHr, 3600);
 
-        AiConversation::create([
+        $message = AiConversation::create([
             'user_id' => $user->id,
             'client_id' => null,
             'role' => 'user',
@@ -75,12 +78,21 @@ class AiChatController extends Controller
             $reply = 'Uy, no pude conectarme con el asistente en este momento. Probá de nuevo en un rato.';
         }
 
-        AiConversation::create([
+        $answer = AiConversation::create([
             'user_id' => $user->id,
             'client_id' => null,
             'role' => 'assistant',
             'content' => $reply,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'messages' => [
+                    ['id' => $message->id, 'role' => 'user', 'content' => $message->content],
+                    ['id' => $answer->id, 'role' => 'assistant', 'content' => $answer->content],
+                ],
+            ]);
+        }
 
         return back();
     }
@@ -92,7 +104,7 @@ class AiChatController extends Controller
             ->whereNull('client_id')
             ->delete();
 
-        return back();
+        return $request->expectsJson() ? response()->json(['ok' => true]) : back();
     }
 
     private function buildSystemPrompt($user): string
