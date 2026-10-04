@@ -8,8 +8,9 @@
 
     <div class="chat-box">
         <div class="chat-messages" id="ai-chat-messages">
+            <button type="button" id="ai-chat-load-older" class="link-btn" style="display:block; margin:0 auto 12px;" @if (! $hasOlder) hidden @endif>Ver mensajes anteriores</button>
             @forelse ($history as $m)
-                <div class="chat-bubble-row {{ $m->role === 'user' ? 'mine' : '' }}">
+                <div class="chat-bubble-row {{ $m->role === 'user' ? 'mine' : '' }}" data-message-id="{{ $m->id }}">
                     <div class="chat-bubble">{{ $m->content }}</div>
                 </div>
             @empty
@@ -43,20 +44,52 @@
         const button = form.querySelector('button');
         const error = document.getElementById('ai-chat-error');
         const reset = document.getElementById('ai-chat-reset');
+        const loadOlder = document.getElementById('ai-chat-load-older');
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
         messages.scrollTop = messages.scrollHeight;
 
-        function appendMessage(role, content) {
-            messages.querySelector('.empty-text')?.remove();
+        function makeMessage(role, content, id) {
             const row = document.createElement('div');
             row.className = 'chat-bubble-row' + (role === 'user' ? ' mine' : '');
+            row.dataset.messageId = id;
             const bubble = document.createElement('div');
             bubble.className = 'chat-bubble';
             bubble.textContent = content;
             row.appendChild(bubble);
-            messages.appendChild(row);
+            return row;
+        }
+
+        function appendMessage(role, content, id) {
+            messages.querySelector('.empty-text')?.remove();
+            messages.appendChild(makeMessage(role, content, id));
             messages.scrollTop = messages.scrollHeight;
         }
+
+        loadOlder.addEventListener('click', async () => {
+            const firstMessage = messages.querySelector('[data-message-id]');
+            if (!firstMessage || loadOlder.disabled) return;
+            loadOlder.disabled = true;
+            error.hidden = true;
+            const previousHeight = messages.scrollHeight;
+            try {
+                const url = new URL(@json(route('client.ai-chat.history')), window.location.origin);
+                url.searchParams.set('before_id', firstMessage.dataset.messageId);
+                const response = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'No se pudieron cargar los mensajes anteriores.');
+                const fragment = document.createDocumentFragment();
+                for (const message of data.messages) fragment.appendChild(makeMessage(message.role, message.content, message.id));
+                messages.querySelector('.empty-text')?.remove();
+                messages.insertBefore(fragment, messages.firstChild === loadOlder ? loadOlder.nextSibling : messages.firstChild);
+                messages.scrollTop += messages.scrollHeight - previousHeight;
+                loadOlder.hidden = !data.has_older;
+            } catch (e) {
+                error.textContent = e.message;
+                error.hidden = false;
+            } finally {
+                loadOlder.disabled = false;
+            }
+        });
 
         async function post(url, payload) {
             const response = await fetch(url, {
@@ -81,7 +114,7 @@
             button.textContent = 'Pensando…';
             try {
                 const data = await post(form.action, { message: text });
-                for (const message of data.messages) appendMessage(message.role, message.content);
+                for (const message of data.messages) appendMessage(message.role, message.content, message.id);
                 input.value = '';
                 reset.hidden = false;
             } catch (e) {
@@ -100,6 +133,7 @@
             try {
                 await post(reset.action, {});
                 messages.replaceChildren();
+                loadOlder.hidden = true;
                 reset.hidden = true;
                 error.hidden = true;
             } catch (e) {
