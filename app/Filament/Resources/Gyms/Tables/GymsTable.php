@@ -18,7 +18,7 @@ class GymsTable
             ->columns([
                 ImageColumn::make('logo')
                     ->label('Logo')
-                    ->disk('public')
+                    ->disk(config('filesystems.gym_logo_disk', 'public'))
                     ->circular()
                     ->defaultImageUrl(asset('images/visionfit-icon.svg')),
 
