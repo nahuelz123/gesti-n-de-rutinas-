@@ -102,6 +102,10 @@
     </main>
 
     <x-client.bottom-nav />
+    <footer style="padding:12px 16px 90px; text-align:center;">
+        @include('partials.legal-links')
+    </footer>
+    @include('partials.cookie-notice')
 
 </body>
 </html>
