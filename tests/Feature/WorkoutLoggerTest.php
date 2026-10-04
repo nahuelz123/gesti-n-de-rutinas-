@@ -106,6 +106,73 @@ class WorkoutLoggerTest extends TestCase
         ]);
     }
 
+    public function test_client_cannot_log_zero_or_negative_weight(): void
+    {
+        $this->actingAs($this->client);
+
+        foreach ([-5, 0] as $weight) {
+            Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+                ->call('selectDay', $this->day->id)
+                ->set('inputs.1.weight', $weight)
+                ->set('inputs.1.reps', 10)
+                ->call('logSet', 1)
+                ->assertHasErrors(['inputs.1.weight']);
+        }
+
+        $this->assertDatabaseCount('exercise_logs', 0);
+    }
+
+    public function test_client_can_leave_set_weight_empty(): void
+    {
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', '')
+            ->set('inputs.1.reps', 10)
+            ->call('logSet', 1)
+            ->assertHasNoErrors()
+            ->assertDispatched('set-logged');
+
+        $this->assertDatabaseHas('exercise_logs', [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => null,
+        ]);
+    }
+
+    public function test_http_set_endpoints_reject_zero_and_negative_weight(): void
+    {
+        $this->actingAs($this->client);
+
+        $this->post(route('client.logs.store'), [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => -2.5,
+            'reps' => 10,
+        ])->assertSessionHasErrors('weight');
+
+        $log = ExerciseLog::create([
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => 40,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $this->put(route('client.logs.update', $log), [
+            'set_number' => 1,
+            'weight' => 0,
+            'reps' => 10,
+        ])->assertSessionHasErrors('weight');
+
+        $this->assertSame('40.00', $log->fresh()->weight);
+        $this->assertDatabaseCount('exercise_logs', 1);
+    }
+
     public function test_client_cannot_log_set_for_another_clients_assignment()
     {
         $otherClient = User::factory()->create(['gym_id' => $this->gym->id]);
@@ -228,4 +295,3 @@ class WorkoutLoggerTest extends TestCase
             ->assertForbidden();
     }
 }
-
