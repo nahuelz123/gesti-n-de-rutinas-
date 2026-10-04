@@ -112,8 +112,13 @@ class WorkoutLogger extends Component
 
     public function decreaseWeight($setNumber)
     {
-        $val = (float)($this->inputs[$setNumber]['weight'] ?? 0);
-        $this->inputs[$setNumber]['weight'] = max(0, $val - 2.5);
+        $raw = $this->inputs[$setNumber]['weight'] ?? '';
+        if ($raw === '') {
+            return;
+        }
+
+        $val = (float) $raw;
+        $this->inputs[$setNumber]['weight'] = max(0.1, $val - 2.5);
     }
 
     public function increaseReps($setNumber)
@@ -137,7 +142,18 @@ class WorkoutLogger extends Component
             return;
         }
 
-        $weight = isset($this->inputs[$setNumber]['weight']) && $this->inputs[$setNumber]['weight'] !== '' ? (float)$this->inputs[$setNumber]['weight'] : null;
+        if (($this->inputs[$setNumber]['weight'] ?? null) === '') {
+            $this->inputs[$setNumber]['weight'] = null;
+        }
+
+        $validated = $this->validate([
+            "inputs.{$setNumber}.weight" => ['nullable', 'numeric', 'gt:0', 'max:9999.99'],
+        ], [
+            "inputs.{$setNumber}.weight.gt" => 'El peso debe ser mayor que cero o dejarse vacío.',
+            "inputs.{$setNumber}.weight.max" => 'El peso supera el máximo admitido.',
+        ]);
+
+        $weight = isset($validated['inputs'][$setNumber]['weight']) && $validated['inputs'][$setNumber]['weight'] !== '' ? (float)$validated['inputs'][$setNumber]['weight'] : null;
         $reps = isset($this->inputs[$setNumber]['reps']) && $this->inputs[$setNumber]['reps'] !== '' ? (int)$this->inputs[$setNumber]['reps'] : null;
 
         // 1) Solo dueÃ±o del assignment
@@ -235,4 +251,3 @@ class WorkoutLogger extends Component
         return view('livewire.client.workout-logger');
     }
 }
-
