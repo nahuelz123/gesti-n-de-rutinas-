@@ -1,6 +1,6 @@
 <nav class="client-bottom-nav">
     @php
-        $currentRoute = request()->route()->getName();
+        $currentRoute = request()->route()?->getName() ?? '';
     @endphp
 
     <a href="{{ route('client.dashboard') }}" class="bottom-nav-item {{ $currentRoute === 'client.dashboard' ? 'active' : '' }}" aria-label="Inicio">
