@@ -70,6 +70,7 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
 
         Route::get('/ai-chat', [AiChatController::class, 'index'])->name('ai-chat.index');
+        Route::get('/ai-chat/history', [AiChatController::class, 'history'])->name('ai-chat.history');
         Route::post('/ai-chat/send', [AiChatController::class, 'send'])->name('ai-chat.send');
         Route::post('/ai-chat/reset', [AiChatController::class, 'reset'])->name('ai-chat.reset');
 
