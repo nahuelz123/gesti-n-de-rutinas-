@@ -236,7 +236,7 @@
                                         <div class="set-control-label">Peso (kg)</div>
                                         <div class="stepper">
                                             <button class="stepper-btn" wire:click="decreaseWeight({{ $i }})">−</button>
-                                            <input type="text" inputmode="decimal" class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="0">
+                                            <input type="number" inputmode="decimal" min="0.01" max="9999.99" step="0.1" class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="Dejar vacío">
                                             <button class="stepper-btn" wire:click="increaseWeight({{ $i }})">+</button>
                                         </div>
                                     </div>
@@ -251,6 +251,7 @@
                                 </div>
                                 
                                 <div>
+                                    @error('inputs.' . $i . '.weight') <span style="color:var(--clr-primary); font-size:12px; display:block; margin-bottom:8px;">{{ $message }}</span> @enderror
                                     @error('set_' . $i) <span style="color:var(--clr-primary); font-size:12px; display:block; margin-bottom:8px;">{{ $message }}</span> @enderror
                                     <button wire:click="logSet({{ $i }})" class="client-btn {{ $isCompleted ? 'client-btn-secondary' : 'client-btn-primary' }}" style="width:100%; min-height:44px; font-size:14px;">
                                         @if($isCompleted)

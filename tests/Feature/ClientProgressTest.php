@@ -41,6 +41,42 @@ class ClientProgressTest extends TestCase
         $response->assertSee('no hay registros para este ejercicio');
     }
 
+    public function test_client_cannot_save_zero_or_negative_body_measurements(): void
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+        $this->actingAs($client);
+
+        foreach (['weight', 'waist', 'chest', 'hip', 'arm', 'thigh', 'neck'] as $field) {
+            foreach ([-3.4, 0] as $value) {
+                $this->post(route('client.progress.store'), [
+                    'measured_at' => today()->toDateString(),
+                    $field => $value,
+                ])->assertSessionHasErrors($field);
+            }
+        }
+
+        $this->assertDatabaseCount('body_measurements', 0);
+    }
+
+    public function test_client_can_leave_body_measurement_values_empty(): void
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+
+        $this->actingAs($client)
+            ->post(route('client.progress.store'), [
+                'measured_at' => today()->toDateString(),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('body_measurements', [
+            'client_id' => $client->id,
+            'weight' => null,
+            'waist' => null,
+        ]);
+    }
+
     public function test_client_cannot_see_other_clients_progress()
     {
         $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);

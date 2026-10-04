@@ -127,9 +127,17 @@
                     'weight' => 'Peso (kg)', 'waist' => 'Cintura (cm)', 'chest' => 'Pecho/busto (cm)',
                     'hip' => 'Cadera (cm)', 'arm' => 'Brazo (cm)', 'thigh' => 'Muslo (cm)', 'neck' => 'Cuello (cm)',
                 ] as $field => $label)
+                    @php
+                        [$min, $max] = match ($field) {
+                            'weight' => [20, 400],
+                            'waist', 'chest', 'hip' => [20, 250],
+                            'arm', 'neck' => [10, 100],
+                            'thigh' => [10, 150],
+                        };
+                    @endphp
                     <div>
                         <label style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#666; display:block; margin-bottom:6px;">{{ $label }}</label>
-                        <input type="number" name="{{ $field }}" step="0.1" class="chat-input" style="width:100%;">
+                        <input type="number" name="{{ $field }}" step="0.1" min="{{ $min }}" max="{{ $max }}" class="chat-input" style="width:100%;">
                     </div>
                 @endforeach
 
