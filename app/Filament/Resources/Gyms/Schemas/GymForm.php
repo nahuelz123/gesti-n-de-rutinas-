@@ -30,11 +30,22 @@ class GymForm
                 ->label('Activo')
                 ->default(true),
 
+            TextInput::make('privacy_contact_name')
+                ->label('Contacto de privacidad')
+                ->maxLength(255)
+                ->helperText('Contacto del gimnasio para consultas sobre datos personales.'),
+
+            TextInput::make('privacy_contact_email')
+                ->label('Email de privacidad')
+                ->email()
+                ->maxLength(255)
+                ->helperText('Completalo antes de invitar clientes.'),
+
             FileUpload::make('logo')
                 ->label('Logo del gimnasio')
                 ->image()
                 ->imageEditor()
-                ->disk('public')
+                ->disk(config('filesystems.gym_logo_disk', 'public'))
                 ->directory('gym-logos')
                 ->visibility('public')
                 ->maxSize(2048)
