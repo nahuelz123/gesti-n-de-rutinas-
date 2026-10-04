@@ -6,6 +6,7 @@ use App\Models\Gym;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -34,22 +35,45 @@ class GymJoinController extends Controller
             'activity_level' => ['nullable', Rule::in(array_keys(User::ACTIVITY_LEVELS))],
             'goals' => ['nullable', 'string', 'max:1000'],
             'medical_notes' => ['nullable', 'string', 'max:1000'],
+            'privacy_accepted' => ['accepted'],
+            'terms_accepted' => ['accepted'],
+            'ai_data_processing_consent' => ['sometimes', 'boolean'],
         ]);
 
         // Por seguridad, el alta por QR SIEMPRE entra como cliente.
         // Si en realidad es un profe, el admin del gimnasio le cambia el
         // rol después desde el panel (Usuarios → editar → Rol: Coach).
-        $user = User::create([
-            'gym_id' => $gym->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => 'client',
-            'age' => $data['age'] ?? null,
-            'activity_level' => $data['activity_level'] ?? null,
-            'goals' => $data['goals'] ?? null,
-            'medical_notes' => $data['medical_notes'] ?? null,
-        ]);
+        $user = DB::transaction(function () use ($gym, $data) {
+            $user = User::create([
+                'gym_id' => $gym->id,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => 'client',
+                'age' => $data['age'] ?? null,
+                'activity_level' => $data['activity_level'] ?? null,
+                'goals' => $data['goals'] ?? null,
+                'medical_notes' => $data['medical_notes'] ?? null,
+            ]);
+
+            foreach (['privacy', 'terms'] as $scope) {
+                $user->consents()->create([
+                    'scope' => $scope,
+                    'version' => config('legal.versions.'.$scope),
+                    'granted_at' => now(),
+                ]);
+            }
+
+            if (filter_var($data['ai_data_processing_consent'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                $user->consents()->create([
+                    'scope' => 'ai_data_processing',
+                    'version' => config('legal.versions.ai_data_processing'),
+                    'granted_at' => now(),
+                ]);
+            }
+
+            return $user;
+        });
 
         Auth::login($user);
 
