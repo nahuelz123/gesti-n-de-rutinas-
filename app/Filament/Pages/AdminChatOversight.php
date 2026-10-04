@@ -91,12 +91,13 @@ class AdminChatOversight extends Page
 
         [$idA, $idB] = explode('-', $this->selectedKey);
         $user = Auth::user();
+        $limit = min(max($this->threadLimit, 100), 2000);
 
         return Message::query()
             ->betweenUsers((int) $idA, (int) $idB)
             ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
             ->orderByDesc('id')
-            ->limit($this->threadLimit)
+            ->limit($limit)
             ->get()
             ->reverse()
             ->values();
