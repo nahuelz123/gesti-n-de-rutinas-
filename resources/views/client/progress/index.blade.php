@@ -137,7 +137,7 @@
                     @endphp
                     <div>
                         <label style="font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:#666; display:block; margin-bottom:6px;">{{ $label }}</label>
-                        <input type="number" name="{{ $field }}" step="0.1" min="{{ $min }}" max="{{ $max }}" class="chat-input" style="width:100%;">
+                        <input type="number" name="{{ $field }}" step="0.1" min="{{ $min }}" max="{{ $max }}" @if($field === 'weight') required @endif class="chat-input" style="width:100%;">
                     </div>
                 @endforeach
 
