@@ -30,11 +30,38 @@ class AccountController extends Controller
             'activity_level' => ['nullable', Rule::in(array_keys(User::ACTIVITY_LEVELS))],
             'goals' => ['nullable', 'string', 'max:1000'],
             'medical_notes' => ['nullable', 'string', 'max:1000'],
+            'ai_data_processing_consent' => ['sometimes', 'boolean'],
         ]);
+
+        $aiConsentWasSubmitted = array_key_exists('ai_data_processing_consent', $data);
+        $aiConsent = $aiConsentWasSubmitted
+            ? (bool) $data['ai_data_processing_consent']
+            : $user->hasActiveConsent('ai_data_processing');
+        unset($data['ai_data_processing_consent']);
 
         $user->update($data);
 
-        return back()->with('success', 'Datos actualizados. Tu coach ya puede verlos.');
+        if ($aiConsentWasSubmitted && $aiConsent) {
+            if (! $user->hasActiveConsent('ai_data_processing')) {
+                $user->consents()
+                    ->where('scope', 'ai_data_processing')
+                    ->whereNull('revoked_at')
+                    ->update(['revoked_at' => now()]);
+
+                $user->consents()->create([
+                    'scope' => 'ai_data_processing',
+                    'version' => config('legal.versions.ai_data_processing'),
+                    'granted_at' => now(),
+                ]);
+            }
+        } elseif ($aiConsentWasSubmitted) {
+            $user->consents()
+                ->where('scope', 'ai_data_processing')
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
+        }
+
+        return back()->with('success', 'Datos actualizados.');
     }
 
     public function updatePassword(Request $request)
