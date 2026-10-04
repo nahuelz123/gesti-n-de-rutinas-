@@ -35,7 +35,6 @@ class RecipesRelationManager extends RelationManager
                     })
                 )
                 ->searchable()
-                ->preload()
                 ->required(),
 
             Select::make('meal_type')
