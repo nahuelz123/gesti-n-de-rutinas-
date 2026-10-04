@@ -18,10 +18,44 @@ class AiChatController extends Controller
         $history = AiConversation::query()
             ->where('user_id', $request->user()->id)
             ->whereNull('client_id')
-            ->orderBy('id')
+            ->orderByDesc('id')
+            ->limit(101)
             ->get();
 
-        return view('client.ai-chat', ['history' => $history]);
+        $hasOlder = $history->count() > 100;
+        $history = $history->take(100)->reverse()->values();
+
+        return view('client.ai-chat', [
+            'history' => $history,
+            'hasOlder' => $hasOlder,
+        ]);
+    }
+
+    public function history(Request $request)
+    {
+        $data = $request->validate([
+            'before_id' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $messages = AiConversation::query()
+            ->where('user_id', $request->user()->id)
+            ->whereNull('client_id')
+            ->where('id', '<', $data['before_id'])
+            ->orderByDesc('id')
+            ->limit(101)
+            ->get();
+
+        $hasOlder = $messages->count() > 100;
+        $messages = $messages->take(100)->reverse()->values();
+
+        return response()->json([
+            'messages' => $messages->map(fn (AiConversation $message) => [
+                'id' => $message->id,
+                'role' => $message->role,
+                'content' => $message->content,
+            ]),
+            'has_older' => $hasOlder,
+        ]);
     }
 
     public function send(Request $request, DeepSeekClient $deepSeek)
