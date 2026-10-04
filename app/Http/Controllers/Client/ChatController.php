@@ -18,8 +18,11 @@ class ChatController extends Controller
         if ($coach) {
             $messages = Message::query()
                 ->betweenUsers($user->id, $coach->id)
-                ->orderBy('id')
-                ->get();
+                ->orderByDesc('id')
+                ->limit(100)
+                ->get()
+                ->reverse()
+                ->values();
 
             Message::query()
                 ->where('recipient_id', $user->id)
@@ -49,6 +52,7 @@ class ChatController extends Controller
             ->betweenUsers($user->id, $coach->id)
             ->where('id', '>', $afterId)
             ->orderBy('id')
+            ->limit(100)
             ->get();
 
         Message::query()
