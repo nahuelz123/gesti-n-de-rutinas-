@@ -69,4 +69,33 @@ class ChatPerformanceTest extends TestCase
         $this->assertSame('Último', $conversations->first()['last_message']);
         $this->assertSame(3, $conversations->first()['count']);
     }
+
+    public function test_client_chat_can_page_older_messages(): void
+    {
+        $gym = Gym::create(['name' => 'Gym']);
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
+        $client = User::factory()->create(['role' => 'client', 'gym_id' => $gym->id]);
+
+        foreach (range(1, 105) as $number) {
+            Message::create([
+                'gym_id' => $gym->id,
+                'sender_id' => $coach->id,
+                'recipient_id' => $client->id,
+                'body' => "Mensaje {$number}",
+            ]);
+        }
+
+        $this->actingAs($client)
+            ->get(route('client.chat.index'))
+            ->assertOk()
+            ->assertSee('Mensaje 6')
+            ->assertSee('Mensaje 105')
+            ->assertDontSee('Mensaje 5');
+
+        $response = $this->getJson(route('client.chat.fetch', ['before_id' => 6]));
+        $response->assertOk()
+            ->assertJsonPath('messages.0.body', 'Mensaje 1')
+            ->assertJsonPath('messages.4.body', 'Mensaje 5')
+            ->assertJsonPath('has_older', false);
+    }
 }
