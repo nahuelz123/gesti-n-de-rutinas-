@@ -28,6 +28,8 @@ class AiChatController extends Controller
         return view('client.ai-chat', [
             'history' => $history,
             'hasOlder' => $hasOlder,
+            'hasAiConsent' => $request->user()->hasActiveConsent('ai_data_processing'),
+            'aiProviderHost' => parse_url((string) config('services.deepseek.base_url'), PHP_URL_HOST) ?: 'proveedor configurado',
         ]);
     }
 
@@ -62,11 +64,26 @@ class AiChatController extends Controller
     {
         set_time_limit(90);
 
-        $data = $request->validate([
-            'message' => ['required', 'string', 'max:1000'],
+        $user = $request->user();
+        $hasAiConsent = $user->hasActiveConsent('ai_data_processing');
+        $rules = ['message' => ['required', 'string', 'max:1000']];
+
+        if (! $hasAiConsent) {
+            $rules['ai_data_consent'] = ['required', 'accepted'];
+        }
+
+        $data = $request->validate($rules, [
+            'ai_data_consent.required' => 'Autorizá el envío de datos al proveedor de IA para usar este chat.',
+            'ai_data_consent.accepted' => 'Autorizá el envío de datos al proveedor de IA para usar este chat.',
         ]);
 
-        $user = $request->user();
+        if (! $hasAiConsent) {
+            $user->consents()->create([
+                'scope' => 'ai_data_processing',
+                'version' => config('legal.versions.ai_data_processing'),
+                'granted_at' => now(),
+            ]);
+        }
 
         $keyMin = 'ai_client_min_' . $user->id;
         $keyHr = 'ai_client_hr_' . $user->id;
@@ -125,6 +142,7 @@ class AiChatController extends Controller
                     ['id' => $message->id, 'role' => 'user', 'content' => $message->content],
                     ['id' => $answer->id, 'role' => 'assistant', 'content' => $answer->content],
                 ],
+                'ai_consent_saved' => ! $hasAiConsent,
             ]);
         }
 
