@@ -122,7 +122,7 @@ class WorkoutLoggerTest extends TestCase
         $this->assertDatabaseCount('exercise_logs', 0);
     }
 
-    public function test_client_can_leave_set_weight_empty(): void
+    public function test_client_cannot_log_set_without_weight(): void
     {
         $this->actingAs($this->client);
 
@@ -131,15 +131,9 @@ class WorkoutLoggerTest extends TestCase
             ->set('inputs.1.weight', '')
             ->set('inputs.1.reps', 10)
             ->call('logSet', 1)
-            ->assertHasNoErrors()
-            ->assertDispatched('set-logged');
+            ->assertHasErrors(['inputs.1.weight']);
 
-        $this->assertDatabaseHas('exercise_logs', [
-            'assignment_id' => $this->assignment->id,
-            'routine_day_exercise_id' => $this->routineDayExercise->id,
-            'set_number' => 1,
-            'weight' => null,
-        ]);
+        $this->assertDatabaseCount('exercise_logs', 0);
     }
 
     public function test_http_set_endpoints_reject_zero_and_negative_weight(): void
