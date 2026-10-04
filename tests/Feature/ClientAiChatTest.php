@@ -54,16 +54,39 @@ class ClientAiChatTest extends TestCase
         $client = User::factory()->create(['role' => 'client', 'gym_id' => $gym->id]);
         $this->mock(DeepSeekClient::class)->shouldReceive('chat')->once()->andReturn('¡Hola!');
 
-        $this->actingAs($client)->postJson(route('client.ai-chat.send'), ['message' => 'Hola'])
+        $this->actingAs($client)->postJson(route('client.ai-chat.send'), ['message' => 'Hola', 'ai_data_consent' => '1'])
             ->assertOk()
             ->assertJsonPath('messages.0.content', 'Hola')
             ->assertJsonPath('messages.1.content', '¡Hola!');
 
         $this->assertDatabaseCount('ai_conversations', 2);
+        $this->assertDatabaseHas('user_consents', [
+            'user_id' => $client->id,
+            'scope' => 'ai_data_processing',
+            'version' => config('legal.versions.ai_data_processing'),
+            'revoked_at' => null,
+        ]);
 
         $this->actingAs($client)->postJson(route('client.ai-chat.reset'))
             ->assertOk()->assertJsonPath('ok', true);
 
         $this->assertDatabaseCount('ai_conversations', 0);
+    }
+
+    public function test_client_cannot_send_personal_context_to_ai_without_opt_in(): void
+    {
+        $gym = Gym::create(['name' => 'Gym consent']);
+        $client = User::factory()->create(['role' => 'client', 'gym_id' => $gym->id]);
+        $this->mock(DeepSeekClient::class)->shouldNotReceive('chat');
+
+        $this->actingAs($client)->postJson(route('client.ai-chat.send'), ['message' => 'Hola'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ai_data_consent');
+
+        $this->assertDatabaseCount('ai_conversations', 0);
+        $this->assertDatabaseMissing('user_consents', [
+            'user_id' => $client->id,
+            'scope' => 'ai_data_processing',
+        ]);
     }
 }
