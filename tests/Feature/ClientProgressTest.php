@@ -59,7 +59,26 @@ class ClientProgressTest extends TestCase
         $this->assertDatabaseCount('body_measurements', 0);
     }
 
-    public function test_client_can_leave_body_measurement_values_empty(): void
+    public function test_client_must_enter_body_weight_but_can_leave_other_measurements_empty(): void
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+
+        $this->actingAs($client)
+            ->post(route('client.progress.store'), [
+                'measured_at' => today()->toDateString(),
+                'weight' => 82.5,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('body_measurements', [
+            'client_id' => $client->id,
+            'weight' => 82.5,
+            'waist' => null,
+        ]);
+    }
+
+    public function test_client_cannot_save_a_body_measurement_without_weight(): void
     {
         $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
         $client = $this->createClient($gym->id);
@@ -68,13 +87,9 @@ class ClientProgressTest extends TestCase
             ->post(route('client.progress.store'), [
                 'measured_at' => today()->toDateString(),
             ])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('weight');
 
-        $this->assertDatabaseHas('body_measurements', [
-            'client_id' => $client->id,
-            'weight' => null,
-            'waist' => null,
-        ]);
+        $this->assertDatabaseCount('body_measurements', 0);
     }
 
     public function test_client_cannot_see_other_clients_progress()
