@@ -26,6 +26,8 @@ class Chat extends Page
 
     public string $clientSearch = '';
 
+    public int $messagesLimit = 100;
+
     public function mount(): void
     {
         $clients = $this->getClients();
@@ -47,7 +49,7 @@ class Chat extends Page
                 ->orWhere('email', 'like', '%'.$this->clientSearch.'%'));
         }
 
-        return $query->orderBy('name')->get();
+        return $query->orderBy('name')->get(['id', 'name', 'email']);
     }
 
     public function getUnreadCountsProperty(): array
@@ -77,8 +79,11 @@ class Chat extends Page
 
         $messages = Message::query()
             ->betweenUsers($user->id, $validClientId)
-            ->orderBy('id')
-            ->get();
+            ->orderByDesc('id')
+            ->limit($this->messagesLimit)
+            ->get()
+            ->reverse()
+            ->values();
 
         Message::query()
             ->where('recipient_id', $user->id)
@@ -92,6 +97,12 @@ class Chat extends Page
     public function selectClient(int $clientId): void
     {
         $this->selectedClientId = $this->authorizeClientId($clientId);
+        $this->messagesLimit = 100;
+    }
+
+    public function loadOlderMessages(): void
+    {
+        $this->messagesLimit = min($this->messagesLimit + 100, 2000);
     }
 
     public function send(): void
