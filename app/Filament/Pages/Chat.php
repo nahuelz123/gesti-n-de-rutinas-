@@ -76,11 +76,12 @@ class Chat extends Page
         }
 
         $user = Auth::user();
+        $limit = min(max($this->messagesLimit, 100), 2000);
 
         $messages = Message::query()
             ->betweenUsers($user->id, $validClientId)
             ->orderByDesc('id')
-            ->limit($this->messagesLimit)
+            ->limit($limit)
             ->get()
             ->reverse()
             ->values();
