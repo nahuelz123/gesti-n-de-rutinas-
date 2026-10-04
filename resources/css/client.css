@@ -62,6 +62,24 @@ body {
     body { padding-bottom: 0; }
 }
 
+.app-nav-main { display: none; }
+@media (min-width: 768px) {
+    .app-nav-main { display: flex; align-items: center; justify-content: center; gap: 4px; flex: 1; margin: 0 16px; }
+    .app-nav-main-link {
+        padding: 9px 12px; border-radius: 9px; color: var(--clr-text-muted); text-decoration: none;
+        font-size: 13px; font-weight: 600; white-space: nowrap; transition: background .15s, color .15s;
+    }
+    .app-nav-main-link:hover { color: var(--clr-text); background: rgba(255,255,255,.05); }
+    .app-nav-main-link.active { color: var(--clr-text); background: var(--clr-primary-alpha); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .app-nav { padding-left: 12px; padding-right: 12px; }
+    .app-nav-main { gap: 0; margin: 0 6px; }
+    .app-nav-main-link { padding: 8px 7px; font-size: 11px; }
+    .app-nav-right { gap: 8px; }
+    .app-nav-actions { gap: 8px; }
+}
+
 .app-nav-logo {
     font-weight: 900;
     font-size: 16px;
@@ -1417,4 +1435,3 @@ body {
      [x-cloak] { display: none !important; }
 
 }
-

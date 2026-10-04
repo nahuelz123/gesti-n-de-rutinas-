@@ -23,6 +23,13 @@
             @endif
         </a>
 
+        <div class="app-nav-main" aria-label="Navegación principal">
+            <a href="{{ route('client.dashboard') }}" class="app-nav-main-link {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" @if(request()->routeIs('client.dashboard')) aria-current="page" @endif>Inicio</a>
+            <a href="{{ route('client.routines.active') }}" class="app-nav-main-link {{ request()->routeIs('client.routines.*') ? 'active' : '' }}" @if(request()->routeIs('client.routines.*')) aria-current="page" @endif>Rutinas</a>
+            <a href="{{ route('client.nutrition.index') }}" class="app-nav-main-link {{ request()->routeIs('client.nutrition.*') ? 'active' : '' }}" @if(request()->routeIs('client.nutrition.*')) aria-current="page" @endif>Nutrición</a>
+            <a href="{{ route('client.recipes.index') }}" class="app-nav-main-link {{ request()->routeIs('client.recipes.*') ? 'active' : '' }}" @if(request()->routeIs('client.recipes.*')) aria-current="page" @endif>Recetas</a>
+        </div>
+
         <div class="app-nav-actions">
             <div class="app-nav-quick">
                 @php $unread = auth()->user()->unreadNotifications()->count(); @endphp

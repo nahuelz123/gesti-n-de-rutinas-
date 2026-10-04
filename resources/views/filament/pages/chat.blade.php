@@ -66,7 +66,7 @@
         .vfc-msg-input::placeholder { color: #71717a; }
     </style>
 
-    <div wire:poll.4s="$refresh" class="vfc-wrap">
+    <div wire:poll.10s="$refresh" class="vfc-wrap">
 
         {{-- Lista de clientes --}}
         <div class="vfc-sidebar">
@@ -108,6 +108,11 @@
                 <div class="vfc-empty-state">Elegí un cliente para empezar a chatear.</div>
             @else
                 <div class="vfc-messages" id="chat-scroll">
+                    @if ($this->messages->count() >= $messagesLimit && $messagesLimit < 2000)
+                        <button type="button" wire:click="loadOlderMessages" data-load-older class="vfc-msg-input" style="flex:none; cursor:pointer;">
+                            Cargar mensajes anteriores
+                        </button>
+                    @endif
                     @forelse ($this->messages as $message)
                         @php $mine = $message->sender_id === auth()->id(); @endphp
                         <div class="vfc-msg-row {{ $mine ? 'mine' : 'theirs' }}">

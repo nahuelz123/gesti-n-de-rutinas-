@@ -102,6 +102,11 @@
                 </div>
 
                 <div class="vfo-messages" id="admin-chat-scroll">
+                    @if ($this->thread->count() >= $threadLimit && $threadLimit < 2000)
+                        <button type="button" wire:click="loadOlderMessages" data-load-older class="vfo-conv-btn" style="color:#f0f0f0;">
+                            Cargar mensajes anteriores
+                        </button>
+                    @endif
                     @forelse ($this->thread as $message)
                         @php $isStaff = in_array($message->sender->role, ['coach', 'admin', 'super_admin']); @endphp
                         <div class="vfo-msg-row {{ $isStaff ? 'staff' : 'client' }}">

@@ -23,6 +23,8 @@ class AdminChatOversight extends Page
 
     public string $search = '';
 
+    public int $threadLimit = 100;
+
     /**
      * Agrupa todos los mensajes del gym en conversaciones únicas coach↔cliente,
      * ordenadas por el mensaje más reciente.
@@ -31,32 +33,43 @@ class AdminChatOversight extends Page
     {
         $user = Auth::user();
 
-        $messages = Message::query()
+        $personA = 'CASE WHEN sender_id < recipient_id THEN sender_id ELSE recipient_id END';
+        $personB = 'CASE WHEN sender_id < recipient_id THEN recipient_id ELSE sender_id END';
+
+        // Agrupar en SQL evita traer y crear un modelo por cada mensaje del gimnasio.
+        $threads = Message::query()
             ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
-            ->with(['sender', 'recipient'])
-            ->orderByDesc('id')
+            ->selectRaw("{$personA} AS person_a, {$personB} AS person_b, MAX(id) AS latest_message_id, COUNT(*) AS message_count")
+            ->groupByRaw("{$personA}, {$personB}")
+            ->orderByDesc('latest_message_id')
             ->get();
 
-        $conversations = $messages
-            ->groupBy(fn (Message $m) => $this->pairKey($m->sender_id, $m->recipient_id))
-            ->map(function (Collection $group) {
-                $last = $group->first(); // ya viene ordenado desc por id
+        $latestMessages = Message::query()
+            ->with(['sender', 'recipient'])
+            ->whereIn('id', $threads->pluck('latest_message_id'))
+            ->get()
+            ->keyBy('id');
 
-                $isSenderStaff = in_array($last->sender->role, ['coach', 'admin', 'super_admin']);
-                $coach = $isSenderStaff ? $last->sender : $last->recipient;
-                $client = $isSenderStaff ? $last->recipient : $last->sender;
+        $conversations = $threads->map(function ($thread) use ($latestMessages) {
+            $last = $latestMessages->get($thread->latest_message_id);
 
-                return [
-                    'key' => $this->pairKey($last->sender_id, $last->recipient_id),
-                    'coach' => $coach,
-                    'client' => $client,
-                    'last_message' => $last->body,
-                    'last_at' => $last->created_at,
-                    'count' => $group->count(),
-                ];
-            })
-            ->sortByDesc('last_at')
-            ->values();
+            if (! $last || ! $last->sender || ! $last->recipient) {
+                return null;
+            }
+
+            $isSenderStaff = in_array($last->sender->role, ['coach', 'admin', 'super_admin']);
+            $coach = $isSenderStaff ? $last->sender : $last->recipient;
+            $client = $isSenderStaff ? $last->recipient : $last->sender;
+
+            return [
+                'key' => $this->pairKey($last->sender_id, $last->recipient_id),
+                'coach' => $coach,
+                'client' => $client,
+                'last_message' => $last->body,
+                'last_at' => $last->created_at,
+                'count' => (int) $thread->message_count,
+            ];
+        })->filter()->values();
 
         if (trim($this->search) === '') {
             return $conversations;
@@ -77,16 +90,28 @@ class AdminChatOversight extends Page
         }
 
         [$idA, $idB] = explode('-', $this->selectedKey);
+        $user = Auth::user();
+        $limit = min(max($this->threadLimit, 100), 2000);
 
         return Message::query()
             ->betweenUsers((int) $idA, (int) $idB)
-            ->orderBy('id')
-            ->get();
+            ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->reverse()
+            ->values();
     }
 
     public function selectConversation(string $key): void
     {
         $this->selectedKey = $key;
+        $this->threadLimit = 100;
+    }
+
+    public function loadOlderMessages(): void
+    {
+        $this->threadLimit = min($this->threadLimit + 100, 2000);
     }
 
     private function pairKey(int $a, int $b): string
