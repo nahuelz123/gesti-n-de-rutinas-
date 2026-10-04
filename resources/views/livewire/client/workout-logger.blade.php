@@ -236,7 +236,7 @@
                                         <div class="set-control-label">Peso (kg)</div>
                                         <div class="stepper">
                                             <button class="stepper-btn" wire:click="decreaseWeight({{ $i }})">−</button>
-                                            <input type="number" inputmode="decimal" min="0.01" max="9999.99" step="0.1" class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="Dejar vacío">
+                                            <input type="number" inputmode="decimal" min="0.01" max="9999.99" step="0.1" required class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="Peso (kg)">
                                             <button class="stepper-btn" wire:click="increaseWeight({{ $i }})">+</button>
                                         </div>
                                     </div>
