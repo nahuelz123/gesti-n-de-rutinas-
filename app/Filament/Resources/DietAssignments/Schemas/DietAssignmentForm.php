@@ -30,7 +30,6 @@ class DietAssignmentForm
                 ->label('Cliente')
                 ->required()
                 ->searchable()
-                ->preload()
                 ->relationship(
                     'client',
                     'name',
@@ -47,7 +46,6 @@ class DietAssignmentForm
                 ->label('Plan de dieta')
                 ->required()
                 ->searchable()
-                ->preload()
                 ->relationship(
                     'dietPlan',
                     'title',

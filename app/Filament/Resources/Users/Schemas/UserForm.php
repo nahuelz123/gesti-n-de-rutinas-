@@ -25,7 +25,6 @@ class UserForm
             ->label('Gimnasio')
             ->relationship('gym', 'name')
             ->searchable()
-            ->preload()
             ->required()
             : Hidden::make('gym_id')
             ->default(fn() => Auth::user()?->gym_id)

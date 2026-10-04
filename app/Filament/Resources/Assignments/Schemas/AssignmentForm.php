@@ -33,7 +33,6 @@ class AssignmentForm
                 ->label('Cliente')
                 ->required()
                 ->searchable()
-                ->preload()
                 ->relationship(
                     'client',
                     'name',
@@ -50,7 +49,6 @@ class AssignmentForm
                 ->label('Rutina')
                 ->required()
                 ->searchable()
-                ->preload()
                 ->relationship(
                     'routine',
                     'title',

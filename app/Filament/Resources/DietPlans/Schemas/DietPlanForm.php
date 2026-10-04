@@ -131,7 +131,6 @@ class DietPlanForm
                                                 )
                                                 ->getOptionLabelFromRecordUsing(fn (Recipe $record) => ($record->is_global ? '🌐 ' : '🏠 ') . $record->title . ($record->is_global ? ' (Catálogo)' : ' (Mi gym)'))
                                                 ->searchable()
-                                                ->preload()
                                                 ->required(),
                                         ]),
 
