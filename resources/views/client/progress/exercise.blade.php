@@ -104,7 +104,7 @@
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
                                 <label style="font-size:10px;color:var(--clr-text-muted);">Peso (kg)</label>
-                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.5" min="0"
+                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.1" min="0.01" max="9999.99"
                                     style="width:80px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
