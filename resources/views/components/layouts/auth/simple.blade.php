@@ -23,5 +23,7 @@
             </div>
         </div>
         @fluxScripts
+        @include('partials.legal-links')
+        @include('partials.cookie-notice')
     </body>
 </html>
