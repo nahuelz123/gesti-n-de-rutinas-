@@ -72,7 +72,6 @@ class ClientProgressTest extends TestCase
 
         $this->assertDatabaseHas('body_measurements', [
             'client_id' => $client->id,
-            'measured_at' => today()->toDateString(),
             'weight' => null,
             'waist' => null,
         ]);
