@@ -15,6 +15,8 @@ class Gym extends Model
         'plan',
         'active',
         'invite_code',
+        'privacy_contact_name',
+        'privacy_contact_email',
     ];
 
     protected static function booted(): void
@@ -63,7 +65,7 @@ class Gym extends Model
             return $this->logo;
         }
 
-        return Storage::disk('public')->url($this->logo);
+        return Storage::disk(config('filesystems.gym_logo_disk', 'public'))->url($this->logo);
     }
 
     public function users(): HasMany
