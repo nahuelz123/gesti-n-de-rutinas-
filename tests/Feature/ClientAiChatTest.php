@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AiConversation;
 use App\Models\Gym;
 use App\Models\User;
 use App\Services\DeepSeekClient;
