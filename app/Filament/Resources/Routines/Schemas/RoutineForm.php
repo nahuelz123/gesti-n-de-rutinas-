@@ -80,7 +80,6 @@ class RoutineForm
                                         )
                                         ->getOptionLabelFromRecordUsing(fn (Exercise $record) => ($record->is_global ? '🌐 ' : '🏠 ') . $record->title . ($record->is_global ? ' (Catálogo)' : ' (Mi gym)'))
                                         ->searchable()
-                                        ->preload()
                                         ->required()
                                         ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
 
