@@ -85,12 +85,13 @@ class ChatPerformanceTest extends TestCase
             ]);
         }
 
-        $this->actingAs($client)
+        $page = $this->actingAs($client)
             ->get(route('client.chat.index'))
             ->assertOk()
             ->assertSee('Mensaje 6')
-            ->assertSee('Mensaje 105')
-            ->assertDontSee('Mensaje 5');
+            ->assertSee('Mensaje 105');
+
+        $this->assertSame(100, preg_match_all('/class="chat-bubble-row/', $page->getContent()));
 
         $response = $this->getJson(route('client.chat.fetch', ['before_id' => 6]));
         $response->assertOk()
