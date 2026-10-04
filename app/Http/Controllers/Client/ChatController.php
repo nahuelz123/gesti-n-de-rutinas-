@@ -48,18 +48,31 @@ class ChatController extends Controller
 
         $afterId = (int) $request->query('after_id', 0);
 
-        $messages = Message::query()
-            ->betweenUsers($user->id, $coach->id)
-            ->where('id', '>', $afterId)
-            ->orderBy('id')
-            ->limit(100)
-            ->get();
+        $query = Message::query()->betweenUsers($user->id, $coach->id);
 
-        Message::query()
-            ->where('recipient_id', $user->id)
-            ->where('sender_id', $coach->id)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+        if ($request->filled('before_id')) {
+            $messages = $query
+                ->where('id', '<', (int) $request->query('before_id'))
+                ->orderByDesc('id')
+                ->limit(100)
+                ->get()
+                ->reverse()
+                ->values();
+        } else {
+            $messages = $query
+                ->where('id', '>', $afterId)
+                ->orderBy('id')
+                ->limit(100)
+                ->get();
+        }
+
+        if (! $request->filled('before_id')) {
+            Message::query()
+                ->where('recipient_id', $user->id)
+                ->where('sender_id', $coach->id)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+        }
 
         return response()->json([
             'messages' => $messages->map(fn (Message $m) => [
@@ -68,6 +81,7 @@ class ChatController extends Controller
                 'mine' => $m->sender_id === $user->id,
                 'time' => $m->created_at->format('H:i'),
             ]),
+            'has_older' => $request->filled('before_id') && $messages->count() === 100,
         ]);
     }
 
