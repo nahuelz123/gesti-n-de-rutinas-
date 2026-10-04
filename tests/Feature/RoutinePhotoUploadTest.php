@@ -37,7 +37,7 @@ class RoutinePhotoUploadTest extends TestCase
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='
         ));
 
-        $this->actingAs($coach)->post(route('routines.photo.store'), ['photo' => $photo])
+        $this->actingAs($coach)->post(route('routines.photo.store'), ['photo' => $photo, 'photo_processing_consent' => '1'])
             ->assertRedirect(RoutineResource::getUrl('create'))
             ->assertSessionHas('routine-photo-draft', fn (array $draft) =>
                 $draft['days'][0]['exercises'][0]['exercise_id'] === $exercise->id
@@ -45,9 +45,31 @@ class RoutinePhotoUploadTest extends TestCase
 
         $this->assertDatabaseCount('routines', 0);
         $this->assertDatabaseCount('assignments', 0);
+        $this->assertDatabaseHas('user_consents', [
+            'user_id' => $coach->id,
+            'scope' => 'routine_photo_upload',
+            'version' => config('legal.versions.routine_photo_upload'),
+        ]);
 
         Livewire::actingAs($coach)->test(CreateRoutine::class)
             ->assertSet('data.title', 'Piernas');
+    }
+
+    public function test_photo_upload_requires_explicit_processing_consent(): void
+    {
+        $gym = Gym::create(['name' => 'Gym foto']);
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
+        $photo = UploadedFile::fake()->createWithContent('rutina.png', base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='
+        ));
+
+        $this->actingAs($coach)->post(route('routines.photo.store'), ['photo' => $photo])
+            ->assertSessionHasErrors('photo_processing_consent');
+
+        $this->assertDatabaseMissing('user_consents', [
+            'user_id' => $coach->id,
+            'scope' => 'routine_photo_upload',
+        ]);
     }
 
     public function test_client_cannot_upload_routines(): void

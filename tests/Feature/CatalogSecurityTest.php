@@ -39,6 +39,20 @@ class CatalogSecurityTest extends TestCase
     }
 
     #[Test]
+    public function ai_client_search_only_returns_clients_with_current_consent()
+    {
+        $allowed = User::factory()->create(['role' => 'client', 'gym_id' => $this->gymA->id, 'name' => 'Cliente Consentido']);
+        $allowed->consents()->create([
+            'scope' => 'ai_data_processing',
+            'version' => config('legal.versions.ai_data_processing'),
+            'granted_at' => now(),
+        ]);
+        User::factory()->create(['role' => 'client', 'gym_id' => $this->gymA->id, 'name' => 'Cliente Sin Permiso']);
+
+        $this->assertSame([$allowed->id], CoachAiTools::findClients('Cliente', $this->coachA)->pluck('id')->all());
+    }
+
+    #[Test]
     public function coach_can_view_global_exercise()
     {
         $this->actingAs($this->coachA);

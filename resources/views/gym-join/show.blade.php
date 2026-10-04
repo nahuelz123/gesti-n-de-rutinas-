@@ -120,6 +120,24 @@
                         <textarea name="medical_notes" rows="2" placeholder="Ej: dolor lumbar, cirugía de rodilla..." style="width:100%; box-sizing:border-box; background:#18181b; border:1px solid rgb(63 63 70); border-radius:8px; padding:9px 10px; color:#fff; font-size:13px; font-family:inherit; resize:vertical;">{{ old('medical_notes') }}</textarea>
                     </div>
 
+                    <div style="border-top:1px solid rgb(63 63 70); padding-top:14px; display:flex; flex-direction:column; gap:12px; font-size:12px; line-height:1.5;">
+                        <label style="display:flex; align-items:flex-start; gap:9px;">
+                            <input type="checkbox" name="privacy_accepted" value="1" required @checked(old('privacy_accepted')) style="margin-top:3px;">
+                            <span>Leí la <a href="{{ route('legal.privacy', ['gym' => $inviteCode]) }}" target="_blank" rel="noopener" style="color:#fbbf24; text-decoration:underline;">política de privacidad</a>.</span>
+                        </label>
+                        <label style="display:flex; align-items:flex-start; gap:9px;">
+                            <input type="checkbox" name="terms_accepted" value="1" required @checked(old('terms_accepted')) style="margin-top:3px;">
+                            <span>Acepto las <a href="{{ route('legal.terms', ['gym' => $inviteCode]) }}" target="_blank" rel="noopener" style="color:#fbbf24; text-decoration:underline;">condiciones del servicio</a>.</span>
+                        </label>
+                        <div>
+                            <input type="hidden" name="ai_data_processing_consent" value="0">
+                            <label style="display:flex; align-items:flex-start; gap:9px;">
+                                <input type="checkbox" name="ai_data_processing_consent" value="1" @checked(old('ai_data_processing_consent')) style="margin-top:3px;">
+                                <span>Opcional: autorizo que mis mensajes y el contexto necesario de mi cuenta se envíen al proveedor de IA para responder en el chat. Puedo retirar este permiso desde Mi cuenta.</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <flux:button type="submit" variant="primary" class="w-full">
                         Crear mi cuenta en {{ $gym->name }}
                     </flux:button>

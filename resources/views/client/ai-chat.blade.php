@@ -6,6 +6,16 @@
     <p class="pg-label">Asistente virtual</p>
     <h1 class="pg-title">Preguntale a VisionFit AI</h1>
 
+    @unless ($hasAiConsent)
+        <div id="ai-consent-note" role="note" style="margin-bottom:14px; padding:13px 15px; border:1px solid #5b4924; border-radius:12px; background:#241d0e; color:#ead9ac; font-size:13px; line-height:1.5;">
+            Para responder, el asistente envía tus mensajes y el contexto necesario de tu perfil, rutina, dieta y progreso a {{ $aiProviderHost }}. Es opcional. Marcá la autorización antes de enviar; podés retirarla desde <a href="{{ route('client.account.edit') }}" style="color:#fbbf24; text-decoration:underline;">Mi cuenta</a>.
+            <label style="display:flex; align-items:flex-start; gap:9px; margin-top:10px; color:#fff;">
+                <input id="ai-data-consent" type="checkbox" value="1" style="margin-top:3px;">
+                <span>Autorizo el uso de IA con mis datos para esta función. <a href="{{ route('legal.privacy', ['gym' => auth()->user()->gym?->invite_code]) }}" style="color:#fbbf24; text-decoration:underline;">Ver privacidad</a>.</span>
+            </label>
+        </div>
+    @endunless
+
     <div class="chat-box">
         <div class="chat-messages" id="ai-chat-messages">
             <button type="button" id="ai-chat-load-older" class="link-btn" style="display:block; margin:0 auto 12px;" @if (! $hasOlder) hidden @endif>Ver mensajes anteriores</button>
@@ -43,6 +53,7 @@
         const input = form.elements.message;
         const button = form.querySelector('button');
         const error = document.getElementById('ai-chat-error');
+        const consent = document.getElementById('ai-data-consent');
         const reset = document.getElementById('ai-chat-reset');
         const loadOlder = document.getElementById('ai-chat-load-older');
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
@@ -100,7 +111,7 @@
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(data.errors?.message?.[0] || data.message || (response.status === 419 ? 'Sesión vencida. Actualizá la página y volvé a intentar.' : 'No se pudo enviar el mensaje.'));
+                throw new Error(data.errors?.ai_data_consent?.[0] || data.errors?.message?.[0] || data.message || (response.status === 419 ? 'Sesión vencida. Actualizá la página y volvé a intentar.' : 'No se pudo enviar el mensaje.'));
             }
             return data;
         }
@@ -109,11 +120,20 @@
             event.preventDefault();
             const text = input.value.trim();
             if (!text || button.disabled) return;
+            if (consent && !consent.checked) {
+                error.textContent = 'Autorizá el envío de datos al proveedor de IA para usar este chat.';
+                error.hidden = false;
+                consent.focus();
+                return;
+            }
             error.hidden = true;
             button.disabled = true;
             button.textContent = 'Pensando…';
             try {
-                const data = await post(form.action, { message: text });
+                const payload = { message: text };
+                if (consent) payload.ai_data_consent = consent.checked ? '1' : '0';
+                const data = await post(form.action, payload);
+                if (data.ai_consent_saved) document.getElementById('ai-consent-note')?.remove();
                 for (const message of data.messages) appendMessage(message.role, message.content, message.id);
                 input.value = '';
                 reset.hidden = false;

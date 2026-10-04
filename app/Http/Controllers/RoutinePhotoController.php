@@ -24,6 +24,13 @@ class RoutinePhotoController extends Controller
 
         $data = $request->validate([
             'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'photo_processing_consent' => ['accepted'],
+        ]);
+
+        $request->user()->consents()->create([
+            'scope' => 'routine_photo_upload',
+            'version' => config('legal.versions.routine_photo_upload'),
+            'granted_at' => now(),
         ]);
 
         try {

@@ -22,15 +22,19 @@
 <main>
     <a href="{{ \App\Filament\Resources\Routines\RoutineResource::getUrl('create') }}">← Volver a crear rutina</a>
     <h1>Cargar rutina desde foto</h1>
-    <p>Elegí una foto nítida (JPG, PNG o WebP, hasta 8 MB). Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
+    <p>Elegí una foto nítida (JPG, PNG o WebP, hasta 8 MB). La imagen se envía a Google Gemini para leerla y VisionFit no la conserva después del procesamiento. Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
+    <p role="note">Evitá que la imagen muestre nombres, diagnósticos u otros datos personales que no hagan falta para transcribir la rutina.</p>
 
     <form method="post" action="{{ route('routines.photo.store') }}" enctype="multipart/form-data" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Leyendo foto…';">
         @csrf
         <label for="photo">Foto de la rutina</label>
         <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+        <label style="display:flex; align-items:flex-start; gap:9px; margin-top:1rem; font-weight:400; font-size:13px; line-height:1.5;"><input name="photo_processing_consent" type="checkbox" value="1" required style="width:auto; margin-top:3px;">Autorizo que se envíe esta foto a Google Gemini para generar un borrador que voy a revisar.</label>
         @error('photo') <div class="error" role="alert">{{ $message }}</div> @enderror
         <button type="submit">Leer foto y revisar</button>
     </form>
+    @include('partials.legal-links')
 </main>
+@include('partials.cookie-notice')
 </body>
 </html>

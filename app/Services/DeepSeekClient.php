@@ -56,14 +56,14 @@ class DeepSeekClient
                 ]);
 
             if ($response->failed()) {
-                Log::error('DeepSeek API error', ['status' => $response->status(), 'body' => $response->body()]);
+                Log::error('DeepSeek API error', ['status' => $response->status()]);
 
                 return null;
             }
 
             return $response->json('choices.0.message.content');
         } catch (\Throwable $e) {
-            Log::error('DeepSeek exception: '.$e->getMessage());
+            Log::error('DeepSeek exception', ['exception' => $e::class]);
 
             return null;
         }
@@ -111,7 +111,7 @@ class DeepSeekClient
                 ->post(config('services.deepseek.base_url'), $payload);
 
             if ($response->failed()) {
-                Log::error('DeepSeek API error', ['status' => $response->status(), 'body' => $response->body()]);
+                Log::error('DeepSeek API error', ['status' => $response->status()]);
 
                 return null;
             }
@@ -123,7 +123,7 @@ class DeepSeekClient
                 'tool_calls' => $message['tool_calls'] ?? [],
             ];
         } catch (\Throwable $e) {
-            Log::error('DeepSeek exception: '.$e->getMessage());
+            Log::error('DeepSeek exception', ['exception' => $e::class]);
 
             return null;
         }

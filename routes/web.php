@@ -14,10 +14,15 @@ use App\Http\Controllers\Client\FreeMealLogController;
 use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\GymJoinController;
 use App\Http\Controllers\RoutinePhotoController;
+use App\Http\Controllers\LegalController;
 
 Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
+
+Route::get('/privacidad', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
 
 // Alta por QR: el alumno escanea el código de SU gimnasio, elige iniciar sesión
 // (si ya tiene cuenta) o registrarse (entra siempre como cliente, ya con el

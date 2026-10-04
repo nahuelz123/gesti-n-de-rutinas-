@@ -60,6 +60,15 @@
                 <textarea name="medical_notes" rows="3" placeholder="Ej: dolor lumbar crónico, cirugía de rodilla en 2023, evitar impacto...">{{ old('medical_notes', $user->medical_notes) }}</textarea>
             </div>
 
+            <div class="account-field" style="border-top:1px solid #2a2a2a; padding-top:14px;">
+                <input type="hidden" name="ai_data_processing_consent" value="0">
+                <label style="display:flex; align-items:flex-start; gap:9px; line-height:1.5;">
+                    <input type="checkbox" name="ai_data_processing_consent" value="1" @checked(old('ai_data_processing_consent', $user->hasActiveConsent('ai_data_processing'))) style="margin-top:3px;">
+                    <span>Autorizo que mis mensajes y el contexto necesario de mi perfil, rutina, dieta y progreso se envíen al proveedor de IA para responder en el chat. Es opcional y puedo retirar el permiso cuando quiera.</span>
+                </label>
+                <p style="font-size:12px; color:#777; margin-top:8px;">El profe solo puede usar el asistente con tus datos si activás esta opción. <a href="{{ route('legal.privacy', ['gym' => $user->gym?->invite_code]) }}" style="color:#fbbf24; text-decoration:underline;">Ver privacidad</a>.</p>
+            </div>
+
             <button type="submit" class="lf-btn" style="align-self:flex-start;">Guardar cambios</button>
         </form>
     </div>

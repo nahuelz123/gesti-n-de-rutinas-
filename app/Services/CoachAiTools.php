@@ -317,6 +317,10 @@ class CoachAiTools
 
         return User::query()
             ->where('role', 'client')
+            ->whereHas('consents', fn ($q) => $q
+                ->where('scope', 'ai_data_processing')
+                ->where('version', config('legal.versions.ai_data_processing'))
+                ->whereNull('revoked_at'))
             ->when($coach->role !== 'super_admin', fn ($q) => $q->where('gym_id', $coach->gym_id))
             ->where(fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%"))
             ->orderBy('name')
@@ -554,6 +558,10 @@ class CoachAiTools
 
         if ($coach->role !== 'super_admin' && $client->gym_id !== $coach->gym_id) {
             throw new \RuntimeException('Acceso denegado: el cliente no pertenece al gimnasio del coach.');
+        }
+
+        if (! $client->hasActiveConsent('ai_data_processing')) {
+            throw new \RuntimeException('El cliente no autorizó el uso de sus datos con el asistente de IA.');
         }
     }
 

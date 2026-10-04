@@ -141,6 +141,7 @@
                     @else
                         Preguntale a la IA sobre el progreso, rutina o dieta de este cliente, o pedile que le arme/edite algo.
                     @endif
+                    <small style="display:block; margin-top:5px; color:#a1a1aa;">Solo aparecen clientes que autorizaron el uso de sus datos con IA. Pueden cambiarlo desde Mi cuenta.</small>
                 </span>
                 <x-filament::button color="danger" size="sm" wire:click="newChat" wire:confirm="¿Borrar todo este historial?">
                     🗑️ Vaciar historial

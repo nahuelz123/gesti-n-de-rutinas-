@@ -15,6 +15,9 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    // Disco público persistente para los logos de los gimnasios.
+    'gym_logo_disk' => env('GYM_LOGO_DISK', 'public'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks

@@ -93,6 +93,26 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Gym::class);
     }
 
+    public function consents(): HasMany
+    {
+        return $this->hasMany(UserConsent::class);
+    }
+
+    public function hasActiveConsent(string $scope): bool
+    {
+        $version = config('legal.versions.'.$scope);
+
+        if (! is_string($version) || $version === '') {
+            return false;
+        }
+
+        return $this->consents()
+            ->where('scope', $scope)
+            ->where('version', $version)
+            ->whereNull('revoked_at')
+            ->exists();
+    }
+
     // Rutinas creadas (si es coach/admin)
     public function createdRoutines(): HasMany
     {
