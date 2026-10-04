@@ -52,6 +52,10 @@ class AiAssistant extends Page
 
         $query = User::query()
             ->where('role', 'client')
+            ->whereHas('consents', fn ($q) => $q
+                ->where('scope', 'ai_data_processing')
+                ->where('version', config('legal.versions.ai_data_processing'))
+                ->whereNull('revoked_at'))
             ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id));
 
         if (trim($this->clientSearch) !== '') {
@@ -65,7 +69,21 @@ class AiAssistant extends Page
 
     public function selectClient(?int $clientId): void
     {
-        $this->selectedClientId = $clientId ? $this->authorizeClientId($clientId) : null;
+        $authorizedClientId = $clientId ? $this->authorizeClientId($clientId) : null;
+
+        if ($clientId && ! $authorizedClientId) {
+            $this->selectedClientId = null;
+            $this->pendingAction = null;
+            $this->loadHistory();
+            Notification::make()
+                ->title('No disponible para IA')
+                ->body('El cliente no autorizó el uso de sus datos con el asistente o no pertenece a tu gimnasio.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        $this->selectedClientId = $authorizedClientId;
         $this->pendingAction = null;
         $this->loadHistory();
     }
@@ -93,6 +111,20 @@ class AiAssistant extends Page
         ]);
 
         $coach = Auth::user();
+        $requestedClientId = $this->selectedClientId;
+        $validClientId = $requestedClientId ? $this->authorizeClientId($requestedClientId) : null;
+
+        if ($requestedClientId && ! $validClientId) {
+            $this->pendingAction = null;
+            Notification::make()
+                ->title('No disponible para IA')
+                ->body('El cliente retiró el permiso para usar sus datos con el asistente.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        $client = $validClientId ? User::find($validClientId) : null;
 
         $keyMin = 'ai_coach_min_' . $coach->id;
         $keyHr = 'ai_coach_hr_' . $coach->id;
@@ -115,10 +147,7 @@ class AiAssistant extends Page
         \Illuminate\Support\Facades\RateLimiter::hit($keyMin, 60);
         \Illuminate\Support\Facades\RateLimiter::hit($keyHr, 3600);
 
-        // Revalidar autorización al momento de enviar (no confiar en selectClient)
-        $validClientId = $this->selectedClientId ? $this->authorizeClientId($this->selectedClientId) : null;
-        $client = $validClientId ? User::find($validClientId) : null;
-
+        // El permiso del cliente se verificó antes de consumir el límite de uso.
         AiConversation::create([
             'user_id' => $coach->id,
             'client_id' => $client?->id,
@@ -385,12 +414,12 @@ class AiAssistant extends Page
 
         $user = Auth::user();
 
-        $exists = User::query()
+        $client = User::query()
             ->where('id', $clientId)
             ->where('role', 'client')
             ->when($user->role !== 'super_admin', fn ($q) => $q->where('gym_id', $user->gym_id))
-            ->exists();
+            ->first();
 
-        return $exists ? $clientId : null;
+        return $client && $client->hasActiveConsent('ai_data_processing') ? $clientId : null;
     }
 }
