@@ -147,8 +147,10 @@ class WorkoutLogger extends Component
         }
 
         $validated = $this->validate([
-            "inputs.{$setNumber}.weight" => ['nullable', 'numeric', 'gt:0', 'max:9999.99'],
+            "inputs.{$setNumber}.weight" => ['required', 'numeric', 'gt:0', 'max:9999.99'],
         ], [
+            "inputs.{$setNumber}.weight.required" => 'Ingresá el peso realizado en esta serie.',
+            "inputs.{$setNumber}.weight.numeric" => 'Ingresá un peso válido.',
             "inputs.{$setNumber}.weight.gt" => 'El peso debe ser mayor que cero o dejarse vacío.',
             "inputs.{$setNumber}.weight.max" => 'El peso supera el máximo admitido.',
         ]);

@@ -42,7 +42,7 @@ class ProgressController extends Controller
     {
         $data = $request->validate([
             'measured_at' => ['required', 'date', 'before_or_equal:today'],
-            'weight' => ['nullable', 'numeric', 'min:20', 'max:400'],
+            'weight' => ['required', 'numeric', 'min:20', 'max:400'],
             'waist' => ['nullable', 'numeric', 'min:20', 'max:250'],
             'chest' => ['nullable', 'numeric', 'min:20', 'max:250'],
             'hip' => ['nullable', 'numeric', 'min:20', 'max:250'],
