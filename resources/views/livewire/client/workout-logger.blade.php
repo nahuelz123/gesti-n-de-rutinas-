@@ -109,6 +109,7 @@
             .stepper {
                 display: flex;
                 align-items: center;
+                min-width: 0;
                 background: var(--clr-bg);
                 border-radius: var(--radius-md);
                 border: 1px solid var(--clr-border);
@@ -116,7 +117,9 @@
                 height: 44px;
             }
             .stepper-btn {
+                flex: 0 0 44px;
                 width: 44px;
+                min-width: 44px;
                 height: 44px;
                 background: transparent;
                 border: none;
@@ -126,11 +129,16 @@
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
             }
             .stepper-btn:active { background: rgba(255,255,255,0.05); }
             .stepper-input {
-                flex: 1;
-                width: 100%;
+                flex: 1 1 0;
+                width: 0;
+                min-width: 0;
+                max-width: 100%;
+                box-sizing: border-box;
                 background: transparent;
                 border: none;
                 color: var(--clr-text);
@@ -235,17 +243,17 @@
                                     <div class="set-control-group">
                                         <div class="set-control-label">Peso (kg)</div>
                                         <div class="stepper">
-                                            <button class="stepper-btn" wire:click="decreaseWeight({{ $i }})">−</button>
+                                            <button type="button" class="stepper-btn" aria-label="Restar peso de la serie {{ $i }}" wire:click="decreaseWeight({{ $i }})">−</button>
                                             <input type="number" inputmode="decimal" min="0.01" max="9999.99" step="0.1" required class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="Peso (kg)">
-                                            <button class="stepper-btn" wire:click="increaseWeight({{ $i }})">+</button>
+                                            <button type="button" class="stepper-btn" aria-label="Sumar peso de la serie {{ $i }}" wire:click="increaseWeight({{ $i }})">+</button>
                                         </div>
                                     </div>
                                     <div class="set-control-group">
                                         <div class="set-control-label">Reps</div>
                                         <div class="stepper">
-                                            <button class="stepper-btn" wire:click="decreaseReps({{ $i }})">−</button>
-                                            <input type="text" inputmode="numeric" class="stepper-input" wire:model="inputs.{{ $i }}.reps" placeholder="0">
-                                            <button class="stepper-btn" wire:click="increaseReps({{ $i }})">+</button>
+                                            <button type="button" class="stepper-btn" aria-label="Restar repeticiones de la serie {{ $i }}" wire:click="decreaseReps({{ $i }})">−</button>
+                                            <input type="number" inputmode="numeric" min="0" max="999" step="1" class="stepper-input" wire:model="inputs.{{ $i }}.reps" placeholder="0">
+                                            <button type="button" class="stepper-btn" aria-label="Sumar repeticiones de la serie {{ $i }}" wire:click="increaseReps({{ $i }})">+</button>
                                         </div>
                                     </div>
                                 </div>

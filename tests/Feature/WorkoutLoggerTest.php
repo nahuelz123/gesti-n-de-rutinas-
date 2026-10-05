@@ -86,6 +86,21 @@ class WorkoutLoggerTest extends TestCase
             ->assertSee('Serie 1');
     }
 
+    public function test_reps_stepper_records_actual_reps_separately_from_prescription_range()
+    {
+        $this->routineDayExercise->update(['reps' => '6-8']);
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertSee('6-8 reps')
+            ->assertSet('inputs.1.reps', '')
+            ->call('increaseReps', 1)
+            ->assertSet('inputs.1.reps', 1)
+            ->call('decreaseReps', 1)
+            ->assertSet('inputs.1.reps', 0);
+    }
+
     public function test_client_can_log_valid_set()
     {
         $this->actingAs($this->client);
