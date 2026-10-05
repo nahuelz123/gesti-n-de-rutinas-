@@ -89,7 +89,7 @@ class WorkoutLogger extends Component
             } else {
                 $this->inputs[$i] = [
                     'weight' => '',
-                    'reps' => $current->reps ?? '',
+                    'reps' => '', // Record actual reps; the prescribed range is shown above.
                 ];
             }
         }
