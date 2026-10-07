@@ -142,9 +142,14 @@ class WorkoutLogger extends Component
             return;
         }
 
-        if (($this->inputs[$setNumber]['weight'] ?? null) === '') {
-            $this->inputs[$setNumber]['weight'] = null;
+        $rawWeight = $this->inputs[$setNumber]['weight'] ?? null;
+        if (is_string($rawWeight)) {
+            $rawWeight = trim($rawWeight);
+            if ($rawWeight !== '') {
+                $rawWeight = str_replace(',', '.', $rawWeight);
+            }
         }
+        $this->inputs[$setNumber]['weight'] = $rawWeight === '' ? null : $rawWeight;
 
         $validated = $this->validate([
             "inputs.{$setNumber}.weight" => ['required', 'numeric', 'gt:0', 'max:9999.99'],
