@@ -285,11 +285,7 @@ body:has(.workout-nav) .ai-fab { display: none; }
     -webkit-appearance: none;
     margin: 0;
 }
-.stepper-btn { padding: 0; line-height: 1; }
-@media (max-width: 380px) {
-    .set-controls { gap: 8px; }
-    .stepper-btn { flex-basis: 36px; width: 36px; min-width: 36px; }
-}
+
 
 
 

@@ -104,35 +104,6 @@ class WorkoutLogger extends Component
         }
     }
 
-    public function increaseWeight($setNumber)
-    {
-        $val = (float)($this->inputs[$setNumber]['weight'] ?? 0);
-        $this->inputs[$setNumber]['weight'] = $val + 2.5;
-    }
-
-    public function decreaseWeight($setNumber)
-    {
-        $raw = $this->inputs[$setNumber]['weight'] ?? '';
-        if ($raw === '') {
-            return;
-        }
-
-        $val = (float) $raw;
-        $this->inputs[$setNumber]['weight'] = max(0.1, $val - 2.5);
-    }
-
-    public function increaseReps($setNumber)
-    {
-        $val = (int) ($this->inputs[$setNumber]['reps'] ?? 0);
-        $this->inputs[$setNumber]['reps'] = min(100, $val + 1);
-    }
-
-    public function decreaseReps($setNumber)
-    {
-        $val = (int) ($this->inputs[$setNumber]['reps'] ?? 0);
-        $this->inputs[$setNumber]['reps'] = max(0, $val - 1);
-    }
-
     public function logSet($setNumber)
     {
         $user = Auth::user();
