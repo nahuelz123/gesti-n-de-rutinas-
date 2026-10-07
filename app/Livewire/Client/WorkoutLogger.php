@@ -132,11 +132,60 @@ class WorkoutLogger extends Component
             return;
         }
 
-        // A null/zero load represents bodyweight/no external load.
-        $this->inputs[$setNumber]['weight'] = $last->weight === null
-            ? '0'
+        // Keep bodyweight visually empty so it does not look like a loaded zero.
+        $this->inputs[$setNumber]['weight'] = $last->weight === null || (float) $last->weight <= 0
+            ? ''
             : $this->formatWeightForInput($last->weight);
         $this->inputs[$setNumber]['reps'] = $last->reps;
+    }
+
+    public function copyPreviousSet($setNumber)
+    {
+        $setNumber = (int) $setNumber;
+
+        if ($setNumber <= 1 || ! isset($this->inputs[$setNumber], $this->inputs[$setNumber - 1])) {
+            return;
+        }
+
+        $previous = $this->inputs[$setNumber - 1];
+
+        if (($previous['weight'] ?? '') === '' && ($previous['reps'] ?? '') === '') {
+            return;
+        }
+
+        $this->inputs[$setNumber] = [
+            'weight' => $previous['weight'] ?? '',
+            'reps' => $previous['reps'] ?? '',
+        ];
+    }
+
+    public function getRestSecondsProperty(): int
+    {
+        return $this->normalizeRestSeconds($this->currentExercise?->rest);
+    }
+
+    public function getRestLabelProperty(): ?string
+    {
+        $seconds = $this->restSeconds;
+
+        if ($seconds <= 0) {
+            return null;
+        }
+
+        if ($seconds % 60 === 0) {
+            $minutes = intdiv($seconds, 60);
+
+            return $minutes . ' ' . ($minutes === 1 ? 'min' : 'min') . ' descanso';
+        }
+
+        if ($seconds > 60) {
+            $minutes = intdiv($seconds, 60);
+            $remaining = $seconds % 60;
+
+            return "{$minutes} min {$remaining} s descanso";
+        }
+
+        return "{$seconds} s descanso";
     }
 
     public function logSet($setNumber)
@@ -233,7 +282,8 @@ class WorkoutLogger extends Component
 
         $this->dispatch('set-logged', [
             'set' => $setNumber,
-            'rest' => max(0, (int) ($currentExercise->rest ?? 0)),
+            'nextSet' => $setNumber < (int) $currentExercise->sets ? $setNumber + 1 : null,
+            'rest' => $this->restSeconds,
         ]);
     }
 
@@ -273,6 +323,37 @@ class WorkoutLogger extends Component
             ->where('routine_day_exercise_id', $this->currentExercise->id)
             ->where('set_number', $setNumber)
             ->isNotEmpty();
+    }
+
+    private function normalizeRestSeconds($rest): int
+    {
+        if ($rest === null || $rest === '') {
+            return 0;
+        }
+
+        if (is_numeric($rest)) {
+            return max(0, (int) round((float) $rest));
+        }
+
+        $value = strtolower(trim((string) $rest));
+
+        if (preg_match('/^(\d+(?:[.,]\d+)?)\s*(min|mins|minuto|minutos)$/u', $value, $matches)) {
+            return max(0, (int) round((float) str_replace(',', '.', $matches[1]) * 60));
+        }
+
+        if (preg_match('/^(\d+)\s*(s|seg|segs|segundo|segundos)$/u', $value, $matches)) {
+            return max(0, (int) $matches[1]);
+        }
+
+        if (preg_match('/^(\d+)\s*:\s*(\d{1,2})$/', $value, $matches)) {
+            return max(0, ((int) $matches[1] * 60) + (int) $matches[2]);
+        }
+
+        if (preg_match('/(\d+)/', $value, $matches)) {
+            return max(0, (int) $matches[1]);
+        }
+
+        return 0;
     }
 
     private function formatWeightForInput($weight): string
