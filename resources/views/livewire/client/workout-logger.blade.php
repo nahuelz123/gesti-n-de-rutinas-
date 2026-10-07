@@ -657,92 +657,103 @@
         </div>
 
         <script>
-            document.addEventListener('livewire:initialized', () => {
-                if (window.__visionfitWorkoutListenersBound) return;
-                window.__visionfitWorkoutListenersBound = true;
+            (() => {
+                const bindWorkoutListeners = () => {
+                    if (!window.Livewire || window.__visionfitWorkoutListenersBound) return;
+                    window.__visionfitWorkoutListenersBound = true;
 
-                const stopRestTimer = () => {
-                    if (window.__visionfitRestInterval) {
-                        clearInterval(window.__visionfitRestInterval);
-                        window.__visionfitRestInterval = null;
-                    }
-
-                    const timer = document.getElementById('vf-rest-timer');
-                    if (timer) timer.hidden = true;
-                };
-
-                const startRestTimer = (seconds) => {
-                    const timer = document.getElementById('vf-rest-timer');
-                    const time = document.getElementById('vf-rest-time');
-
-                    if (!timer || !time || !Number.isFinite(seconds) || seconds <= 0) return;
-
-                    stopRestTimer();
-                    let remaining = Math.round(seconds);
-
-                    const render = () => {
-                        const minutes = Math.floor(remaining / 60);
-                        const secs = String(remaining % 60).padStart(2, '0');
-                        time.textContent = minutes + ':' + secs;
-                        timer.hidden = false;
-
-                        if (remaining <= 0) {
+                    const stopRestTimer = () => {
+                        if (window.__visionfitRestInterval) {
                             clearInterval(window.__visionfitRestInterval);
                             window.__visionfitRestInterval = null;
-                            time.textContent = '¡Listo!';
-                            if ('vibrate' in navigator) navigator.vibrate([160, 80, 160]);
-                            setTimeout(() => {
-                                const current = document.getElementById('vf-rest-timer');
-                                if (current) current.hidden = true;
-                            }, 2200);
-                            return;
                         }
 
-                        remaining--;
+                        const timer = document.getElementById('vf-rest-timer');
+                        if (timer) timer.hidden = true;
                     };
 
-                    render();
-                    window.__visionfitRestInterval = setInterval(render, 1000);
-                };
+                    const startRestTimer = (seconds) => {
+                        const timer = document.getElementById('vf-rest-timer');
+                        const time = document.getElementById('vf-rest-time');
 
-                document.addEventListener('click', (event) => {
-                    if (event.target?.id === 'vf-rest-skip') stopRestTimer();
-                });
+                        if (!timer || !time || !Number.isFinite(seconds) || seconds <= 0) return;
 
-                Livewire.on('set-logged', (event) => {
-                    const payload = event?.[0] ?? event ?? {};
-                    const setNumber = payload.set;
-                    const nextSetNumber = payload.nextSet;
-                    const row = document.getElementById('set-' + setNumber);
+                        stopRestTimer();
+                        let remaining = Math.round(seconds);
 
-                    document.querySelectorAll('.vf-set.next-up').forEach((element) => {
-                        element.classList.remove('next-up');
+                        const render = () => {
+                            const minutes = Math.floor(remaining / 60);
+                            const secs = String(remaining % 60).padStart(2, '0');
+                            time.textContent = minutes + ':' + secs;
+                            timer.hidden = false;
+
+                            if (remaining <= 0) {
+                                clearInterval(window.__visionfitRestInterval);
+                                window.__visionfitRestInterval = null;
+                                time.textContent = '¡Listo!';
+                                if ('vibrate' in navigator) navigator.vibrate([160, 80, 160]);
+
+                                setTimeout(() => {
+                                    const current = document.getElementById('vf-rest-timer');
+                                    if (current) current.hidden = true;
+                                }, 2200);
+                                return;
+                            }
+
+                            remaining--;
+                        };
+
+                        render();
+                        window.__visionfitRestInterval = setInterval(render, 1000);
+                    };
+
+                    document.addEventListener('click', (event) => {
+                        if (event.target?.id === 'vf-rest-skip') stopRestTimer();
                     });
 
-                    if (row) {
-                        row.style.transform = 'scale(.99)';
-                        setTimeout(() => row.style.transform = 'scale(1)', 140);
-                    }
+                    Livewire.on('set-logged', (event) => {
+                        const payload = Array.isArray(event) ? (event[0] ?? {}) : (event ?? {});
+                        const setNumber = Number(payload.set || 0);
+                        const nextSetNumber = payload.nextSet ? Number(payload.nextSet) : null;
+                        const restSeconds = Number(payload.rest || 0);
+                        const row = document.getElementById('set-' + setNumber);
 
-                    if (nextSetNumber) {
-                        const nextRow = document.getElementById('set-' + nextSetNumber);
-                        if (nextRow) {
-                            nextRow.classList.add('next-up');
-                            setTimeout(() => {
-                                nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                const nextInput = document.getElementById('weight-' + nextSetNumber);
-                                nextInput?.focus({ preventScroll: true });
-                            }, 220);
+                        document.querySelectorAll('.vf-set.next-up').forEach((element) => {
+                            element.classList.remove('next-up');
+                        });
+
+                        if (row) {
+                            row.style.transform = 'scale(.99)';
+                            setTimeout(() => row.style.transform = 'scale(1)', 140);
                         }
-                    }
 
-                    startRestTimer(Number(payload.rest || 0));
-                });
+                        if (nextSetNumber) {
+                            const nextRow = document.getElementById('set-' + nextSetNumber);
+                            if (nextRow) {
+                                nextRow.classList.add('next-up');
 
-                Livewire.on('exercise-changed', () => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                });
-            });
+                                setTimeout(() => {
+                                    nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    document.getElementById('weight-' + nextSetNumber)?.focus({ preventScroll: true });
+                                }, 220);
+                            }
+                        }
+
+                        startRestTimer(restSeconds);
+                    });
+
+                    Livewire.on('exercise-changed', () => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                };
+
+                document.addEventListener('livewire:init', bindWorkoutListeners);
+                document.addEventListener('livewire:initialized', bindWorkoutListeners);
+
+                if (window.Livewire) {
+                    bindWorkoutListeners();
+                }
+            })();
         </script>
 
     @elseif ($step === 'completed')

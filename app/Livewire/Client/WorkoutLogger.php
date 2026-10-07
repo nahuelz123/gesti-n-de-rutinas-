@@ -280,11 +280,12 @@ class WorkoutLogger extends Component
             ]);
         }
 
-        $this->dispatch('set-logged', [
-            'set' => $setNumber,
-            'nextSet' => $setNumber < (int) $currentExercise->sets ? $setNumber + 1 : null,
-            'rest' => $this->restSeconds,
-        ]);
+        $this->dispatch(
+            'set-logged',
+            set: $setNumber,
+            nextSet: $setNumber < (int) $currentExercise->sets ? $setNumber + 1 : null,
+            rest: $this->restSeconds,
+        );
     }
 
     public function nextExercise()
