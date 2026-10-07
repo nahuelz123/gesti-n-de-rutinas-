@@ -397,7 +397,6 @@
                 align-items:center;
                 gap:12px;
             }
-            .vf-rest-timer[hidden] { display:none; }
             .vf-rest-icon {
                 width:38px;
                 height:38px;
@@ -646,76 +645,60 @@
                 </main>
             @endif
 
-            <div class="vf-rest-timer" id="vf-rest-timer" hidden aria-live="polite">
-                <div class="vf-rest-icon">⏱</div>
-                <div class="vf-rest-copy">
-                    <div class="vf-rest-label">Descanso</div>
-                    <div class="vf-rest-time" id="vf-rest-time">0:00</div>
-                </div>
-                <button type="button" class="vf-rest-skip" id="vf-rest-skip">OMITIR</button>
-            </div>
-        </div>
-
-        <script>
-            (() => {
-                const bindWorkoutListeners = () => {
-                    if (!window.Livewire || window.__visionfitWorkoutListenersBound) return;
-                    window.__visionfitWorkoutListenersBound = true;
-
-                    const stopRestTimer = () => {
-                        if (window.__visionfitRestInterval) {
-                            clearInterval(window.__visionfitRestInterval);
-                            window.__visionfitRestInterval = null;
+            <div
+                class="vf-rest-timer"
+                x-data="{
+                    visible: false,
+                    remaining: 0,
+                    interval: null,
+                    displayTime: '0:00',
+                    stop() {
+                        if (this.interval) {
+                            clearInterval(this.interval);
+                            this.interval = null;
                         }
+                        this.visible = false;
+                    },
+                    start(seconds) {
+                        seconds = Number(seconds || 0);
+                        if (!Number.isFinite(seconds) || seconds <= 0) return;
 
-                        const timer = document.getElementById('vf-rest-timer');
-                        if (timer) timer.hidden = true;
-                    };
+                        if (this.interval) clearInterval(this.interval);
+                        this.remaining = Math.round(seconds);
+                        this.visible = true;
 
-                    const startRestTimer = (seconds) => {
-                        const timer = document.getElementById('vf-rest-timer');
-                        const time = document.getElementById('vf-rest-time');
+                        const tick = () => {
+                            const minutes = Math.floor(this.remaining / 60);
+                            const secs = String(this.remaining % 60).padStart(2, '0');
+                            this.displayTime = minutes + ':' + secs;
 
-                        if (!timer || !time || !Number.isFinite(seconds) || seconds <= 0) return;
+                            if (this.remaining <= 0) {
+                                clearInterval(this.interval);
+                                this.interval = null;
+                                this.displayTime = '¡Listo!';
 
-                        stopRestTimer();
-                        let remaining = Math.round(seconds);
-
-                        const render = () => {
-                            const minutes = Math.floor(remaining / 60);
-                            const secs = String(remaining % 60).padStart(2, '0');
-                            time.textContent = minutes + ':' + secs;
-                            timer.hidden = false;
-
-                            if (remaining <= 0) {
-                                clearInterval(window.__visionfitRestInterval);
-                                window.__visionfitRestInterval = null;
-                                time.textContent = '¡Listo!';
-                                if ('vibrate' in navigator) navigator.vibrate([160, 80, 160]);
+                                if ('vibrate' in navigator) {
+                                    navigator.vibrate([160, 80, 160]);
+                                }
 
                                 setTimeout(() => {
-                                    const current = document.getElementById('vf-rest-timer');
-                                    if (current) current.hidden = true;
+                                    this.visible = false;
                                 }, 2200);
+
                                 return;
                             }
 
-                            remaining--;
+                            this.remaining--;
                         };
 
-                        render();
-                        window.__visionfitRestInterval = setInterval(render, 1000);
-                    };
+                        tick();
+                        this.interval = setInterval(tick, 1000);
+                    },
+                    handleSetLogged(payload) {
+                        payload = payload || {};
 
-                    document.addEventListener('click', (event) => {
-                        if (event.target?.id === 'vf-rest-skip') stopRestTimer();
-                    });
-
-                    Livewire.on('set-logged', (event) => {
-                        const payload = Array.isArray(event) ? (event[0] ?? {}) : (event ?? {});
                         const setNumber = Number(payload.set || 0);
                         const nextSetNumber = payload.nextSet ? Number(payload.nextSet) : null;
-                        const restSeconds = Number(payload.rest || 0);
                         const row = document.getElementById('set-' + setNumber);
 
                         document.querySelectorAll('.vf-set.next-up').forEach((element) => {
@@ -729,6 +712,7 @@
 
                         if (nextSetNumber) {
                             const nextRow = document.getElementById('set-' + nextSetNumber);
+
                             if (nextRow) {
                                 nextRow.classList.add('next-up');
 
@@ -739,22 +723,23 @@
                             }
                         }
 
-                        startRestTimer(restSeconds);
-                    });
-
-                    Livewire.on('exercise-changed', () => {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    });
-                };
-
-                document.addEventListener('livewire:init', bindWorkoutListeners);
-                document.addEventListener('livewire:initialized', bindWorkoutListeners);
-
-                if (window.Livewire) {
-                    bindWorkoutListeners();
-                }
-            })();
-        </script>
+                        this.start(payload.rest);
+                    }
+                }"
+                x-cloak
+                x-show="visible"
+                @set-logged.window="handleSetLogged($event.detail)"
+                @exercise-changed.window="stop(); window.scrollTo({ top: 0, behavior: 'smooth' })"
+                aria-live="polite"
+            >
+                <div class="vf-rest-icon">⏱</div>
+                <div class="vf-rest-copy">
+                    <div class="vf-rest-label">Descanso</div>
+                    <div class="vf-rest-time" x-text="displayTime">0:00</div>
+                </div>
+                <button type="button" class="vf-rest-skip" @click="stop()">OMITIR</button>
+            </div>
+        </div>
 
     @elseif ($step === 'completed')
         <div style="min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
