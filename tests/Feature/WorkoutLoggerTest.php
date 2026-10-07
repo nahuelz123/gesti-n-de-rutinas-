@@ -129,7 +129,7 @@ class WorkoutLoggerTest extends TestCase
             ->set('inputs.1.weight', 80)
             ->set('inputs.1.reps', 10)
             ->call('logSet', 1)
-            ->assertDispatched('set-logged');
+            ->assertDispatched('set-logged', set: 1, nextSet: 2, rest: 0);
 
         $this->assertDatabaseHas('exercise_logs', [
             'assignment_id' => $this->assignment->id,
