@@ -347,6 +347,69 @@ class WorkoutLoggerTest extends TestCase
             ->assertSet('inputs.2.reps', '8');
     }
 
+    public function test_overview_shows_today_progress_and_continue_action(): void
+    {
+        ExerciseLog::create([
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => 80,
+            'reps' => 10,
+            'logged_at' => now(),
+        ]);
+
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->assertSee('1/3 series')
+            ->assertSee('CONTINUAR');
+    }
+
+    public function test_selecting_started_day_resumes_first_incomplete_exercise(): void
+    {
+        $secondExercise = Exercise::create([
+            'gym_id' => $this->gym->id,
+            'title' => 'Aperturas',
+            'muscle_group' => 'pecho',
+        ]);
+
+        RoutineDayExercise::create([
+            'routine_day_id' => $this->day->id,
+            'exercise_id' => $secondExercise->id,
+            'sets' => 3,
+            'reps' => '12',
+            'order' => 2,
+        ]);
+
+        for ($set = 1; $set <= 3; $set++) {
+            ExerciseLog::create([
+                'assignment_id' => $this->assignment->id,
+                'routine_day_exercise_id' => $this->routineDayExercise->id,
+                'set_number' => $set,
+                'weight' => 80,
+                'reps' => 10,
+                'logged_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertSet('currentExerciseIndex', 1)
+            ->assertSee('Aperturas');
+    }
+
+    public function test_training_hides_distractions_and_warns_before_skipping_incomplete_sets(): void
+    {
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertSee('.ai-fab', false)
+            ->assertSee('wire:confirm="Todavía faltan 3 serie(s)', false);
+    }
+
     public function test_client_cannot_log_set_in_historical_routine(): void
     {
         $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $this->gym->id]);
