@@ -8,16 +8,12 @@
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" sizes="16x16" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     @livewireStyles
 
-    {{-- App base por Vite. El CSS del cliente se inserta inline para que el preview
-         no dependa de la resolución de assets de Vite/Railway. --}}
+    {{-- Livewire already ships Alpine. Loading a second CDN copy can cause duplicate
+         Alpine instances and inconsistent component behaviour. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        {!! file_get_contents(resource_path('css/client.css')) !!}
-    </style>
+    @vite('resources/css/client.css')
 </head>
 <body>
 

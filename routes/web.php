@@ -24,6 +24,9 @@ Route::get('/privacidad', [LegalController::class, 'privacy'])->name('legal.priv
 Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
 
+// iOS may request this legacy icon path automatically.
+Route::redirect('/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', 302);
+
 // Alta por QR: el alumno escanea el código de SU gimnasio, elige iniciar sesión
 // (si ya tiene cuenta) o registrarse (entra siempre como cliente, ya con el
 // gym_id correcto). Público, sin auth.

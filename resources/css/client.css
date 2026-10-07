@@ -1450,7 +1450,6 @@ body:has(.workout-nav) .ai-fab { display: none; }
     margin-bottom: var(--space-5);
     max-width: 280px;
 }
-.empty-action { width: 100%; max-width: 200px;
-     [x-cloak] { display: none !important; }
+.empty-action { width: 100%; max-width: 200px; }
 
-}
+[x-cloak] { display: none !important; }

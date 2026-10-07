@@ -354,6 +354,69 @@
                 font-size:11px;
                 line-height:1.35;
             }
+            .vf-field-hint {
+                display:block;
+                margin-top:6px;
+                color:#666;
+                font-size:10px;
+                line-height:1.3;
+            }
+            .vf-rest-timer {
+                position:fixed;
+                left:50%;
+                bottom:18px;
+                transform:translateX(-50%);
+                width:min(440px, calc(100% - 32px));
+                z-index:45;
+                border:1px solid rgba(230,57,70,.32);
+                border-radius:18px;
+                background:rgba(19,19,19,.96);
+                backdrop-filter:blur(16px);
+                box-shadow:0 16px 44px rgba(0,0,0,.5);
+                padding:12px 14px;
+                display:flex;
+                align-items:center;
+                gap:12px;
+            }
+            .vf-rest-timer[hidden] { display:none; }
+            .vf-rest-icon {
+                width:38px;
+                height:38px;
+                border-radius:12px;
+                display:grid;
+                place-items:center;
+                flex:0 0 38px;
+                background:rgba(230,57,70,.12);
+                color:var(--clr-primary);
+                font-size:18px;
+            }
+            .vf-rest-copy { flex:1; min-width:0; }
+            .vf-rest-label {
+                color:var(--clr-text-muted);
+                font-size:9px;
+                font-weight:800;
+                letter-spacing:.09em;
+                text-transform:uppercase;
+            }
+            .vf-rest-time {
+                margin-top:2px;
+                color:var(--clr-text);
+                font-size:20px;
+                line-height:1;
+                font-weight:850;
+                font-variant-numeric:tabular-nums;
+            }
+            .vf-rest-skip {
+                border:0;
+                border-radius:10px;
+                background:var(--clr-surface-elevated);
+                color:var(--clr-text);
+                font:inherit;
+                font-size:11px;
+                font-weight:800;
+                padding:10px 12px;
+                cursor:pointer;
+            }
             .vf-workout-nav {
                 display:flex;
                 gap:10px;
@@ -398,7 +461,10 @@
                 </div>
             </div>
 
-            @php $current = $this->currentExercise; @endphp
+            @php
+                $current = $this->currentExercise;
+                $lastLog = $this->lastLog;
+            @endphp
 
             @if($current)
                 <main class="vf-workout-body">
@@ -423,8 +489,8 @@
                                 <button
                                     type="button"
                                     class="vf-small-action"
-                                    x-data
-                                    @click="$dispatch('open-tutorial', { type: '{{ $mediaType }}', url: '{{ $mediaUrl }}', title: '{{ addslashes($current->exercise->title) }}' })"
+                                    x-data="{{ json_encode(['type' => $mediaType, 'url' => $mediaUrl, 'title' => $current->exercise->title]) }}"
+                                    @click="$dispatch('open-tutorial', { type, url, title })"
                                 >
                                     ▶ Tutorial
                                 </button>
@@ -436,15 +502,21 @@
                         </div>
                     </header>
 
-                    @if($this->lastLog)
+                    @if($lastLog)
                         <div class="vf-last-log">
                             <div>
-                                <div class="vf-last-log-label">Última vez</div>
+                                <div class="vf-last-log-label">Última marca de este ejercicio</div>
                                 <div class="vf-last-log-value">
-                                    {{ rtrim(rtrim(number_format($this->lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $this->lastLog->reps }} reps
+                                    @if($lastLog->weight === null || (float) $lastLog->weight <= 0)
+                                        Peso corporal × {{ $lastLog->reps }} reps
+                                    @else
+                                        {{ rtrim(rtrim(number_format((float) $lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $lastLog->reps }} reps
+                                    @endif
                                 </div>
                             </div>
-                            <div style="color:var(--clr-text-muted);font-size:11px;text-align:right;">Referencia<br>para hoy</div>
+                            <div style="color:var(--clr-text-muted);font-size:11px;text-align:right;">
+                                {{ optional($lastLog->logged_at)->format('d/m') }}<br>referencia
+                            </div>
                         </div>
                     @endif
 
@@ -476,6 +548,7 @@
                                                 placeholder="0"
                                             >
                                         </div>
+                                        <span class="vf-field-hint">0 o vacío = peso corporal</span>
                                         @error('inputs.' . $i . '.weight')
                                             <span class="vf-error">{{ $message }}</span>
                                         @enderror
@@ -513,9 +586,15 @@
                                     </button>
                                 </div>
 
-                                @if($this->lastLog && !$isCompleted)
+                                @if($lastLog && !$isCompleted)
                                     <button type="button" class="vf-use-last" wire:click="useLastLog({{ $i }})">
-                                        Usar {{ rtrim(rtrim(number_format($this->lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $this->lastLog->reps }} reps
+                                        Usar última marca:
+                                        @if($lastLog->weight === null || (float) $lastLog->weight <= 0)
+                                            peso corporal
+                                        @else
+                                            {{ rtrim(rtrim(number_format((float) $lastLog->weight, 2, '.', ''), '0'), '.') }} kg
+                                        @endif
+                                        × {{ $lastLog->reps }}
                                     </button>
                                 @endif
 
@@ -537,18 +616,81 @@
                     </div>
                 </main>
             @endif
+
+            <div class="vf-rest-timer" id="vf-rest-timer" hidden aria-live="polite">
+                <div class="vf-rest-icon">⏱</div>
+                <div class="vf-rest-copy">
+                    <div class="vf-rest-label">Descanso</div>
+                    <div class="vf-rest-time" id="vf-rest-time">0:00</div>
+                </div>
+                <button type="button" class="vf-rest-skip" id="vf-rest-skip">OMITIR</button>
+            </div>
         </div>
 
         <script>
             document.addEventListener('livewire:initialized', () => {
+                if (window.__visionfitWorkoutListenersBound) return;
+                window.__visionfitWorkoutListenersBound = true;
+
+                const stopRestTimer = () => {
+                    if (window.__visionfitRestInterval) {
+                        clearInterval(window.__visionfitRestInterval);
+                        window.__visionfitRestInterval = null;
+                    }
+
+                    const timer = document.getElementById('vf-rest-timer');
+                    if (timer) timer.hidden = true;
+                };
+
+                const startRestTimer = (seconds) => {
+                    const timer = document.getElementById('vf-rest-timer');
+                    const time = document.getElementById('vf-rest-time');
+
+                    if (!timer || !time || !Number.isFinite(seconds) || seconds <= 0) return;
+
+                    stopRestTimer();
+                    let remaining = Math.round(seconds);
+
+                    const render = () => {
+                        const minutes = Math.floor(remaining / 60);
+                        const secs = String(remaining % 60).padStart(2, '0');
+                        time.textContent = minutes + ':' + secs;
+                        timer.hidden = false;
+
+                        if (remaining <= 0) {
+                            clearInterval(window.__visionfitRestInterval);
+                            window.__visionfitRestInterval = null;
+                            time.textContent = '¡Listo!';
+                            if ('vibrate' in navigator) navigator.vibrate([160, 80, 160]);
+                            setTimeout(() => {
+                                const current = document.getElementById('vf-rest-timer');
+                                if (current) current.hidden = true;
+                            }, 2200);
+                            return;
+                        }
+
+                        remaining--;
+                    };
+
+                    render();
+                    window.__visionfitRestInterval = setInterval(render, 1000);
+                };
+
+                document.addEventListener('click', (event) => {
+                    if (event.target?.id === 'vf-rest-skip') stopRestTimer();
+                });
+
                 Livewire.on('set-logged', (event) => {
-                    const setNumber = event?.set ?? event?.[0]?.set;
+                    const payload = event?.[0] ?? event ?? {};
+                    const setNumber = payload.set;
                     const row = document.getElementById('set-' + setNumber);
 
                     if (row) {
                         row.style.transform = 'scale(.99)';
                         setTimeout(() => row.style.transform = 'scale(1)', 140);
                     }
+
+                    startRestTimer(Number(payload.rest || 0));
                 });
 
                 Livewire.on('exercise-changed', () => {

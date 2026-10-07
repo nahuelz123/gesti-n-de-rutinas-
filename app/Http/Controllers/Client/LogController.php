@@ -17,8 +17,8 @@ class LogController extends Controller
             'assignment_id' => ['required','integer','exists:assignments,id'],
             'routine_day_exercise_id' => ['required','integer','exists:routine_day_exercises,id'],
             'set_number' => ['required','integer','min:1','max:20'],
-            'weight' => ['required','numeric','gt:0','max:9999.99'],
-            'reps' => ['nullable','integer','min:1','max:200'],
+            'weight' => ['nullable','numeric','min:0','max:9999.99'],
+            'reps' => ['nullable','integer','min:1','max:100'],
         ]);
 
         $assignment = Assignment::query()->findOrFail($data['assignment_id']);
@@ -83,8 +83,8 @@ class LogController extends Controller
 
         $data = $request->validate([
             'set_number' => ['required', 'integer', 'min:1', 'max:20'],
-            'weight' => ['required', 'numeric', 'gt:0', 'max:9999.99'],
-            'reps' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'weight' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
+            'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
             'logged_at' => ['nullable', 'date'],
         ]);
 
