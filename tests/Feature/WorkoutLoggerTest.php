@@ -251,7 +251,7 @@ class WorkoutLoggerTest extends TestCase
             'routine_id' => $oldRoutine->id,
             'status' => 'completed',
             'assigned_at' => now()->subMonth(),
-            'end_date' => yesterday(),
+            'end_date' => now()->subDay(),
         ]);
 
         ExerciseLog::create([
@@ -260,7 +260,7 @@ class WorkoutLoggerTest extends TestCase
             'set_number' => 1,
             'weight' => 70,
             'reps' => 8,
-            'logged_at' => yesterday()->setTime(18, 0),
+            'logged_at' => now()->subDay()->setTime(18, 0),
         ]);
 
         $this->actingAs($this->client);
