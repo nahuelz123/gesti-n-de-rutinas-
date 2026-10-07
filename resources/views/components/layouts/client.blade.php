@@ -12,10 +12,12 @@
 
     @livewireStyles
 
-    {{-- Cargamos los estilos base con Vite y el CSS del cliente de forma explícita.
-         En Railway esto evita que la entrada client.css quede fuera del HTML renderizado. --}}
+    {{-- App base por Vite. El CSS del cliente se inserta inline para que el preview
+         no dependa de la resolución de assets de Vite/Railway. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ Vite::asset('resources/css/client.css') }}">
+    <style>
+        {!! file_get_contents(resource_path('css/client.css')) !!}
+    </style>
 </head>
 <body>
 
