@@ -31,12 +31,22 @@
         </div>
     @endif
 
+    @php
+        $hasExternalLoad = $logs->contains(fn ($log) => $log->weight !== null && (float) $log->weight > 0);
+        $bodyweightPr = $logs
+            ->filter(fn ($log) => $log->weight === null || (float) $log->weight <= 0)
+            ->max('reps');
+    @endphp
+
     {{-- PR + último registro --}}
     <div class="pr-card">
         <div>
-            <div class="pr-label">Récord personal</div>
-            @if ($pr)
+            <div class="pr-label">{{ $hasExternalLoad ? 'Récord de carga' : 'Mejor serie' }}</div>
+            @if ($pr && (float) $pr > 0)
                 <div class="pr-value">{{ $pr }}<span class="pr-unit">kg</span></div>
+            @elseif ($bodyweightPr)
+                <div class="pr-value">{{ $bodyweightPr }}<span class="pr-unit">reps</span></div>
+                <div style="font-size:11px;color:var(--clr-text-muted);margin-top:4px;">Peso corporal</div>
             @else
                 <div class="pr-none">—</div>
             @endif
@@ -47,8 +57,12 @@
                 <div class="last-log-date">{{ $last->logged_at->format('d/m/Y H:i') }}</div>
                 <div class="last-log-detail">
                     Serie {{ $last->set_number }} &nbsp;·&nbsp;
-                    {{ $last->weight ?? '—' }} kg &nbsp;·&nbsp;
-                    {{ $last->reps ?? '—' }} reps
+                    @if($last->weight === null || (float) $last->weight <= 0)
+                        Peso corporal
+                    @else
+                        {{ $last->weight }} kg
+                    @endif
+                    &nbsp;·&nbsp; {{ $last->reps ?? '—' }} reps
                 </div>
             </div>
         @endif
@@ -60,8 +74,8 @@
             <div class="chart-card-header">
                 <span class="chart-card-title">Evolución</span>
                 <div class="chart-tabs">
-                    <button class="chart-tab active" onclick="switchChart('weight', this)">Peso</button>
-                    <button class="chart-tab" onclick="switchChart('reps', this)">Reps</button>
+                    <button class="chart-tab {{ $hasExternalLoad ? 'active' : '' }}" onclick="switchChart('weight', this)">Carga</button>
+                    <button class="chart-tab {{ $hasExternalLoad ? '' : 'active' }}" onclick="switchChart('reps', this)">Reps</button>
                 </div>
             </div>
             <div class="chart-wrap">
@@ -84,7 +98,9 @@
                 <div class="log-row" x-show="!editing">
                     <span class="log-time">{{ $log->logged_at->format('d/m H:i') }}</span>
                     <span class="log-set">Serie {{ $log->set_number }}</span>
-                    <span class="log-kg">{{ $log->weight ?? '—' }} kg</span>
+                    <span class="log-kg">
+                        {{ $log->weight === null || (float) $log->weight <= 0 ? 'Peso corporal' : $log->weight.' kg' }}
+                    </span>
                     <span class="log-reps">{{ $log->reps ?? '—' }} reps</span>
                     <span style="opacity:0.5;margin-left:auto;cursor:pointer;" @click="editing = true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"></path></svg>
@@ -104,12 +120,12 @@
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
                                 <label style="font-size:10px;color:var(--clr-text-muted);">Peso (kg)</label>
-                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.1" min="0.01" max="9999.99"
+                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.1" min="0" max="9999.99"
                                     style="width:80px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
                                 <label style="font-size:10px;color:var(--clr-text-muted);">Reps</label>
-                                <input type="number" name="reps" value="{{ $log->reps }}" min="1" max="200"
+                                <input type="number" name="reps" value="{{ $log->reps }}" min="1" max="100"
                                     style="width:60px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
                             </div>
                         </div>
@@ -149,7 +165,7 @@
     $chartData = $logs->sortBy('logged_at')->values()->map(function($l) {
         return [
             'date'   => $l->logged_at->format('d/m H:i'),
-            'weight' => (float) ($l->weight ?? 0),
+            'weight' => ($l->weight !== null && (float) $l->weight > 0) ? (float) $l->weight : null,
             'reps'   => (int)   ($l->reps   ?? 0),
         ];
     });
@@ -207,7 +223,10 @@ function makeDataset(data) {
 
 const chart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [makeDataset(weights)] },
+    data: {
+        labels,
+        datasets: [makeDataset({{ $hasExternalLoad ? 'weights' : 'repsData' }})],
+    },
     options: commonOptions,
 });
 
