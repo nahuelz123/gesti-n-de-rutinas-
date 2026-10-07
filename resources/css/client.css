@@ -267,6 +267,30 @@ body {
 .ai-fab:active { transform: scale(0.92); }
 .ai-fab svg { width: 24px; height: 24px; }
 
+/* Keep the floating assistant from covering set controls during a workout. */
+body:has(.workout-nav) .ai-fab { display: none; }
+
+/* iOS Safari reserves space for number spinners and can clip centered values. */
+.set-control-group { min-width: 0; }
+.stepper { min-width: 0; }
+.stepper input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+    min-width: 0;
+    padding-inline: 2px;
+    line-height: 1.2;
+}
+.stepper input[type="number"]::-webkit-inner-spin-button,
+.stepper input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.stepper-btn { padding: 0; line-height: 1; }
+@media (max-width: 380px) {
+    .set-controls { gap: 8px; }
+    .stepper-btn { flex-basis: 36px; width: 36px; min-width: 36px; }
+}
+
 
 
 .app-nav-link-label { display: none; }
