@@ -2,7 +2,7 @@
     @if ($step === 'overview')
         <style>
             .vf-routine-overview {
-                max-width:760px;
+                max-width:880px;
                 margin:0 auto;
                 padding:24px 16px calc(96px + var(--safe-area-bottom));
             }
@@ -110,7 +110,7 @@
                 border-bottom:1px solid var(--clr-border);
             }
             .vf-workout-topbar-inner {
-                max-width:760px;
+                max-width:880px;
                 margin:0 auto;
                 padding:12px 16px 10px;
                 display:grid;
@@ -145,7 +145,7 @@
                 font-variant-numeric:tabular-nums;
             }
             .vf-progress-track {
-                max-width:760px;
+                max-width:880px;
                 height:4px;
                 margin:0 auto;
                 background:rgba(255,255,255,.07);
@@ -157,7 +157,7 @@
                 transition:width .25s ease;
             }
             .vf-workout-body {
-                max-width:760px;
+                max-width:880px;
                 margin:0 auto;
                 padding:22px 16px 0;
             }
@@ -256,6 +256,11 @@
                 border-color:rgba(74,222,128,.45);
                 background:linear-gradient(180deg,rgba(74,222,128,.04),transparent),var(--clr-surface);
             }
+            .vf-set.next-up:not(.completed) {
+                border-color:rgba(230,57,70,.58);
+                background:linear-gradient(180deg,rgba(230,57,70,.055),transparent),var(--clr-surface);
+                box-shadow:0 0 0 3px rgba(230,57,70,.08);
+            }
             .vf-set-head {
                 display:flex;
                 align-items:center;
@@ -280,6 +285,11 @@
                 grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
                 gap:10px;
                 align-items:end;
+            }
+            .vf-field {
+                display:flex;
+                min-width:0;
+                flex-direction:column;
             }
             .vf-field label {
                 display:block;
@@ -337,16 +347,26 @@
                 border:1px solid var(--clr-border);
                 color:var(--clr-text);
             }
-            .vf-use-last {
+            .vf-set-tools {
+                display:flex;
+                flex-wrap:wrap;
+                align-items:center;
+                gap:8px 14px;
                 margin-top:9px;
+            }
+            .vf-use-last,
+            .vf-copy-prev {
                 border:0;
                 background:transparent;
-                color:#60a5fa;
                 font-size:11px;
                 font-weight:700;
                 cursor:pointer;
                 padding:0;
             }
+            .vf-use-last { color:#60a5fa; }
+            .vf-copy-prev { color:var(--clr-text-muted); }
+            .vf-use-last:hover,
+            .vf-copy-prev:hover { color:var(--clr-text); }
             .vf-error {
                 display:block;
                 margin-top:7px;
@@ -354,12 +374,11 @@
                 font-size:11px;
                 line-height:1.35;
             }
-            .vf-field-hint {
-                display:block;
-                margin-top:6px;
-                color:#666;
-                font-size:10px;
-                line-height:1.3;
+            .vf-bodyweight-note {
+                margin:10px 0 0;
+                color:#777;
+                font-size:11px;
+                line-height:1.35;
             }
             .vf-rest-timer {
                 position:fixed;
@@ -475,10 +494,11 @@
                         <div class="vf-prescription">
                             <span>{{ $current->sets }} series</span>
                             <span>Objetivo: {{ $current->reps ?? '-' }} reps</span>
-                            @if($current->rest)
-                                <span>{{ $current->rest }} s descanso</span>
+                            @if($this->restLabel)
+                                <span>{{ $this->restLabel }}</span>
                             @endif
                         </div>
+                        <div class="vf-bodyweight-note">Para ejercicios con peso corporal, dejá el campo Peso vacío.</div>
 
                         <div class="vf-exercise-actions">
                             @if ($current->exercise->gif_url || $current->exercise->video_url)
@@ -545,10 +565,9 @@
                                                 autocomplete="off"
                                                 wire:model="inputs.{{ $i }}.weight"
                                                 aria-label="Peso en kg de la serie {{ $i }}"
-                                                placeholder="0"
+                                                placeholder="—"
                                             >
                                         </div>
-                                        <span class="vf-field-hint">0 o vacío = peso corporal</span>
                                         @error('inputs.' . $i . '.weight')
                                             <span class="vf-error">{{ $message }}</span>
                                         @enderror
@@ -567,7 +586,7 @@
                                                 autocomplete="off"
                                                 wire:model="inputs.{{ $i }}.reps"
                                                 aria-label="Repeticiones de la serie {{ $i }}"
-                                                placeholder="{{ is_numeric($current->reps) ? $current->reps : '0' }}"
+                                                placeholder="{{ is_numeric($current->reps) ? $current->reps : 'Reps' }}"
                                             >
                                         </div>
                                         @error('inputs.' . $i . '.reps')
@@ -586,16 +605,26 @@
                                     </button>
                                 </div>
 
-                                @if($lastLog && !$isCompleted)
-                                    <button type="button" class="vf-use-last" wire:click="useLastLog({{ $i }})">
-                                        Usar última marca:
-                                        @if($lastLog->weight === null || (float) $lastLog->weight <= 0)
-                                            peso corporal
-                                        @else
-                                            {{ rtrim(rtrim(number_format((float) $lastLog->weight, 2, '.', ''), '0'), '.') }} kg
+                                @if(!$isCompleted && ($lastLog || $i > 1))
+                                    <div class="vf-set-tools">
+                                        @if($lastLog)
+                                            <button type="button" class="vf-use-last" wire:click="useLastLog({{ $i }})">
+                                                Usar última marca:
+                                                @if($lastLog->weight === null || (float) $lastLog->weight <= 0)
+                                                    peso corporal
+                                                @else
+                                                    {{ rtrim(rtrim(number_format((float) $lastLog->weight, 2, '.', ''), '0'), '.') }} kg
+                                                @endif
+                                                × {{ $lastLog->reps }}
+                                            </button>
                                         @endif
-                                        × {{ $lastLog->reps }}
-                                    </button>
+
+                                        @if($i > 1)
+                                            <button type="button" class="vf-copy-prev" wire:click="copyPreviousSet({{ $i }})">
+                                                Copiar serie anterior
+                                            </button>
+                                        @endif
+                                    </div>
                                 @endif
 
                                 @error('set_' . $i)
@@ -683,11 +712,28 @@
                 Livewire.on('set-logged', (event) => {
                     const payload = event?.[0] ?? event ?? {};
                     const setNumber = payload.set;
+                    const nextSetNumber = payload.nextSet;
                     const row = document.getElementById('set-' + setNumber);
+
+                    document.querySelectorAll('.vf-set.next-up').forEach((element) => {
+                        element.classList.remove('next-up');
+                    });
 
                     if (row) {
                         row.style.transform = 'scale(.99)';
                         setTimeout(() => row.style.transform = 'scale(1)', 140);
+                    }
+
+                    if (nextSetNumber) {
+                        const nextRow = document.getElementById('set-' + nextSetNumber);
+                        if (nextRow) {
+                            nextRow.classList.add('next-up');
+                            setTimeout(() => {
+                                nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                const nextInput = document.getElementById('weight-' + nextSetNumber);
+                                nextInput?.focus({ preventScroll: true });
+                            }, 220);
+                        }
                     }
 
                     startRestTimer(Number(payload.rest || 0));
