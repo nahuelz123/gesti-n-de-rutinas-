@@ -489,7 +489,6 @@
                                 <button
                                     type="button"
                                     class="vf-small-action"
-                                    x-data
                                     x-data="{{ json_encode(['type' => $mediaType, 'url' => $mediaUrl, 'title' => $current->exercise->title]) }}"
                                     @click="$dispatch('open-tutorial', { type, url, title })"
                                 >
