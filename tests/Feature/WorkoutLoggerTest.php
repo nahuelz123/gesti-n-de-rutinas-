@@ -342,4 +342,14 @@ class WorkoutLoggerTest extends TestCase
             'set_number' => 1,
         ]);
     }
+
+    public function test_client_routine_layout_loads_livewire_scripts_for_mobile_controls()
+    {
+        $this->actingAs($this->client);
+
+        $this->get(route('client.routines.active'))
+            ->assertOk()
+            ->assertSee('livewire/livewire.js', false);
+    }
+
 }
