@@ -319,6 +319,7 @@ class WorkoutLoggerTest extends TestCase
             ->call('selectDay', $this->day->id)
             ->assertSee('1 min 30 s descanso')
             ->assertSee('vf-rest-timer', false)
+            ->assertSee('@set-logged.window', false)
             ->assertSee('OMITIR');
     }
 
