@@ -317,9 +317,33 @@ class WorkoutLoggerTest extends TestCase
 
         Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
             ->call('selectDay', $this->day->id)
-            ->assertSee('90 s descanso')
+            ->assertSee('1 min 30 s descanso')
             ->assertSee('vf-rest-timer', false)
             ->assertSee('OMITIR');
+    }
+
+    public function test_two_minute_rest_is_rendered_without_duplicate_units(): void
+    {
+        $this->routineDayExercise->update(['rest' => 120]);
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->assertSee('2 min descanso')
+            ->assertDontSee('2 min s descanso');
+    }
+
+    public function test_client_can_copy_previous_set_values(): void
+    {
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', '42.5')
+            ->set('inputs.1.reps', '8')
+            ->call('copyPreviousSet', 2)
+            ->assertSet('inputs.2.weight', '42.5')
+            ->assertSet('inputs.2.reps', '8');
     }
 
     public function test_client_cannot_log_set_in_historical_routine(): void
