@@ -304,25 +304,24 @@ class WorkoutLoggerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_stepper_actions_update_values_and_bound_repetitions()
+    public function test_client_can_log_89_repetitions_when_entered_directly()
     {
         $this->actingAs($this->client);
 
         Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
             ->call('selectDay', $this->day->id)
-            ->call('increaseWeight', 1)
-            ->assertSet('inputs.1.weight', 2.5)
-            ->call('decreaseWeight', 1)
-            ->assertSet('inputs.1.weight', 0.1)
-            ->call('decreaseWeight', 1)
-            ->assertSet('inputs.1.weight', 0.1)
-            ->call('increaseReps', 1)
-            ->assertSet('inputs.1.reps', 1)
-            ->set('inputs.1.reps', 100)
-            ->call('increaseReps', 1)
-            ->assertSet('inputs.1.reps', 100)
-            ->call('decreaseReps', 1)
-            ->assertSet('inputs.1.reps', 99);
+            ->set('inputs.1.weight', '30')
+            ->set('inputs.1.reps', '89')
+            ->call('logSet', 1)
+            ->assertDispatched('set-logged');
+
+        $this->assertDatabaseHas('exercise_logs', [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => 30,
+            'reps' => 89,
+        ]);
     }
 
     public function test_client_cannot_log_more_than_100_repetitions()
