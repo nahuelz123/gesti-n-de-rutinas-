@@ -123,13 +123,13 @@ class WorkoutLogger extends Component
 
     public function increaseReps($setNumber)
     {
-        $val = (int)($this->inputs[$setNumber]['reps'] ?? 0);
-        $this->inputs[$setNumber]['reps'] = $val + 1;
+        $val = (int) ($this->inputs[$setNumber]['reps'] ?? 0);
+        $this->inputs[$setNumber]['reps'] = min(100, $val + 1);
     }
 
     public function decreaseReps($setNumber)
     {
-        $val = (int)($this->inputs[$setNumber]['reps'] ?? 0);
+        $val = (int) ($this->inputs[$setNumber]['reps'] ?? 0);
         $this->inputs[$setNumber]['reps'] = max(0, $val - 1);
     }
 
@@ -148,11 +148,16 @@ class WorkoutLogger extends Component
 
         $validated = $this->validate([
             "inputs.{$setNumber}.weight" => ['required', 'numeric', 'gt:0', 'max:9999.99'],
+            "inputs.{$setNumber}.reps" => ['required', 'integer', 'min:1', 'max:100'],
         ], [
             "inputs.{$setNumber}.weight.required" => 'Ingresá el peso realizado en esta serie.',
             "inputs.{$setNumber}.weight.numeric" => 'Ingresá un peso válido.',
             "inputs.{$setNumber}.weight.gt" => 'El peso debe ser mayor que cero o dejarse vacío.',
             "inputs.{$setNumber}.weight.max" => 'El peso supera el máximo admitido.',
+            "inputs.{$setNumber}.reps.required" => 'Ingresá las repeticiones realizadas.',
+            "inputs.{$setNumber}.reps.integer" => 'Las repeticiones deben ser un número entero.',
+            "inputs.{$setNumber}.reps.min" => 'Completá al menos 1 repetición.',
+            "inputs.{$setNumber}.reps.max" => 'El máximo admitido es 100 repeticiones.',
         ]);
 
         $weight = isset($validated['inputs'][$setNumber]['weight']) && $validated['inputs'][$setNumber]['weight'] !== '' ? (float)$validated['inputs'][$setNumber]['weight'] : null;
