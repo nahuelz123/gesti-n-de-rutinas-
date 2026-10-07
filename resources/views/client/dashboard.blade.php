@@ -1,9 +1,9 @@
 <x-layouts.client>
 <style>
     .vf-dashboard {
-        max-width: 1080px;
-        margin: 0 auto;
-        padding: 24px 16px 110px;
+        max-width:1080px;
+        margin:0 auto;
+        padding:24px 16px 110px;
     }
     .vf-dashboard-header {
         display:flex;
@@ -43,7 +43,7 @@
     .vf-panel {
         position:relative;
         overflow:hidden;
-        background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01)), var(--clr-surface);
+        background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01)),var(--clr-surface);
         border:1px solid var(--clr-border);
         border-radius:20px;
         padding:20px;
@@ -51,8 +51,8 @@
     .vf-training-panel {
         border-color:rgba(230,57,70,.32);
         background:
-            radial-gradient(circle at 100% 0%, rgba(230,57,70,.16), transparent 35%),
-            linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01)),
+            radial-gradient(circle at 100% 0%,rgba(230,57,70,.16),transparent 35%),
+            linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01)),
             var(--clr-surface);
     }
     .vf-panel-label {
@@ -91,12 +91,66 @@
         color:var(--clr-primary);
         border:1px solid rgba(230,57,70,.18);
     }
+    .vf-training-summary {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:8px;
+        margin-top:18px;
+    }
+    .vf-stat {
+        min-width:0;
+        border:1px solid rgba(255,255,255,.07);
+        border-radius:13px;
+        background:rgba(0,0,0,.16);
+        padding:11px;
+    }
+    .vf-stat-label {
+        color:var(--clr-text-muted);
+        font-size:9px;
+        font-weight:800;
+        letter-spacing:.08em;
+        text-transform:uppercase;
+    }
+    .vf-stat-value {
+        display:block;
+        margin-top:5px;
+        color:var(--clr-text);
+        font-size:14px;
+        font-weight:800;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+    .vf-week-row {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-top:16px;
+        color:var(--clr-text-muted);
+        font-size:11px;
+        font-weight:700;
+    }
+    .vf-week-track {
+        width:100%;
+        height:7px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        overflow:hidden;
+        margin-top:8px;
+    }
+    .vf-week-fill {
+        height:100%;
+        border-radius:inherit;
+        background:linear-gradient(90deg,var(--clr-primary),#fb7185);
+        transition:width .25s ease;
+    }
     .vf-dashboard .client-btn {
         min-height:50px;
         border-radius:13px;
         font-weight:800;
     }
-    .vf-training-action { margin-top:20px; }
+    .vf-training-action { margin-top:18px; }
     .vf-section-title {
         color:var(--clr-text);
         font-size:16px;
@@ -170,7 +224,7 @@
     }
     .vf-quick-grid {
         display:grid;
-        grid-template-columns:repeat(2, minmax(0,1fr));
+        grid-template-columns:repeat(2,minmax(0,1fr));
         gap:10px;
     }
     .vf-quick {
@@ -184,7 +238,7 @@
         display:flex;
         flex-direction:column;
         justify-content:space-between;
-        transition:transform .15s ease, border-color .15s ease, background .15s ease;
+        transition:transform .15s ease,border-color .15s ease,background .15s ease;
     }
     .vf-quick:hover {
         transform:translateY(-2px);
@@ -207,14 +261,16 @@
         line-height:1.5;
         margin:12px 0 18px;
     }
-    @media (max-width: 820px) {
+    @media (max-width:820px) {
         .vf-dashboard-grid { grid-template-columns:1fr; }
     }
-    @media (max-width: 520px) {
+    @media (max-width:520px) {
         .vf-dashboard { padding-top:20px; }
         .vf-dashboard-title { font-size:27px; }
         .vf-panel { padding:17px; border-radius:18px; }
         .vf-training-title { font-size:21px; }
+        .vf-training-summary { grid-template-columns:1fr 1fr; }
+        .vf-stat:first-child { grid-column:1 / -1; }
     }
 </style>
 
@@ -223,14 +279,14 @@
         <div>
             <div class="vf-dashboard-kicker">Tu día en VisionFit</div>
             <h1 class="vf-dashboard-title">Hola, {{ explode(' ', auth()->user()->name)[0] }} 👋</h1>
-            <p class="vf-dashboard-subtitle">Tenés todo listo para seguir avanzando hoy.</p>
+            <p class="vf-dashboard-subtitle">Tu entrenamiento, nutrición y progreso en un solo lugar.</p>
         </div>
     </header>
 
     <div class="vf-dashboard-grid">
         <div class="vf-stack">
             <section class="vf-panel vf-training-panel">
-                <div class="vf-panel-label">Entrenamiento de hoy</div>
+                <div class="vf-panel-label">{{ $hasWorkoutToday ? 'Entrenamiento en curso' : 'Tu próximo entrenamiento' }}</div>
 
                 @if ($active)
                     <div class="vf-training-top">
@@ -247,10 +303,33 @@
                         </div>
                     </div>
 
+                    <div class="vf-training-summary">
+                        <div class="vf-stat">
+                            <span class="vf-stat-label">Esta semana</span>
+                            <strong class="vf-stat-value">{{ $weeklyCompletedSessions }}/{{ $weeklyTarget ?: $active->routine->days->count() }} sesiones</strong>
+                        </div>
+                        <div class="vf-stat">
+                            <span class="vf-stat-label">{{ $hasWorkoutToday ? 'Entrenando' : 'Siguiente día' }}</span>
+                            <strong class="vf-stat-value">{{ $nextWorkoutDay?->title ?? 'Elegí un día' }}</strong>
+                        </div>
+                        <div class="vf-stat">
+                            <span class="vf-stat-label">Última sesión</span>
+                            <strong class="vf-stat-value">{{ $lastWorkout?->logged_at ? $lastWorkout->logged_at->format('d/m') : 'Sin registros' }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="vf-week-row">
+                        <span>Progreso semanal</span>
+                        <span>{{ $weeklyProgressPct }}%</span>
+                    </div>
+                    <div class="vf-week-track" aria-label="Progreso de entrenamientos semanales">
+                        <div class="vf-week-fill" style="width:{{ $weeklyProgressPct }}%"></div>
+                    </div>
+
                     <div class="vf-training-action">
                         <a href="{{ route('client.routines.active') }}" style="text-decoration:none;">
                             <x-client.action-button variant="primary">
-                                EMPEZAR ENTRENAMIENTO
+                                {{ $hasWorkoutToday ? 'CONTINUAR ENTRENAMIENTO' : 'EMPEZAR ENTRENAMIENTO' }}
                             </x-client.action-button>
                         </a>
                     </div>
