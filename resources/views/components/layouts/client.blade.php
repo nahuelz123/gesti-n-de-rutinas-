@@ -12,7 +12,12 @@
 
     @livewireStyles
 
-    @vite(['resources/css/app.css', 'resources/css/client.css', 'resources/js/app.js'])
+    {{-- App base por Vite. El CSS del cliente se inserta inline para que el preview
+         no dependa de la resolución de assets de Vite/Railway. --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        {!! file_get_contents(resource_path('css/client.css')) !!}
+    </style>
 </head>
 <body>
 

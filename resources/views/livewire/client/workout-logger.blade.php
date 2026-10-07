@@ -1,287 +1,556 @@
 <div>
     @if ($step === 'overview')
-        <div style="padding: var(--space-5) var(--space-4); max-width: 640px; margin: 0 auto; padding-bottom: calc(var(--space-6) + var(--bottom-nav-height));">
-            <h1 style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--clr-text); margin-bottom: 2px;">
-                TU RUTINA
-            </h1>
-            <p style="font-size: 14px; color: var(--clr-text-muted); font-weight: 500; margin-bottom: 8px;">
-                {{ $assignment->routine->title }}
-            </p>
+        <style>
+            .vf-routine-overview {
+                max-width:760px;
+                margin:0 auto;
+                padding:24px 16px calc(96px + var(--safe-area-bottom));
+            }
+            .vf-routine-head { margin-bottom:22px; }
+            .vf-routine-kicker {
+                color:var(--clr-primary);
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.12em;
+                text-transform:uppercase;
+                margin-bottom:6px;
+            }
+            .vf-routine-title {
+                color:var(--clr-text);
+                font-size:29px;
+                line-height:1.05;
+                font-weight:850;
+                letter-spacing:-.04em;
+            }
+            .vf-routine-subtitle {
+                margin-top:7px;
+                color:var(--clr-text-muted);
+                font-size:14px;
+            }
+            .vf-day-grid {
+                display:grid;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:12px;
+            }
+            .vf-day-card {
+                border:1px solid var(--clr-border);
+                border-radius:18px;
+                background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01)),var(--clr-surface);
+                padding:18px;
+            }
+            .vf-day-number {
+                color:var(--clr-primary);
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.1em;
+                text-transform:uppercase;
+            }
+            .vf-day-card h3 {
+                margin-top:6px;
+                color:var(--clr-text);
+                font-size:18px;
+                font-weight:800;
+                letter-spacing:-.02em;
+            }
+            .vf-day-card p {
+                margin:5px 0 16px;
+                color:var(--clr-text-muted);
+                font-size:13px;
+            }
+            @media(max-width:620px) {
+                .vf-day-grid { grid-template-columns:1fr; }
+                .vf-routine-title { font-size:26px; }
+            }
+        </style>
+
+        <div class="vf-routine-overview">
+            <header class="vf-routine-head">
+                <div class="vf-routine-kicker">Tu entrenamiento</div>
+                <h1 class="vf-routine-title">{{ $assignment->routine->title }}</h1>
+                <p class="vf-routine-subtitle">Elegí el día que vas a entrenar y registrá cada serie a medida que avanzás.</p>
+            </header>
+
             @if($assignment->status === 'completed' && $assignment->end_date && \Carbon\Carbon::parse($assignment->end_date)->isToday())
-                <div style="display:inline-block; background:rgba(74,222,128,0.1); color:var(--clr-success); font-size:12px; font-weight:700; padding:4px 8px; border-radius:4px; margin-bottom:var(--space-6);">
-                    Sesión iniciada desde historial
+                <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.10);color:var(--clr-success);font-size:12px;font-weight:750;padding:7px 10px;border:1px solid rgba(74,222,128,.18);border-radius:999px;margin-bottom:16px;">
+                    Sesión reabierta desde el historial
                 </div>
-            @else
-                <div style="margin-bottom: var(--space-6);"></div>
             @endif
 
-            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <div class="vf-day-grid">
                 @foreach($assignment->routine->days as $day)
-                    @php
-                        $exCount = $day->exercises->count();
-                        // Optional progress logic here if we load logs for all days, 
-                        // but to avoid N+1 we just show the start button.
-                    @endphp
-                    <x-client.card>
-                        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4);">
-                            <div>
-                                <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--clr-primary); margin-bottom: 4px;">Día {{ $day->day_number }}</div>
-                                <h3 style="font-size: 18px; font-weight: 700; color: var(--clr-text); margin-bottom: 2px;">{{ $day->title }}</h3>
-                                <p style="font-size: 14px; color: var(--clr-text-muted);">{{ $exCount }} ejercicios</p>
-                            </div>
-                        </div>
-                        
+                    <article class="vf-day-card">
+                        <div class="vf-day-number">Día {{ $day->day_number }}</div>
+                        <h3>{{ $day->title }}</h3>
+                        <p>{{ $day->exercises->count() }} ejercicios</p>
+
                         <x-client.action-button variant="primary" wire:click="selectDay({{ $day->id }})">
-                            COMENZAR ENTRENAMIENTO
+                            EMPEZAR
                         </x-client.action-button>
-                    </x-client.card>
+                    </article>
                 @endforeach
             </div>
         </div>
 
     @elseif ($step === 'training')
         <style>
-            /* Hide bottom nav during training */
-            .client-bottom-nav { display: none !important; }
-            .app-main { padding-bottom: 0 !important; }
-            
-            .workout-nav {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: var(--space-4);
-                background: var(--clr-surface);
-                border-bottom: 1px solid var(--clr-border);
-                position: sticky;
-                top: 0;
-                z-index: 10;
+            .client-bottom-nav { display:none !important; }
+            .app-main { padding-bottom:0 !important; }
+
+            .vf-workout {
+                min-height:100svh;
+                background:var(--clr-bg);
+                padding-bottom:96px;
             }
-            .workout-progress-bar {
-                height: 4px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 2px;
-                margin-top: 8px;
-                overflow: hidden;
+            .vf-workout-topbar {
+                position:sticky;
+                top:0;
+                z-index:20;
+                background:rgba(19,19,19,.94);
+                backdrop-filter:blur(14px);
+                border-bottom:1px solid var(--clr-border);
             }
-            .workout-progress-fill {
-                height: 100%;
-                background: var(--clr-primary);
-                transition: width 0.3s ease;
+            .vf-workout-topbar-inner {
+                max-width:760px;
+                margin:0 auto;
+                padding:12px 16px 10px;
+                display:grid;
+                grid-template-columns:auto minmax(0,1fr) auto;
+                align-items:center;
+                gap:12px;
             }
-            .set-row {
-                background: var(--clr-surface);
-                border: 1px solid var(--clr-border);
-                border-radius: var(--radius-lg);
-                padding: var(--space-4);
-                margin-bottom: var(--space-3);
-                transition: border-color 0.2s, transform 0.2s;
+            .vf-workout-exit {
+                appearance:none;
+                border:0;
+                background:transparent;
+                color:var(--clr-text-muted);
+                font:inherit;
+                font-size:13px;
+                font-weight:700;
+                padding:8px 0;
+                cursor:pointer;
             }
-            .set-row.completed {
-                border-color: var(--clr-success);
-                background: rgba(74, 222, 128, 0.03);
+            .vf-workout-day {
+                color:var(--clr-text);
+                font-size:13px;
+                font-weight:800;
+                text-align:center;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
             }
-            .set-number {
-                font-size: 12px;
-                font-weight: 700;
-                color: var(--clr-text-muted);
-                text-transform: uppercase;
-                letter-spacing: 0.1em;
-                margin-bottom: var(--space-3);
+            .vf-workout-count {
+                color:var(--clr-text-muted);
+                font-size:12px;
+                font-weight:700;
+                font-variant-numeric:tabular-nums;
             }
-            .set-controls {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: var(--space-3);
-                margin-bottom: var(--space-4);
+            .vf-progress-track {
+                max-width:760px;
+                height:4px;
+                margin:0 auto;
+                background:rgba(255,255,255,.07);
+                overflow:hidden;
             }
-            .set-control-group {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                min-width: 0;
+            .vf-progress-fill {
+                height:100%;
+                background:var(--clr-primary);
+                transition:width .25s ease;
             }
-            .set-control-label {
-                font-size: 11px;
-                color: var(--clr-text-muted);
-                text-transform: uppercase;
-                font-weight: 600;
-                text-align: center;
+            .vf-workout-body {
+                max-width:760px;
+                margin:0 auto;
+                padding:22px 16px 0;
             }
-            .stepper {
-                display: flex;
-                align-items: center;
-                min-width: 0;
-                background: var(--clr-bg);
-                border-radius: var(--radius-md);
-                border: 1px solid var(--clr-border);
-                overflow: hidden;
-                height: 44px;
+            .vf-exercise-head {
+                text-align:left;
+                margin-bottom:18px;
             }
-            .stepper-input {
-                flex: 1 1 100%;
-                width: 100%;
-                min-width: 0;
-                max-width: 100%;
-                box-sizing: border-box;
-                background: transparent;
-                border: none;
-                color: var(--clr-text);
-                font-size: 18px;
-                font-weight: 700;
-                font-variant-numeric: tabular-nums;
-                text-align: center;
-                padding: 0 6px;
+            .vf-exercise-kicker {
+                color:var(--clr-primary);
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.12em;
+                text-transform:uppercase;
             }
-            .stepper-input:focus { outline: none; }
-            .stepper-input::placeholder { color: var(--clr-text-muted); }
-            
-            .tech-details {
-                display: none;
-                padding-top: var(--space-3);
-                margin-top: var(--space-3);
-                border-top: 1px dashed var(--clr-border);
-                font-size: 14px;
-                color: var(--clr-text-muted);
+            .vf-exercise-title {
+                margin-top:6px;
+                color:var(--clr-text);
+                font-size:29px;
+                line-height:1.08;
+                font-weight:850;
+                letter-spacing:-.04em;
             }
-            .tech-details.open { display: block; }
+            .vf-prescription {
+                display:flex;
+                flex-wrap:wrap;
+                gap:8px;
+                margin-top:12px;
+            }
+            .vf-prescription span {
+                display:inline-flex;
+                align-items:center;
+                min-height:30px;
+                padding:0 10px;
+                border-radius:999px;
+                border:1px solid var(--clr-border);
+                background:rgba(255,255,255,.025);
+                color:var(--clr-text-muted);
+                font-size:12px;
+                font-weight:700;
+            }
+            .vf-exercise-actions {
+                display:flex;
+                gap:8px;
+                margin-top:14px;
+            }
+            .vf-small-action {
+                flex:1;
+                min-height:42px;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                gap:7px;
+                border:1px solid var(--clr-border);
+                border-radius:12px;
+                background:var(--clr-surface);
+                color:var(--clr-text);
+                font-size:13px;
+                font-weight:700;
+                text-decoration:none;
+                cursor:pointer;
+            }
+            .vf-last-log {
+                margin:18px 0;
+                padding:13px 14px;
+                border-radius:14px;
+                border:1px solid rgba(96,165,250,.18);
+                background:rgba(96,165,250,.07);
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:12px;
+            }
+            .vf-last-log-label {
+                color:#60a5fa;
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.08em;
+                text-transform:uppercase;
+            }
+            .vf-last-log-value {
+                margin-top:3px;
+                color:var(--clr-text);
+                font-size:14px;
+                font-weight:750;
+            }
+
+            .vf-set-list { display:flex; flex-direction:column; gap:10px; }
+            .vf-set {
+                border:1px solid var(--clr-border);
+                border-radius:16px;
+                background:var(--clr-surface);
+                padding:14px;
+                transition:border-color .2s ease, background .2s ease, transform .15s ease;
+            }
+            .vf-set.completed {
+                border-color:rgba(74,222,128,.45);
+                background:linear-gradient(180deg,rgba(74,222,128,.04),transparent),var(--clr-surface);
+            }
+            .vf-set-head {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                margin-bottom:12px;
+            }
+            .vf-set-index {
+                color:var(--clr-text);
+                font-size:13px;
+                font-weight:800;
+            }
+            .vf-set-status {
+                color:var(--clr-success);
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.07em;
+                text-transform:uppercase;
+            }
+            .vf-set-grid {
+                display:grid;
+                grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+                gap:10px;
+                align-items:end;
+            }
+            .vf-field label {
+                display:block;
+                margin-bottom:6px;
+                color:var(--clr-text-muted);
+                font-size:10px;
+                font-weight:800;
+                letter-spacing:.06em;
+                text-transform:uppercase;
+            }
+            .vf-input-wrap {
+                position:relative;
+                display:flex;
+                align-items:center;
+                min-width:0;
+                border:1px solid #303030;
+                border-radius:12px;
+                background:#0b0b0b;
+                transition:border-color .15s ease, box-shadow .15s ease;
+            }
+            .vf-input-wrap:focus-within {
+                border-color:var(--clr-primary);
+                box-shadow:0 0 0 3px rgba(230,57,70,.10);
+            }
+            .vf-input {
+                width:100%;
+                min-width:0;
+                height:50px;
+                border:0;
+                outline:0;
+                background:transparent;
+                color:var(--clr-text);
+                text-align:center;
+                font-size:20px;
+                font-weight:800;
+                font-variant-numeric:tabular-nums;
+                padding:0 10px;
+            }
+            .vf-input::placeholder { color:#555; font-weight:600; }
+            .vf-save {
+                min-width:148px;
+                height:50px;
+                border:0;
+                border-radius:12px;
+                padding:0 16px;
+                cursor:pointer;
+                background:var(--clr-primary);
+                color:#fff;
+                font-size:12px;
+                font-weight:850;
+                letter-spacing:.03em;
+            }
+            .vf-set.completed .vf-save {
+                background:var(--clr-surface-elevated);
+                border:1px solid var(--clr-border);
+                color:var(--clr-text);
+            }
+            .vf-use-last {
+                margin-top:9px;
+                border:0;
+                background:transparent;
+                color:#60a5fa;
+                font-size:11px;
+                font-weight:700;
+                cursor:pointer;
+                padding:0;
+            }
+            .vf-error {
+                display:block;
+                margin-top:7px;
+                color:#fb7185;
+                font-size:11px;
+                line-height:1.35;
+            }
+            .vf-workout-nav {
+                display:flex;
+                gap:10px;
+                margin-top:18px;
+            }
+            .vf-workout-nav .client-btn {
+                min-height:50px;
+                border-radius:12px;
+                font-weight:800;
+            }
+
+            @media(max-width:620px) {
+                .vf-exercise-title { font-size:25px; }
+                .vf-set-grid { grid-template-columns:1fr 1fr; }
+                .vf-save { grid-column:1 / -1; width:100%; min-width:0; }
+            }
+            @media(max-width:390px) {
+                .vf-set { padding:12px; }
+                .vf-input { font-size:18px; }
+                .vf-workout-topbar-inner { gap:8px; }
+                .vf-workout-day { font-size:12px; }
+            }
         </style>
 
-        <div style="min-height: 100svh; background: var(--clr-bg); padding-bottom: 100px;">
-            <div class="workout-nav">
-                <button wire:click="exitTraining" wire:confirm="¿Salir del entrenamiento? Tu progreso guardado no se perderá." style="background:transparent; border:none; color:var(--clr-text); font-size:14px; font-weight:600; display:flex; align-items:center; gap:4px; padding:8px 0;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
-                    Salir
-                </button>
-                <div style="font-weight:700; font-size:14px;">{{ $this->day->title }}</div>
-                <div style="font-size:14px; color:var(--clr-text-muted); font-weight:600;">{{ $currentExerciseIndex + 1 }} / {{ $this->exercises->count() }}</div>
-            </div>
-            
-            <div style="padding: 0 var(--space-4);">
-                <div class="workout-progress-bar">
-                    <div class="workout-progress-fill" style="width: {{ (($currentExerciseIndex + 1) / $this->exercises->count()) * 100 }}%;"></div>
+        <div class="vf-workout">
+            <div class="vf-workout-topbar">
+                <div class="vf-workout-topbar-inner">
+                    <button
+                        class="vf-workout-exit"
+                        wire:click="exitTraining"
+                        wire:confirm="¿Salir del entrenamiento? Lo que ya guardaste no se perderá."
+                    >
+                        ← Salir
+                    </button>
+
+                    <div class="vf-workout-day">{{ $this->day->title }}</div>
+                    <div class="vf-workout-count">{{ $currentExerciseIndex + 1 }}/{{ $this->exercises->count() }}</div>
+                </div>
+
+                <div class="vf-progress-track">
+                    <div class="vf-progress-fill" style="width:{{ (($currentExerciseIndex + 1) / max(1, $this->exercises->count())) * 100 }}%"></div>
                 </div>
             </div>
 
             @php $current = $this->currentExercise; @endphp
+
             @if($current)
-                <div style="padding: var(--space-5) var(--space-4); max-width: 640px; margin: 0 auto;">
-                    
-                    {{-- Header Ejercicio --}}
-                    <div style="margin-bottom: var(--space-6); text-align: center;">
-                        <h2 style="font-size: 24px; font-weight: 800; color: var(--clr-text); margin-bottom: 8px;">{{ $current->exercise->title }}</h2>
-                        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:16px; font-size:13px; font-weight:600; color:var(--clr-text-muted); margin-bottom: 16px;">
+                <main class="vf-workout-body">
+                    <header class="vf-exercise-head">
+                        <div class="vf-exercise-kicker">Ejercicio {{ $currentExerciseIndex + 1 }}</div>
+                        <h1 class="vf-exercise-title">{{ $current->exercise->title }}</h1>
+
+                        <div class="vf-prescription">
                             <span>{{ $current->sets }} series</span>
-                            <span>&bull;</span>
-                            <span>{{ $current->reps ?? '-' }} reps</span>
+                            <span>Objetivo: {{ $current->reps ?? '-' }} reps</span>
                             @if($current->rest)
-                                <span>&bull;</span>
-                                <span>{{ $current->rest }}s desc.</span>
+                                <span>{{ $current->rest }} s descanso</span>
                             @endif
                         </div>
-                        
-                        <div style="display: flex; gap: 8px; max-width: 320px; margin: 0 auto;">
+
+                        <div class="vf-exercise-actions">
                             @if ($current->exercise->gif_url || $current->exercise->video_url)
                                 @php
                                     $mediaType = $current->exercise->video_url ? 'video' : 'gif';
                                     $mediaUrl = $current->exercise->video_url ?? $current->exercise->gif_url;
                                 @endphp
-                                <button type="button" x-data @click="$dispatch('open-tutorial', { type: '{{ $mediaType }}', url: '{{ $mediaUrl }}', title: '{{ addslashes($current->exercise->title) }}' })" style="flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 10px; color: var(--clr-text); font-size: 13px; font-weight: 600; display:flex; align-items:center; justify-content:center; gap:6px;">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;"><path d="M8 5v14l11-7z"/></svg>
-                                    Tutorial
+                                <button
+                                    type="button"
+                                    class="vf-small-action"
+                                    x-data
+                                    @click="$dispatch('open-tutorial', { type: '{{ $mediaType }}', url: '{{ $mediaUrl }}', title: '{{ addslashes($current->exercise->title) }}' })"
+                                >
+                                    ▶ Tutorial
                                 </button>
                             @endif
-                            
-                            <a href="{{ route('client.progress.exercise', $current->exercise_id) }}" style="flex:1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 10px; color: var(--clr-text); font-size: 13px; font-weight: 600; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                                Progreso
+
+                            <a class="vf-small-action" href="{{ route('client.progress.exercise', $current->exercise_id) }}">
+                                ↗ Progreso
                             </a>
                         </div>
-                    </div>
+                    </header>
 
-                    {{-- Historial / Info --}}
                     @if($this->lastLog)
-                        <div style="background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.2); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-5); display: flex; align-items: center; justify-content: space-between;">
+                        <div class="vf-last-log">
                             <div>
-                                <div style="font-size:11px; font-weight:700; color:#60a5fa; text-transform:uppercase; margin-bottom:2px;">Última sesión</div>
-                                <div style="font-size:14px; font-weight:600; color:var(--clr-text);">{{ rtrim(rtrim(number_format($this->lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $this->lastLog->reps }} reps</div>
+                                <div class="vf-last-log-label">Última vez</div>
+                                <div class="vf-last-log-value">
+                                    {{ rtrim(rtrim(number_format($this->lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $this->lastLog->reps }} reps
+                                </div>
                             </div>
+                            <div style="color:var(--clr-text-muted);font-size:11px;text-align:right;">Referencia<br>para hoy</div>
                         </div>
                     @endif
 
-                    {{-- Series --}}
-                    <div style="display: flex; flex-direction: column;">
+                    <div class="vf-set-list">
                         @for($i = 1; $i <= $current->sets; $i++)
                             @php $isCompleted = $this->isSetCompleted($i); @endphp
-                            
-                            <div class="set-row {{ $isCompleted ? 'completed' : '' }}" id="set-{{ $i }}">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
-                                    <div class="set-number">Serie {{ $i }}</div>
+
+                            <section class="vf-set {{ $isCompleted ? 'completed' : '' }}" id="set-{{ $i }}">
+                                <div class="vf-set-head">
+                                    <div class="vf-set-index">Serie {{ $i }}</div>
                                     @if($isCompleted)
-                                        <div style="color:var(--clr-success); display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700;">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:14px; height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                            COMPLETADA
-                                        </div>
+                                        <div class="vf-set-status">✓ Guardada</div>
                                     @endif
                                 </div>
-                                
-                                <div class="set-controls">
-                                    <div class="set-control-group">
-                                        <div class="set-control-label">Peso (kg)</div>
-                                        <div class="stepper">
-                                            <input type="text" inputmode="decimal" maxlength="7" autocomplete="off" required class="stepper-input" wire:model="inputs.{{ $i }}.weight" aria-label="Peso en kg de la serie {{ $i }}" placeholder="kg">
+
+                                <div class="vf-set-grid">
+                                    <div class="vf-field">
+                                        <label for="weight-{{ $i }}">Peso (kg)</label>
+                                        <div class="vf-input-wrap">
+                                            <input
+                                                id="weight-{{ $i }}"
+                                                class="vf-input"
+                                                type="text"
+                                                inputmode="decimal"
+                                                maxlength="7"
+                                                autocomplete="off"
+                                                wire:model="inputs.{{ $i }}.weight"
+                                                aria-label="Peso en kg de la serie {{ $i }}"
+                                                placeholder="0"
+                                            >
                                         </div>
+                                        @error('inputs.' . $i . '.weight')
+                                            <span class="vf-error">{{ $message }}</span>
+                                        @enderror
                                     </div>
-                                    <div class="set-control-group">
-                                        <div class="set-control-label">Reps</div>
-                                        <div class="stepper">
-                                            <input type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" autocomplete="off" class="stepper-input" wire:model="inputs.{{ $i }}.reps" aria-label="Repeticiones de la serie {{ $i }}" placeholder="Reps">
+
+                                    <div class="vf-field">
+                                        <label for="reps-{{ $i }}">Repeticiones</label>
+                                        <div class="vf-input-wrap">
+                                            <input
+                                                id="reps-{{ $i }}"
+                                                class="vf-input"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9]{1,3}"
+                                                maxlength="3"
+                                                autocomplete="off"
+                                                wire:model="inputs.{{ $i }}.reps"
+                                                aria-label="Repeticiones de la serie {{ $i }}"
+                                                placeholder="{{ is_numeric($current->reps) ? $current->reps : '0' }}"
+                                            >
                                         </div>
+                                        @error('inputs.' . $i . '.reps')
+                                            <span class="vf-error">{{ $message }}</span>
+                                        @enderror
                                     </div>
-                                </div>
-                                
-                                <div>
-                                    @error('inputs.' . $i . '.weight') <span style="color:var(--clr-primary); font-size:12px; display:block; margin-bottom:8px;">{{ $message }}</span> @enderror
-                                    @error('set_' . $i) <span style="color:var(--clr-primary); font-size:12px; display:block; margin-bottom:8px;">{{ $message }}</span> @enderror
-                                    <button wire:click="logSet({{ $i }})" class="client-btn {{ $isCompleted ? 'client-btn-secondary' : 'client-btn-primary' }}" style="width:100%; min-height:44px; font-size:14px;">
-                                        @if($isCompleted)
-                                            ACTUALIZAR SERIE
-                                        @else
-                                            ✓ COMPLETAR SERIE
-                                        @endif
+
+                                    <button
+                                        type="button"
+                                        wire:click="logSet({{ $i }})"
+                                        class="vf-save"
+                                        wire:loading.attr="disabled"
+                                        wire:target="logSet({{ $i }})"
+                                    >
+                                        {{ $isCompleted ? 'ACTUALIZAR' : 'GUARDAR SERIE' }}
                                     </button>
                                 </div>
-                            </div>
+
+                                @if($this->lastLog && !$isCompleted)
+                                    <button type="button" class="vf-use-last" wire:click="useLastLog({{ $i }})">
+                                        Usar {{ rtrim(rtrim(number_format($this->lastLog->weight, 2, '.', ''), '0'), '.') }} kg × {{ $this->lastLog->reps }} reps
+                                    </button>
+                                @endif
+
+                                @error('set_' . $i)
+                                    <span class="vf-error">{{ $message }}</span>
+                                @enderror
+                            </section>
                         @endfor
                     </div>
 
-                    {{-- Next Prev Controls --}}
-                    <div style="display: flex; gap: var(--space-3); margin-top: var(--space-5);">
+                    <div class="vf-workout-nav">
                         @if($currentExerciseIndex > 0)
                             <button wire:click="prevExercise" class="client-btn client-btn-secondary" style="flex:1;">← Anterior</button>
                         @endif
+
                         <button wire:click="nextExercise" class="client-btn client-btn-secondary" style="flex:1;">
                             {{ $currentExerciseIndex < $this->exercises->count() - 1 ? 'Siguiente →' : 'Finalizar' }}
                         </button>
                     </div>
-
-                </div>
+                </main>
             @endif
-
         </div>
-        
+
         <script>
             document.addEventListener('livewire:initialized', () => {
                 Livewire.on('set-logged', (event) => {
-                    // Find the set row and animate it
-                    const row = document.getElementById('set-' + event.set);
-                    if(row) {
-                        row.style.transform = 'scale(0.98)';
-                        setTimeout(() => {
-                            row.style.transform = 'scale(1)';
-                        }, 150);
+                    const setNumber = event?.set ?? event?.[0]?.set;
+                    const row = document.getElementById('set-' + setNumber);
+
+                    if (row) {
+                        row.style.transform = 'scale(.99)';
+                        setTimeout(() => row.style.transform = 'scale(1)', 140);
                     }
                 });
-                
+
                 Livewire.on('exercise-changed', () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
@@ -289,55 +558,59 @@
         </script>
 
     @elseif ($step === 'completed')
-        <div style="min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-5); text-align: center;">
-            <div style="width: 80px; height: 80px; background: rgba(74,222,128,0.1); color: var(--clr-success); border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-5);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:40px; height:40px;"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+        <div style="min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+            <div style="width:76px;height:76px;border-radius:24px;display:grid;place-items:center;background:rgba(74,222,128,.10);color:var(--clr-success);border:1px solid rgba(74,222,128,.18);margin-bottom:20px;">
+                <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                </svg>
             </div>
-            
-            <h1 style="font-size: 24px; font-weight: 800; color: var(--clr-text); margin-bottom: 8px;">¡Entrenamiento Completado!</h1>
-            <p style="font-size: 15px; color: var(--clr-text-muted); margin-bottom: var(--space-6); max-width: 280px;">
-                Excelente trabajo. Completaste todos los ejercicios de {{ $this->day->title }}.
+
+            <h1 style="font-size:27px;font-weight:850;letter-spacing:-.04em;color:var(--clr-text);margin-bottom:8px;">
+                Entrenamiento completado
+            </h1>
+            <p style="font-size:14px;line-height:1.55;color:var(--clr-text-muted);margin-bottom:24px;max-width:320px;">
+                Listo. Tus series quedaron registradas y ya podés seguir comparando tu progreso en la próxima sesión.
             </p>
-            
+
             @if($assignment->status === 'completed' && $assignment->end_date && \Carbon\Carbon::parse($assignment->end_date)->isToday())
-                <a href="{{ route('client.routines.history') }}" style="text-decoration:none; width: 100%; max-width: 300px;">
-                    <x-client.action-button variant="primary">
-                        VOLVER AL HISTORIAL
-                    </x-client.action-button>
+                <a href="{{ route('client.routines.history') }}" style="text-decoration:none;width:100%;max-width:320px;">
+                    <x-client.action-button variant="primary">VOLVER AL HISTORIAL</x-client.action-button>
                 </a>
             @else
-                <a href="{{ route('client.dashboard') }}" style="text-decoration:none; width: 100%; max-width: 300px;">
-                    <x-client.action-button variant="primary">
-                        VOLVER AL INICIO
-                    </x-client.action-button>
+                <a href="{{ route('client.dashboard') }}" style="text-decoration:none;width:100%;max-width:320px;">
+                    <x-client.action-button variant="primary">VOLVER AL INICIO</x-client.action-button>
                 </a>
             @endif
         </div>
     @endif
 
-    {{-- Tutorial Modal --}}
-    <div x-data="{ open: false, type: '', url: '', title: '' }" 
-         @open-tutorial.window="open = true; type = $event.detail.type; url = $event.detail.url; title = $event.detail.title"
-         x-show="open" 
-         style="display:none;" 
-         class="modal-overlay" 
-         :class="{ 'open': open }"
-         @click.self="open = false; url = ''">
-        
-        <div class="modal-box" style="background: var(--clr-card); border: 1px solid var(--clr-border);">
-            <div class="modal-header" style="border-bottom: 1px solid var(--clr-border);">
+    <div
+        x-data="{ open: false, type: '', url: '', title: '' }"
+        @open-tutorial.window="open = true; type = $event.detail.type; url = $event.detail.url; title = $event.detail.title"
+        x-show="open"
+        style="display:none;"
+        class="modal-overlay"
+        :class="{ 'open': open }"
+        @click.self="open = false; url = ''"
+    >
+        <div class="modal-box" style="background:var(--clr-surface);border:1px solid var(--clr-border);">
+            <div class="modal-header" style="border-bottom:1px solid var(--clr-border);">
                 <span class="modal-title" x-text="title" style="color:var(--clr-text);"></span>
-                <button class="modal-close" @click="open = false; url = ''" style="color:var(--clr-text-muted);">âœ•</button>
+                <button class="modal-close" @click="open = false; url = ''" style="color:var(--clr-text-muted);">×</button>
             </div>
-            <div class="modal-body" style="padding:0; background:#000;">
+            <div class="modal-body" style="padding:0;background:#000;">
                 <template x-if="type === 'video' && url">
-                    <iframe :src="'https://www.youtube.com/embed/' + (url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/) ? url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/)[1] : '') + '?autoplay=1'" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; display:block;"></iframe>
+                    <iframe
+                        :src="'https://www.youtube.com/embed/' + (url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/) ? url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/)[1] : '') + '?autoplay=1'"
+                        allowfullscreen
+                        style="width:100%;aspect-ratio:16/9;border:none;display:block;"
+                    ></iframe>
                 </template>
+
                 <template x-if="type === 'gif' && url">
-                    <img :src="url" style="width:100%; max-height:70vh; object-fit:contain; display:block; margin:0 auto;" />
+                    <img :src="url" style="width:100%;max-height:70vh;object-fit:contain;display:block;margin:0 auto;" alt="">
                 </template>
             </div>
         </div>
     </div>
-
 </div>
