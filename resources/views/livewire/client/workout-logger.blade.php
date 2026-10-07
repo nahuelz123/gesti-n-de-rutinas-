@@ -117,37 +117,20 @@
                 overflow: hidden;
                 height: 44px;
             }
-            .stepper-btn {
-                flex: 0 0 44px;
-                width: 44px;
-                min-width: 44px;
-                height: 44px;
-                background: transparent;
-                border: none;
-                color: var(--clr-text);
-                font-size: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                touch-action: manipulation;
-                -webkit-tap-highlight-color: transparent;
-            }
-            .stepper-btn:active { background: rgba(255,255,255,0.05); }
             .stepper-input {
-                flex: 1 1 auto;
-                width: auto;
-                min-width: 48px;
+                flex: 1 1 100%;
+                width: 100%;
+                min-width: 0;
                 max-width: 100%;
                 box-sizing: border-box;
                 background: transparent;
                 border: none;
                 color: var(--clr-text);
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 700;
                 font-variant-numeric: tabular-nums;
                 text-align: center;
-                padding: 0 2px;
+                padding: 0 6px;
             }
             .stepper-input:focus { outline: none; }
             .stepper-input::placeholder { color: var(--clr-text-muted); }
@@ -245,17 +228,13 @@
                                     <div class="set-control-group">
                                         <div class="set-control-label">Peso (kg)</div>
                                         <div class="stepper">
-                                            <button type="button" class="stepper-btn" aria-label="Restar peso de la serie {{ $i }}" wire:click.prevent="decreaseWeight({{ $i }})">−</button>
                                             <input type="text" inputmode="decimal" maxlength="7" autocomplete="off" required class="stepper-input" wire:model="inputs.{{ $i }}.weight" aria-label="Peso en kg de la serie {{ $i }}" placeholder="kg">
-                                            <button type="button" class="stepper-btn" aria-label="Sumar peso de la serie {{ $i }}" wire:click.prevent="increaseWeight({{ $i }})">+</button>
                                         </div>
                                     </div>
                                     <div class="set-control-group">
                                         <div class="set-control-label">Reps</div>
                                         <div class="stepper">
-                                            <button type="button" class="stepper-btn" aria-label="Restar repeticiones de la serie {{ $i }}" wire:click.prevent="decreaseReps({{ $i }})">−</button>
-                                            <input type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" autocomplete="off" class="stepper-input" wire:model="inputs.{{ $i }}.reps" aria-label="Repeticiones de la serie {{ $i }}" placeholder="0">
-                                            <button type="button" class="stepper-btn" aria-label="Sumar repeticiones de la serie {{ $i }}" wire:click.prevent="increaseReps({{ $i }})">+</button>
+                                            <input type="text" inputmode="numeric" pattern="[0-9]{1,3}" maxlength="3" autocomplete="off" class="stepper-input" wire:model="inputs.{{ $i }}.reps" aria-label="Repeticiones de la serie {{ $i }}" placeholder="Reps">
                                         </div>
                                     </div>
                                 </div>
