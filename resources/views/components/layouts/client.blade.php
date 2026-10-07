@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
     <title>Panel Cliente</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#131313">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
@@ -105,7 +109,7 @@
     </main>
 
     <x-client.bottom-nav />
-    <footer style="padding:12px 16px 90px; text-align:center;">
+    <footer class="client-footer" style="padding:12px 16px 90px; text-align:center;">
         @include('partials.legal-links')
     </footer>
     @include('partials.cookie-notice')
