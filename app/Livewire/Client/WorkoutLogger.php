@@ -32,7 +32,7 @@ class WorkoutLogger extends Component
         abort_unless($day, 403);
 
         $this->selectedDayId = $day->id;
-        $this->currentExerciseIndex = 0;
+        $this->currentExerciseIndex = $this->firstIncompleteExerciseIndex();
         $this->step = 'training';
         $this->initInputsForCurrentExercise();
     }
@@ -60,6 +60,14 @@ class WorkoutLogger extends Component
         return $this->exercises[$this->currentExerciseIndex] ?? null;
     }
 
+    public function getTodayAssignmentLogsProperty()
+    {
+        return ExerciseLog::query()
+            ->where('assignment_id', $this->assignment->id)
+            ->whereDate('logged_at', today())
+            ->get();
+    }
+
     public function getTodayLogsProperty()
     {
         if (! $this->selectedDayId) {
@@ -68,11 +76,64 @@ class WorkoutLogger extends Component
 
         $exerciseIds = $this->exercises->pluck('id');
 
-        return ExerciseLog::query()
-            ->where('assignment_id', $this->assignment->id)
+        return $this->todayAssignmentLogs
             ->whereIn('routine_day_exercise_id', $exerciseIds)
-            ->whereDate('logged_at', today())
-            ->get();
+            ->values();
+    }
+
+    public function getDayTotalSetsProperty(): int
+    {
+        return (int) $this->exercises->sum(fn ($exercise) => (int) $exercise->sets);
+    }
+
+    public function getDayCompletedSetsProperty(): int
+    {
+        return $this->todayLogs
+            ->unique(fn ($log) => $log->routine_day_exercise_id . ':' . $log->set_number)
+            ->count();
+    }
+
+    public function getDayProgressPercentProperty(): int
+    {
+        if ($this->dayTotalSets <= 0) {
+            return 0;
+        }
+
+        return min(100, (int) round(($this->dayCompletedSets / $this->dayTotalSets) * 100));
+    }
+
+    public function getCurrentExerciseCompletedSetsProperty(): int
+    {
+        if (! $this->currentExercise) {
+            return 0;
+        }
+
+        return $this->todayLogs
+            ->where('routine_day_exercise_id', $this->currentExercise->id)
+            ->unique('set_number')
+            ->count();
+    }
+
+    public function dayProgress($dayId): array
+    {
+        $day = $this->assignment->routine->days->firstWhere('id', (int) $dayId);
+
+        if (! $day) {
+            return ['completed' => 0, 'total' => 0, 'percent' => 0];
+        }
+
+        $exerciseIds = $day->exercises->pluck('id');
+        $total = (int) $day->exercises->sum(fn ($exercise) => (int) $exercise->sets);
+        $completed = $this->todayAssignmentLogs
+            ->whereIn('routine_day_exercise_id', $exerciseIds)
+            ->unique(fn ($log) => $log->routine_day_exercise_id . ':' . $log->set_number)
+            ->count();
+
+        return [
+            'completed' => $completed,
+            'total' => $total,
+            'percent' => $total > 0 ? min(100, (int) round(($completed / $total) * 100)) : 0,
+        ];
     }
 
     /**
@@ -312,6 +373,29 @@ class WorkoutLogger extends Component
     {
         $this->step = 'overview';
         $this->selectedDayId = null;
+        $this->currentExerciseIndex = 0;
+    }
+
+    private function firstIncompleteExerciseIndex(): int
+    {
+        $exercises = $this->exercises;
+
+        if ($exercises->isEmpty()) {
+            return 0;
+        }
+
+        foreach ($exercises as $index => $exercise) {
+            $completed = $this->todayLogs
+                ->where('routine_day_exercise_id', $exercise->id)
+                ->unique('set_number')
+                ->count();
+
+            if ($completed < (int) $exercise->sets) {
+                return (int) $index;
+            }
+        }
+
+        return max(0, $exercises->count() - 1);
     }
 
     public function isSetCompleted($setNumber)
