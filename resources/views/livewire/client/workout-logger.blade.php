@@ -243,17 +243,17 @@
                                     <div class="set-control-group">
                                         <div class="set-control-label">Peso (kg)</div>
                                         <div class="stepper">
-                                            <button type="button" class="stepper-btn" aria-label="Restar peso de la serie {{ $i }}" wire:click="decreaseWeight({{ $i }})">−</button>
+                                            <button type="button" class="stepper-btn" aria-label="Restar peso de la serie {{ $i }}" wire:click.prevent="decreaseWeight({{ $i }})">−</button>
                                             <input type="number" inputmode="decimal" min="0.01" max="9999.99" step="0.1" required class="stepper-input" wire:model="inputs.{{ $i }}.weight" placeholder="Peso (kg)">
-                                            <button type="button" class="stepper-btn" aria-label="Sumar peso de la serie {{ $i }}" wire:click="increaseWeight({{ $i }})">+</button>
+                                            <button type="button" class="stepper-btn" aria-label="Sumar peso de la serie {{ $i }}" wire:click.prevent="increaseWeight({{ $i }})">+</button>
                                         </div>
                                     </div>
                                     <div class="set-control-group">
                                         <div class="set-control-label">Reps</div>
                                         <div class="stepper">
-                                            <button type="button" class="stepper-btn" aria-label="Restar repeticiones de la serie {{ $i }}" wire:click="decreaseReps({{ $i }})">−</button>
-                                            <input type="number" inputmode="numeric" min="0" max="999" step="1" class="stepper-input" wire:model="inputs.{{ $i }}.reps" placeholder="0">
-                                            <button type="button" class="stepper-btn" aria-label="Sumar repeticiones de la serie {{ $i }}" wire:click="increaseReps({{ $i }})">+</button>
+                                            <button type="button" class="stepper-btn" aria-label="Restar repeticiones de la serie {{ $i }}" wire:click.prevent="decreaseReps({{ $i }})">−</button>
+                                            <input type="number" inputmode="numeric" min="1" max="100" step="1" class="stepper-input" wire:model="inputs.{{ $i }}.reps" placeholder="0">
+                                            <button type="button" class="stepper-btn" aria-label="Sumar repeticiones de la serie {{ $i }}" wire:click.prevent="increaseReps({{ $i }})">+</button>
                                         </div>
                                     </div>
                                 </div>
