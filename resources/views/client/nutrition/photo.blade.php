@@ -21,10 +21,10 @@
         @csrf
         <label for="meal-photo">Foto de la comida</label>
         <input id="meal-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required>
-        <small>JPG, PNG o WebP, hasta 5 MB. La imagen se envía a Google Gemini para el análisis y no se guarda en VisionFit.</small>
+        <small>JPG, PNG o WebP, hasta 5 MB. La imagen se envía a {{ app(\App\Services\FileAiReader::class)->providerName() }} para el análisis y no se guarda en VisionFit.</small>
         <label style="display:flex; align-items:flex-start; gap:10px; font-weight:500;">
             <input type="checkbox" name="processing_consent" value="1" required style="margin-top:3px;">
-            Autorizo el análisis de esta imagen con Google Gemini.
+            Autorizo el análisis de esta imagen con {{ app(\App\Services\FileAiReader::class)->providerName() }}.
         </label>
         @error('photo') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
         @error('processing_consent') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror

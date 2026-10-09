@@ -11,6 +11,8 @@ class LegalPagesTest extends TestCase
 
     public function test_public_legal_pages_are_available_and_describe_ai_and_cookies(): void
     {
+        config()->set('services.gemini.key', 'test-key');
+
         $this->get(route('legal.privacy'))
             ->assertOk()
             ->assertSee('Uso de inteligencia artificial')

@@ -22,14 +22,14 @@
 <main>
     <a href="{{ \App\Filament\Resources\Routines\RoutineResource::getUrl('create') }}">← Volver a crear rutina</a>
     <h1>Importar rutina desde archivo</h1>
-    <p>Elegí una foto, un PDF, un documento Word (.docx) o una planilla Excel (.xlsx), hasta 8 MB. Se envía el archivo o su texto a Google Gemini y VisionFit no conserva el archivo después del procesamiento. Los formatos antiguos .doc y .xls se pueden exportar a PDF. Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
+    <p>Elegí una foto, un PDF, un documento Word (.docx) o una planilla Excel (.xlsx), hasta 8 MB. PDF: hasta 5 páginas por archivo. Se envía el archivo o su texto a {{ app(\App\Services\FileAiReader::class)->providerName() }} y VisionFit no conserva el archivo después del procesamiento. Los formatos antiguos .doc y .xls se pueden exportar a PDF. Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
     <p role="note">Evitá que el archivo muestre nombres, diagnósticos u otros datos personales que no hagan falta para transcribir la rutina.</p>
 
     <form method="post" action="{{ route('routines.photo.store') }}" enctype="multipart/form-data" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Leyendo archivo…';">
         @csrf
         <label for="photo">Archivo de la rutina</label>
         <input id="photo" name="photo" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.docx,.xlsx,image/jpeg,image/png,image/webp,application/pdf" required>
-        <label style="display:flex; align-items:flex-start; gap:9px; margin-top:1rem; font-weight:400; font-size:13px; line-height:1.5;"><input name="photo_processing_consent" type="checkbox" value="1" required style="width:auto; margin-top:3px;">Autorizo que se envíe este archivo a Google Gemini para generar un borrador que voy a revisar.</label>
+        <label style="display:flex; align-items:flex-start; gap:9px; margin-top:1rem; font-weight:400; font-size:13px; line-height:1.5;"><input name="photo_processing_consent" type="checkbox" value="1" required style="width:auto; margin-top:3px;">Autorizo que se envíe este archivo a {{ app(\App\Services\FileAiReader::class)->providerName() }} para generar un borrador que voy a revisar.</label>
         @error('photo') <div class="error" role="alert">{{ $message }}</div> @enderror
         <button type="submit">Crear borrador y revisar</button>
     </form>
