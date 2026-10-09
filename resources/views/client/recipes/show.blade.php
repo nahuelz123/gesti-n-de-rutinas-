@@ -27,7 +27,7 @@
         </div>
         @if ($recipe->video_url)
             <button class="btn-video" style="flex-shrink:0; margin-top:4px;"
-                onclick="openVideo('{{ $recipe->video_url }}', '{{ addslashes($recipe->title) }}')">
+                data-video-url="{{ $recipe->video_url }}" data-video-title="{{ $recipe->title }}" type="button" id="recipe-video-button">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
                 Ver tutorial
             </button>
@@ -105,8 +105,16 @@
 
 <script>
 function getYoutubeId(url) {
-    const match = url.match(/(?:v=|youtu\.be\/)([^&?\/]+)/);
-    return match ? match[1] : null;
+    try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+        let id = null;
+        if (host === 'youtu.be') id = parsed.pathname.slice(1).split('/')[0];
+        if (host === 'youtube.com' || host === 'm.youtube.com') {
+            id = parsed.pathname.startsWith('/shorts/') ? parsed.pathname.split('/')[2] : parsed.searchParams.get('v');
+        }
+        return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
+    } catch (error) { return null; }
 }
 function openVideo(url, title) {
     const id = getYoutubeId(url);
@@ -119,6 +127,9 @@ function closeVideo() {
     document.getElementById('modalIframe').src = '';
     document.getElementById('videoModal').classList.remove('open');
 }
+document.getElementById('recipe-video-button')?.addEventListener('click', function () {
+    openVideo(this.dataset.videoUrl, this.dataset.videoTitle);
+});
 document.getElementById('videoModal').addEventListener('click', function(e) {
     if (e.target === this) closeVideo();
 });
