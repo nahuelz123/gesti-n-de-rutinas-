@@ -52,7 +52,27 @@ class RoutinePhotoUploadTest extends TestCase
         ]);
 
         Livewire::actingAs($coach)->test(CreateRoutine::class)
-            ->assertSet('data.title', 'Piernas');
+            ->assertSet('data.title', 'Piernas')
+            ->assertSet('data.days', function (array $days) use ($exercise): bool {
+                $this->assertCount(1, $days);
+                $day = array_values($days)[0];
+                $this->assertSame('Día 1', $day['title']);
+                $this->assertCount(1, $day['exercises']);
+                $item = array_values($day['exercises'])[0];
+                $this->assertSame($exercise->id, $item['exercise_id']);
+                $this->assertEquals(3, $item['sets']);
+                $this->assertSame('12', $item['reps']);
+
+                return true;
+            })
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('routine_days', ['title' => 'Día 1']);
+        $this->assertDatabaseHas('routine_day_exercises', [
+            'exercise_id' => $exercise->id, 'sets' => 3, 'reps' => '12',
+        ]);
+        $this->assertDatabaseCount('assignments', 0);
     }
 
     public function test_photo_upload_requires_explicit_processing_consent(): void
@@ -110,6 +130,16 @@ class RoutinePhotoUploadTest extends TestCase
                 'photo' => $file, 'photo_processing_consent' => '1',
             ])->assertRedirect(RoutineResource::getUrl('create'))
                 ->assertSessionHas('routine-photo-draft', fn (array $draft) => $draft['title'] === 'Piernas');
+
+            Livewire::actingAs($coach)->test(CreateRoutine::class)
+                ->assertSet('data.days', function (array $days): bool {
+                    $this->assertCount(1, $days);
+                    $day = array_values($days)[0];
+                    $this->assertCount(1, $day['exercises']);
+                    $this->assertEquals(3, array_values($day['exercises'])[0]['sets']);
+
+                    return true;
+                });
         }
 
         Http::assertSentCount(3);
@@ -132,6 +162,54 @@ class RoutinePhotoUploadTest extends TestCase
         ])->assertSessionHasErrors('photo');
 
         $this->assertDatabaseCount('routines', 0);
+    }
+
+
+    public function test_all_imported_days_remain_editable_with_unmatched_exercises(): void
+    {
+        $gym = Gym::create(['name' => 'Gym revisión']);
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
+        $days = [];
+        for ($number = 1; $number <= 5; $number++) {
+            $days[] = [
+                'title' => 'Día '.$number, 'day_number' => $number,
+                'exercises' => [[
+                    'exercise_id' => null, 'sets' => 4, 'reps' => '6-8',
+                    'rest' => '120s', 'notes' => 'Leído en el archivo: Ejercicio por confirmar.',
+                    'order' => 1,
+                ]],
+            ];
+        }
+        $this->withSession(['routine-photo-draft' => [
+            'title' => 'Hipertrofia', 'description' => 'Revisar', 'days' => $days,
+            'unmatched' => ['Ejercicio por confirmar'],
+        ]]);
+
+        $page = Livewire::actingAs($coach)->test(CreateRoutine::class)
+            ->assertSet('data.days', function (array $state): bool {
+                $this->assertCount(5, $state);
+                foreach (array_values($state) as $index => $day) {
+                    $this->assertSame('Día '.($index + 1), $day['title']);
+                    $this->assertCount(1, $day['exercises']);
+                    $item = array_values($day['exercises'])[0];
+                    $this->assertNull($item['exercise_id']);
+                    $this->assertSame('6-8', $item['reps']);
+                    $this->assertSame('120s', $item['rest']);
+                    $this->assertSame('Leído en el archivo: Ejercicio por confirmar.', $item['notes']);
+                }
+
+                return true;
+            });
+        $this->assertDatabaseCount('routines', 0);
+        $this->assertDatabaseCount('routine_days', 0);
+        $state = $page->get('data.days');
+        $dayKey = array_key_first($state);
+        $exerciseKey = array_key_first($state[$dayKey]['exercises']);
+        $page->call('create')->assertHasFormErrors([
+            "days.{$dayKey}.exercises.{$exerciseKey}.exercise_id" => 'required',
+        ]);
+        $this->assertDatabaseCount('routines', 0);
+        $this->assertDatabaseCount('assignments', 0);
     }
 
     /** @param array<string, string> $entries */
