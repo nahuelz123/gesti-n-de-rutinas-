@@ -380,8 +380,13 @@
                                 const btn = document.createElement('button');
                                 btn.type = 'button';
                                 btn.className = 'food-search-item';
-                                btn.innerHTML = '<div class="food-search-item-name">' + food.name + '</div>'
-                                    + '<div class="food-search-item-macros">' + food.calories_per_100g + ' kcal / 100g · P ' + food.protein_per_100g + 'g · C ' + food.carbs_per_100g + 'g · G ' + food.fat_per_100g + 'g</div>';
+                                const name = document.createElement('div');
+                                name.className = 'food-search-item-name';
+                                name.textContent = food.name;
+                                const macros = document.createElement('div');
+                                macros.className = 'food-search-item-macros';
+                                macros.textContent = food.calories_per_100g + ' kcal / 100g · P ' + food.protein_per_100g + 'g · C ' + food.carbs_per_100g + 'g · G ' + food.fat_per_100g + 'g';
+                                btn.append(name, macros);
                                 btn.addEventListener('click', function () { selectFood(food); });
                                 resultsBox.appendChild(btn);
                             });
