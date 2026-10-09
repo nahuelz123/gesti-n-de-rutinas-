@@ -63,6 +63,11 @@ class MealPhotoController extends Controller
                 throw new RuntimeException('La estimación vino incompleta. Probá con otra foto.');
             }
 
+            $request->user()->consents()->create([
+                'scope' => 'meal_photo_analysis',
+                'version' => config('legal.versions.meal_photo_analysis'),
+                'granted_at' => now(),
+            ]);
             $request->session()->put('meal-photo-estimate', $estimate);
 
             return redirect()->route('client.nutrition.photo.show');
