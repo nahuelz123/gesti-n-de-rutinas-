@@ -46,6 +46,10 @@ return [
         'key' => env('PEXELS_API_KEY'),
     ],
 
+    'vision' => [
+        'model' => env('VISION_MODEL', 'nvidia/nemotron-nano-12b-v2-vl'),
+    ],
+
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-3-flash-preview'),
