@@ -68,12 +68,30 @@ class FileAiReader
                         ]];
                     }
                 }
-                $response = Http::connectTimeout(10)->timeout(80)->withToken($key)
+                $deadline = microtime(true) + 80;
+                $response = Http::connectTimeout(10)->timeout(50)->withToken($key)
                     ->post('https://integrate.api.nvidia.com/v1/chat/completions', [
                         'model' => config('services.vision.model'),
                         'messages' => [['role' => 'user', 'content' => $parts]],
                         'temperature' => 0, 'max_tokens' => 8192, 'stream' => false,
                     ]);
+                if ($response->status() === 202) {
+                    $requestId = $response->header('NVCF-REQID') ?: $response->json('requestId');
+                    if (! is_string($requestId) || ! preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $requestId)) {
+                        throw new RuntimeException('No se pudo consultar el resultado del análisis. Intentá nuevamente.');
+                    }
+                    do {
+                        $remaining = $deadline - microtime(true);
+                        if ($remaining <= 0) {
+                            throw new RuntimeException('El servicio de IA tardó demasiado en responder. Intentá nuevamente.');
+                        }
+                        $response = Http::connectTimeout(5)->timeout(min(10, $remaining))->withToken($key)
+                            ->get('https://integrate.api.nvidia.com/v1/status/'.$requestId);
+                        if ($response->status() === 202) {
+                            usleep(500_000);
+                        }
+                    } while ($response->status() === 202);
+                }
                 if ($response->json('choices.0.finish_reason') === 'length') {
                     throw new RuntimeException('El archivo es demasiado extenso para leerlo completo. Dividilo en archivos más cortos.');
                 }
