@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\FreeMealLog;
+use App\Services\FileAiReader;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -23,28 +23,12 @@ class MealPhotoController extends Controller
             'photo' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'processing_consent' => ['accepted'],
         ]);
-        $key = config('services.gemini.key');
-        $model = config('services.gemini.model');
-        if (! $key || ! is_string($model) || ! preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
-            return back()->withErrors(['photo' => 'El análisis de fotos no está disponible en este momento.']);
-        }
-
         try {
             $photo = $data['photo'];
-            $response = Http::timeout(50)->withHeaders(['x-goog-api-key' => $key])
-                ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
-                    'contents' => [['parts' => [
-                        ['text' => 'Analizá solo la comida visible. Devolvé JSON en español con name (descripción breve), quantity_grams (gramos aproximados de toda la porción), calories (kcal aproximadas de toda la porción), protein, carbs, fat (gramos aproximados totales) y note (alimentos dudosos, aceite, salsas o ingredientes no visibles). No inventes precisión; si no se ve comida, devolvé {"error":"No se reconoce comida"}.'],
-                        ['inline_data' => ['mime_type' => $photo->getMimeType(), 'data' => base64_encode($photo->get())]],
-                    ]]],
-                    'generationConfig' => ['responseMimeType' => 'application/json', 'temperature' => 0],
-                ]);
-
-            if (! $response->successful()) {
-                throw new RuntimeException('No pudimos analizar la imagen. Intentá nuevamente.');
-            }
-
-            $parsed = json_decode((string) $response->json('candidates.0.content.parts.0.text'), true);
+            $parsed = app(FileAiReader::class)->read(
+                'Analizá solo la comida visible. Devolvé JSON en español con name (descripción breve), quantity_grams (gramos aproximados de toda la porción), calories (kcal aproximadas de toda la porción), protein, carbs, fat (gramos aproximados totales) y note (alimentos dudosos, aceite, salsas o ingredientes no visibles). No inventes precisión; si no se ve comida, devolvé {"error":"No se reconoce comida"}.',
+                $photo->get(), $photo->getMimeType()
+            );
             if (! is_array($parsed) || isset($parsed['error'])) {
                 throw new RuntimeException('No pudimos reconocer una comida. Probá con otra foto.');
             }
