@@ -114,8 +114,8 @@ class FileAiReader
                 throw new RuntimeException('No se pudo leer el PDF. Verificá que sea válido y no tenga contraseña.');
             }
             $pages = (int) $match[1];
-            if ($pages < 1 || $pages > 14) {
-                throw new RuntimeException('El PDF debe tener entre 1 y 14 páginas. Dividilo para leerlo completo.');
+            if ($pages < 1 || $pages > 5) {
+                throw new RuntimeException('El PDF debe tener entre 1 y 5 páginas. Dividilo para leerlo completo.');
             }
             $renderer = new Process(['pdftoppm', '-jpeg', '-scale-to', '1600', '-f', '1', '-l', (string) $pages, $path, $directory.'/page']);
             $renderer->setTimeout(25)->run();
