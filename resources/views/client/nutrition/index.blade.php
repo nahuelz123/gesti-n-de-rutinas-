@@ -10,7 +10,11 @@
     <p class="pg-label">Mi alimentación</p>
     <h1 class="pg-title">Plan de nutrición</h1>
 
-    <a href="{{ route('client.recipes.index') }}" class="card-link" style="display:inline-block; margin-bottom:20px;">🍽️ Ver catálogo de recetas →</a>
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 22px;">
+        <a href="{{ route('client.nutrition.photo.show') }}" class="client-btn client-btn-primary" style="min-height:46px; display:inline-flex; align-items:center; padding:0 18px; text-decoration:none;">📷 Registrar comida con foto</a>
+        <a href="#diario-libre" class="client-btn client-btn-secondary" style="min-height:46px; display:inline-flex; align-items:center; padding:0 18px; text-decoration:none;">✍️ Cargar a mano</a>
+        <a href="{{ route('client.recipes.index') }}" class="client-btn client-btn-secondary" style="min-height:46px; display:inline-flex; align-items:center; padding:0 18px; text-decoration:none;">🍽️ Recetas</a>
+    </div>
 
     @if (!$assignment)
         <div class="empty">No tenés un plan de dieta activo.</div>
@@ -173,11 +177,11 @@
 
     {{-- Diario libre: el alumno puede registrar cualquier comida por cantidad exacta,
          tenga o no un plan de dieta asignado. --}}
-    <div class="free-log-section">
+    <div class="free-log-section" id="diario-libre">
         <div class="free-log-header">
             <div>
                 <div class="free-log-title">🍴 Diario libre de hoy</div>
-                <div class="free-log-hint">Buscá el alimento, cargá la cantidad en gramos exacta y calculamos las calorías y macros solos.</div>
+                <div class="free-log-hint">Buscá un alimento y ajustá los gramos. También podés registrarlo desde una foto.</div>
             </div>
         </div>
 
