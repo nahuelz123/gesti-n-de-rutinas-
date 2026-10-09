@@ -40,7 +40,7 @@ class LegalController extends Controller
             'operatorName' => config('legal.operator_name') ?: config('app.name', 'VisionFit'),
             'contactEmail' => config('legal.contact_email'),
             'aiProviderHost' => parse_url((string) config('services.deepseek.base_url'), PHP_URL_HOST) ?: 'el proveedor configurado',
-            'photoProviderHost' => 'Google Gemini',
+            'photoProviderHost' => app(\App\Services\FileAiReader::class)->providerName(),
         ];
     }
 }
