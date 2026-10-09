@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Exercise;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -17,31 +16,10 @@ class RoutinePhotoReader
             throw new RuntimeException('El archivo PDF no es válido.');
         }
 
-        $key = config('services.gemini.key');
-        if (! $key) {
-            throw new RuntimeException('Configurá GEMINI_API_KEY para leer fotos de rutinas.');
-        }
-
-        $model = config('services.gemini.model');
-        if (! preg_match('/^[a-zA-Z0-9._-]+$/', $model)) {
-            throw new RuntimeException('El modelo de Gemini no es válido.');
-        }
-
-        $response = Http::timeout(50)->withHeaders(['x-goog-api-key' => $key])
-            ->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent", [
-                'contents' => [['parts' => [
-                    ['text' => 'Transcribí la rutina manuscrita o impresa. No inventes ejercicios, series ni repeticiones. Si un dato no es legible, dejalo vacío. Devolvé JSON en español: {"title":"", "days":[{"title":"", "exercises":[{"name":"", "sets":0, "reps":"", "rest":"", "notes":""}]}]}. Cada día debe tener su título. Series es entero. Conservá indicaciones especiales en notes.'.($documentText === null ? '' : "\n\nDocumento:\n".$documentText)],
-                    ...($documentText === null ? [['inline_data' => ['mime_type' => $mime, 'data' => base64_encode($bytes)]]] : []),
-                ]]],
-                'generationConfig' => ['responseMimeType' => 'application/json', 'temperature' => 0],
-            ]);
-
-        if (! $response->successful()) {
-            throw new RuntimeException('Gemini no pudo procesar el archivo (HTTP '.$response->status().'). Intentá nuevamente.');
-        }
-
-        $raw = $response->json('candidates.0.content.parts.0.text');
-        $parsed = is_string($raw) ? json_decode($raw, true) : null;
+        $parsed = app(FileAiReader::class)->read(
+            'Transcribí la rutina manuscrita o impresa. No inventes ejercicios, series ni repeticiones. Si un dato no es legible, dejalo vacío. Devolvé JSON en español: {"title":"", "days":[{"title":"", "exercises":[{"name":"", "sets":0, "reps":"", "rest":"", "notes":""}]}]}. Cada día debe tener su título. Series es entero. Conservá indicaciones especiales en notes.',
+            $bytes, $mime, $documentText
+        );
         if (! is_array($parsed) || ! is_array($parsed['days'] ?? null) || count($parsed['days']) < 1 || count($parsed['days']) > 14) {
             throw new RuntimeException('El archivo no produjo una rutina reconocible. Probá con una imagen más nítida.');
         }
