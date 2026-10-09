@@ -56,6 +56,7 @@ class NvidiaPhotoTest extends TestCase
             && str_starts_with($request['messages'][0]['content'][1]['image_url']['url'], 'data:image/png;base64,')
         );
         $this->get(route('routines.photo.show'))->assertSee('NVIDIA')->assertDontSee('Google Gemini');
+        $this->get(route('legal.privacy'))->assertSee('NVIDIA')->assertDontSee('Google Gemini');
     }
 
     public function test_existing_nvidia_key_estimates_food_without_saving_it(): void
@@ -125,6 +126,34 @@ class NvidiaPhotoTest extends TestCase
             'photo' => $this->photo(), 'processing_consent' => '1',
         ])->assertSessionHasErrors('photo')->assertSessionMissing('meal-photo-estimate');
         $this->assertDatabaseCount('free_meal_logs', 0);
+    }
+
+    public function test_pending_analysis_is_polled_without_resubmitting_the_photo(): void
+    {
+        $gym = Gym::create(['name' => 'Gym NVIDIA']);
+        $client = User::factory()->create(['role' => 'client', 'gym_id' => $gym->id]);
+        $requestId = 'af79a140-2c41-4f48-bd1e-6a6131e32a4e';
+        Http::fake([
+            'integrate.api.nvidia.com/v1/chat/completions' => Http::response([], 202, ['NVCF-REQID' => $requestId]),
+            'integrate.api.nvidia.com/v1/status/'.$requestId => Http::response([
+                'choices' => [['message' => ['content' => json_encode([
+                    'name' => 'Arroz', 'quantity_grams' => 200, 'calories' => 260,
+                    'protein' => 5, 'carbs' => 56, 'fat' => 1, 'note' => '',
+                ])], 'finish_reason' => 'stop']],
+            ]),
+        ]);
+
+        $this->actingAs($client)->post(route('client.nutrition.photo.analyze'), [
+            'photo' => $this->photo(), 'processing_consent' => '1',
+        ])->assertRedirect(route('client.nutrition.photo.show'))
+            ->assertSessionHas('meal-photo-estimate');
+        $this->assertDatabaseCount('free_meal_logs', 0);
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($request) =>
+            $request->method() === 'GET'
+            && $request->url() === 'https://integrate.api.nvidia.com/v1/status/'.$requestId
+            && $request->hasHeader('Authorization', 'Bearer existing-nvidia-key')
+        );
     }
 
     private function pdf(int $pages): string
