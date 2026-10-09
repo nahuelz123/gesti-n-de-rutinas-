@@ -109,7 +109,7 @@ class NvidiaPhotoTest extends TestCase
         Http::fake();
 
         $this->actingAs($coach)->post(route('routines.photo.store'), [
-            'photo' => UploadedFile::fake()->createWithContent('rutina.pdf', $this->pdf(15)),
+            'photo' => UploadedFile::fake()->createWithContent('rutina.pdf', $this->pdf(6)),
             'photo_processing_consent' => '1',
         ])->assertSessionHasErrors('photo')->assertSessionMissing('routine-photo-draft');
         Http::assertNothingSent();
