@@ -11,6 +11,7 @@ use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\NotificationsController;
 use App\Http\Controllers\Client\FreeMealLogController;
+use App\Http\Controllers\Client\MealPhotoController;
 use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\GymJoinController;
 use App\Http\Controllers\RoutinePhotoController;
@@ -68,6 +69,10 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
         Route::put('/account', [AccountController::class, 'updateProfile'])->name('account.update');
         Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+
+        Route::get('/nutrition/photo', [MealPhotoController::class, 'show'])->name('nutrition.photo.show');
+        Route::post('/nutrition/photo/analyze', [MealPhotoController::class, 'analyze'])->middleware('throttle:10,1')->name('nutrition.photo.analyze');
+        Route::post('/nutrition/photo/confirm', [MealPhotoController::class, 'confirm'])->name('nutrition.photo.confirm');
 
         Route::get('/nutrition/foods/search', [FreeMealLogController::class, 'searchFoods'])->name('nutrition.foods.search');
         Route::post('/nutrition/free-logs', [FreeMealLogController::class, 'store'])->name('nutrition.free-logs.store');
