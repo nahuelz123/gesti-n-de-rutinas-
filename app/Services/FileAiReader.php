@@ -32,7 +32,12 @@ class FileAiReader
     {
         // PHP debe permitir que termine el timeout HTTP (80 s) y el procesamiento del PDF.
         $previousLimit = (int) ini_get('max_execution_time');
-        if (! function_exists('set_time_limit') || ! set_time_limit(150)) {
+        if (! function_exists('set_time_limit')) {
+            throw new RuntimeException('No se pudo iniciar la lectura del archivo. Contactá al administrador.');
+        }
+
+        set_time_limit(150);
+        if ((int) ini_get('max_execution_time') !== 150) {
             throw new RuntimeException('No se pudo iniciar la lectura del archivo. Contactá al administrador.');
         }
 
