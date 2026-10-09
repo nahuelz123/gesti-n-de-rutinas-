@@ -35,6 +35,7 @@ class CreateRoutine extends CreateRecord
             $draft['days'] = $days;
 
             $this->form->rawState($draft + ['gym_id' => Auth::user()?->gym_id, 'coach_id' => Auth::id()]);
+            $this->form->getFlatFields()['days']->clearCachedDefaultChildSchemas();
 
             Notification::make()->title('Borrador listo: revisá todos los datos antes de crear la rutina')
                 ->body($unmatched ? 'Completá los campos sin resolver: '.implode(', ', $unmatched) : 'Revisá ejercicios, series y repeticiones antes de guardar.')
