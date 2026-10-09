@@ -23,7 +23,7 @@ class RoutinePhotoController extends Controller
         abort_unless(RoutineResource::canCreate(), 403);
 
         $data = $request->validate([
-            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf,docx,xlsx', 'max:8192'],
+            'photo' => ['required', 'file', 'extensions:jpg,jpeg,png,webp,pdf,docx,xlsx', 'max:8192'],
             'photo_processing_consent' => ['accepted'],
         ]);
 
