@@ -52,7 +52,27 @@ class RoutinePhotoUploadTest extends TestCase
         ]);
 
         Livewire::actingAs($coach)->test(CreateRoutine::class)
-            ->assertSet('data.title', 'Piernas');
+            ->assertSet('data.title', 'Piernas')
+            ->assertSet('data.days', function (array $days) use ($exercise): bool {
+                $this->assertCount(1, $days);
+                $day = array_values($days)[0];
+                $this->assertSame('Día 1', $day['title']);
+                $this->assertCount(1, $day['exercises']);
+                $item = array_values($day['exercises'])[0];
+                $this->assertSame($exercise->id, $item['exercise_id']);
+                $this->assertEquals(3, $item['sets']);
+                $this->assertSame('12', $item['reps']);
+
+                return true;
+            })
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('routine_days', ['title' => 'Día 1']);
+        $this->assertDatabaseHas('routine_day_exercises', [
+            'exercise_id' => $exercise->id, 'sets' => 3, 'reps' => '12',
+        ]);
+        $this->assertDatabaseCount('assignments', 0);
     }
 
     public function test_photo_upload_requires_explicit_processing_consent(): void
