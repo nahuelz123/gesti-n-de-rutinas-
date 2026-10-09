@@ -34,7 +34,7 @@
                 @endif
 
                 <div class="meal-info">
-                    <div class="meal-name">{{ $recipe->title }}</div>
+                    <div class="meal-name">{{ $recipe->title }} @if ($recipe->video_url) <span style="font-size:11px; color:var(--clr-primary); font-weight:700;">▶ Video</span> @endif</div>
                     <div class="meal-macros">
                         @if ($recipe->calories)<span class="meal-macro-item"><b>{{ $recipe->calories }}</b> kcal</span>@endif
                         @if ($recipe->protein)<span class="meal-macro-item">P <b>{{ $recipe->protein }}g</b></span>@endif

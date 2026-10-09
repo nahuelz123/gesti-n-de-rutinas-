@@ -61,7 +61,8 @@ class RecipeForm
                         ->nullable(),
 
                     TextInput::make('video_url')
-                        ->label('URL de video')
+                        ->label('Video explicativo (YouTube)')
+                        ->helperText('Pegá el enlace de tu video de YouTube; solo se reproduce cuando el alumno lo abre.')
                         ->url()
                         ->maxLength(255)
                         ->nullable(),
