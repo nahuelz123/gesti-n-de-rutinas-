@@ -22,7 +22,7 @@
 <main>
     <a href="{{ \App\Filament\Resources\Routines\RoutineResource::getUrl('create') }}">← Volver a crear rutina</a>
     <h1>Importar rutina desde archivo</h1>
-    <p>Elegí una foto, un PDF, un documento Word (.docx) o una planilla Excel (.xlsx), hasta 8 MB. Se envía el archivo o su texto a {{ app(\App\Services\FileAiReader::class)->providerName() }} y VisionFit no conserva el archivo después del procesamiento. Los formatos antiguos .doc y .xls se pueden exportar a PDF. Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
+    <p>Elegí una foto, un PDF, un documento Word (.docx) o una planilla Excel (.xlsx), hasta 8 MB. PDF: hasta 5 páginas por archivo. Se envía el archivo o su texto a {{ app(\App\Services\FileAiReader::class)->providerName() }} y VisionFit no conserva el archivo después del procesamiento. Los formatos antiguos .doc y .xls se pueden exportar a PDF. Vas a revisar el borrador y corregir cada ejercicio antes de guardarlo. No se asigna a ningún alumno automáticamente.</p>
     <p role="note">Evitá que el archivo muestre nombres, diagnósticos u otros datos personales que no hagan falta para transcribir la rutina.</p>
 
     <form method="post" action="{{ route('routines.photo.store') }}" enctype="multipart/form-data" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Leyendo archivo…';">
