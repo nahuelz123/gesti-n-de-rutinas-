@@ -139,7 +139,7 @@ class RoutinePhotoUploadTest extends TestCase
     {
         $path = tempnam(sys_get_temp_dir(), 'routine-test-');
         $zip = new \ZipArchive;
-        $zip->open($path, \ZipArchive::OVERWRITE);
+        $zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         foreach ($entries as $name => $contents) {
             $zip->addFromString($name, $contents);
         }
