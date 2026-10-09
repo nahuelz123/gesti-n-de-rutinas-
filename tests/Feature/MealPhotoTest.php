@@ -16,7 +16,9 @@ class MealPhotoTest extends TestCase
 
     private function photo(): UploadedFile
     {
-        return UploadedFile::fake()->image('almuerzo.jpg');
+        return UploadedFile::fake()->createWithContent('almuerzo.png', base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='
+        ));
     }
 
     public function test_photo_generates_reviewable_estimate_and_saves_only_after_confirmation(): void
