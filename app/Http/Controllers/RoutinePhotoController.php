@@ -23,7 +23,7 @@ class RoutinePhotoController extends Controller
         abort_unless(RoutineResource::canCreate(), 403);
 
         $data = $request->validate([
-            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'photo' => ['required', 'file', 'extensions:jpg,jpeg,png,webp,pdf,docx,xlsx', 'max:8192'],
             'photo_processing_consent' => ['accepted'],
         ]);
 
@@ -36,8 +36,20 @@ class RoutinePhotoController extends Controller
         try {
             $photo = $data['photo'];
             $mime = $photo->getMimeType();
-            if (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-                throw new RuntimeException('La foto debe ser JPG, PNG o WebP.');
+            $extension = strtolower($photo->getClientOriginalExtension());
+            if (in_array($extension, ['docx', 'xlsx'], true)) {
+                if (! in_array($mime, ['application/zip', 'application/octet-stream',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'], true)) {
+                    throw new RuntimeException('El documento no es un Word o Excel válido.');
+                }
+                $mime = $extension;
+            } elseif ($extension === 'pdf') {
+                if ($mime !== 'application/pdf') {
+                    throw new RuntimeException('El archivo PDF no es válido.');
+                }
+            } elseif (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                throw new RuntimeException('El archivo debe ser una imagen, PDF, DOCX o XLSX.');
             }
 
             $draft = $reader->read($photo->get(), $mime, $request->user()->gym_id);
@@ -47,7 +59,7 @@ class RoutinePhotoController extends Controller
             return back()->withErrors(['photo' => $error->getMessage()]);
         }
 
-        // La foto no se guarda. Solo se conserva el borrador durante la redirección.
+        // El archivo no se guarda. Solo se conserva el borrador durante la redirección.
         $request->session()->flash('routine-photo-draft', $draft);
 
         return redirect(RoutineResource::getUrl('create'));

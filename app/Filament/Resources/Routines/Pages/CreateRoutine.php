@@ -32,7 +32,7 @@ class CreateRoutine extends CreateRecord
     {
         return [
             Action::make('leerFoto')
-                ->label('Cargar rutina desde foto')
+                ->label('Importar foto, PDF, Word o Excel')
                 ->url(route('routines.photo.show')),
         ];
     }
