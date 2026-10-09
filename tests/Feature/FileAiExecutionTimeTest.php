@@ -26,6 +26,12 @@ Illuminate\Support\Facades\Http::fake(function () {
     ]);
 });
 set_time_limit(1);
+fwrite(STDERR, json_encode([
+    'timer_function_available' => function_exists('set_time_limit'),
+    'timer_return' => set_time_limit(150),
+    'timer_value' => ini_get('max_execution_time'),
+])."\n");
+set_time_limit(1);
 $result = app(App\Services\FileAiReader::class)->read('Transcribir', null, null, 'Sentadilla 3x12');
 echo json_encode(['result' => $result, 'restored_limit' => (int) ini_get('max_execution_time')]);
 PHP;
