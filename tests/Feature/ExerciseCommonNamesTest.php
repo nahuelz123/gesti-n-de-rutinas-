@@ -77,6 +77,28 @@ class ExerciseCommonNamesTest extends TestCase
             ->assertCanNotSeeTableRecords([$extension]);
     }
 
+
+    public function test_import_does_not_substitute_a_different_exercise_variant(): void
+    {
+        Exercise::create(['title' => 'Zancadas caminando', 'muscle_group' => 'piernas', 'is_global' => true]);
+        Exercise::create(['title' => 'Barbell squat', 'muscle_group' => 'piernas', 'is_global' => true]);
+        config()->set('services.gemini.key', 'test-key');
+        $routine = ['title' => 'Piernas', 'days' => [[
+            'title' => 'Día 1', 'exercises' => [
+                ['name' => 'Reverse lunge', 'sets' => 3, 'reps' => '12'],
+                ['name' => 'Bodyweight squat', 'sets' => 3, 'reps' => '10'],
+            ],
+        ]]];
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [['content' => ['parts' => [['text' => json_encode($routine)]]]]],
+        ])]);
+        $draft = app(RoutinePhotoReader::class)->read('image', 'image/png', null);
+        $this->assertNull($draft['days'][0]['exercises'][0]['exercise_id']);
+        $this->assertNull($draft['days'][0]['exercises'][1]['exercise_id']);
+        $this->assertContains('Reverse lunge', $draft['unmatched']);
+        $this->assertContains('Bodyweight squat', $draft['unmatched']);
+    }
+
     public function test_import_matches_unique_common_names_but_leaves_ambiguous_variants_for_review(): void
     {
         $extension = Exercise::create(['title' => 'Extensiones de cuádriceps', 'muscle_group' => 'piernas', 'is_global' => true]);
