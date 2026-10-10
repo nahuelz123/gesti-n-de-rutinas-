@@ -6,6 +6,7 @@ use App\Models\Exercise;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use App\Support\ExerciseNames;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Grid;
@@ -78,8 +79,10 @@ class RoutineForm
                                                   ->orWhere('gym_id', $user?->gym_id);
                                             })
                                         )
-                                        ->getOptionLabelFromRecordUsing(fn (Exercise $record) => ($record->is_global ? '🌐 ' : '🏠 ') . $record->title . ($record->is_global ? ' (Catálogo)' : ' (Mi gym)'))
-                                        ->searchable()
+                                        ->getOptionLabelFromRecordUsing(fn (Exercise $record) => ($record->is_global ? '🌐 ' : '🏠 ') . ExerciseNames::displayName($record->title) . ($record->is_global ? ' (Catálogo)' : ' (Mi gym)'))
+                                        ->getSearchResultsUsing(fn (string $search): array => Exercise::searchOptionsForGym($search, Auth::user()?->gym_id))
+                ->searchPrompt('Buscá por nombre habitual: estocadas, sillón, camilla, búlgara…')
+                ->searchable()
                                         ->required()
                                         ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
 
