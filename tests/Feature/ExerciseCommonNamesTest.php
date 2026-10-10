@@ -67,13 +67,14 @@ class ExerciseCommonNamesTest extends TestCase
         $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
         $extension = Exercise::create(['title' => 'Lever leg extension', 'muscle_group' => 'piernas', 'is_global' => true]);
         $curl = Exercise::create(['title' => 'Lever lying leg curl', 'muscle_group' => 'piernas', 'is_global' => true]);
+        $genericCurl = Exercise::create(['title' => 'Curl femoral', 'muscle_group' => 'piernas', 'is_global' => true]);
         Livewire::actingAs($coach)
             ->test(\App\Filament\Resources\Exercises\Pages\ListExercises::class)
             ->searchTable('sillon de cuadriceps')
             ->assertCanSeeTableRecords([$extension])
             ->assertCanNotSeeTableRecords([$curl])
             ->searchTable('camilla de isquios')
-            ->assertCanSeeTableRecords([$curl])
+            ->assertCanSeeTableRecords([$curl, $genericCurl])
             ->assertCanNotSeeTableRecords([$extension]);
     }
 
