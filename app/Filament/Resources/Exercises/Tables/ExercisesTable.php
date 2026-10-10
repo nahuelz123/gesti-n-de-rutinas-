@@ -8,12 +8,16 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use App\Support\ExerciseNames;
 
 class ExercisesTable
 {
     public static function configure(Table $table): Table
 {
     return $table
+        ->splitSearchTerms(false)
+        ->searchPlaceholder('Nombre habitual o del catálogo')
         ->columns([
             ImageColumn::make('gif_url')
                 ->label('')
@@ -24,11 +28,11 @@ class ExercisesTable
 
             TextColumn::make('title')
                 ->label('Título')
-                ->searchable()
+                ->searchable(query: fn (Builder $query, string $search): Builder => $query->searchByName($search))
                 ->sortable()
                 ->formatStateUsing(fn ($state, $record) => $record->is_global 
-                    ? '🌐 ' . $state . ' (Catálogo)'
-                    : '🏠 ' . $state . ' (Mi gym)'
+                    ? '🌐 ' . ExerciseNames::displayName($state) . ' (Catálogo)'
+                    : '🏠 ' . ExerciseNames::displayName($state) . ' (Mi gym)'
                 ),
 
             TextColumn::make('muscle_group')
