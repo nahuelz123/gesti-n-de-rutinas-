@@ -31,6 +31,7 @@ class GlobalCatalogSeeder extends Seeder
             ['title' => 'Press francés', 'muscle_group' => 'triceps'],
             
             ['title' => 'Sentadilla', 'muscle_group' => 'piernas'],
+            ['title' => 'Sentadilla búlgara', 'muscle_group' => 'piernas'],
             ['title' => 'Prensa', 'muscle_group' => 'piernas'],
             ['title' => 'Peso muerto rumano', 'muscle_group' => 'piernas'],
             ['title' => 'Hip thrust', 'muscle_group' => 'gluteos'],
