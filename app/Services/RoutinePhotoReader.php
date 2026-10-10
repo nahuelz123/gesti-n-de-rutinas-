@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Exercise;
+use App\Support\ExerciseNames;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -24,8 +25,7 @@ class RoutinePhotoReader
             throw new RuntimeException('El archivo no produjo una rutina reconocible. Probá con una imagen más nítida.');
         }
 
-        $catalog = Exercise::query()->where(fn ($q) => $q->where('is_global', true)->orWhere('gym_id', $gymId))
-            ->get(['id', 'title'])->keyBy(fn ($exercise) => Str::lower(Str::ascii(trim($exercise->title))));
+        $catalog = Exercise::query()->visibleToGym($gymId)->get(['id', 'title']);
         $days = [];
         $missing = [];
         foreach ($parsed['days'] as $dayIndex => $day) {
@@ -35,7 +35,7 @@ class RoutinePhotoReader
             $exercises = [];
             foreach ($day['exercises'] as $index => $item) {
                 $name = trim((string) ($item['name'] ?? ''));
-                $match = $catalog->get(Str::lower(Str::ascii($name)));
+                $match = ExerciseNames::uniqueMatch($catalog, $name);
                 if (! $match) {
                     $missing[] = $name ?: 'ejercicio ilegible';
                 }
