@@ -60,6 +60,23 @@ class ExerciseCommonNamesTest extends TestCase
         $this->assertSame([], $field->getSearchResults('%'));
     }
 
+
+    public function test_catalog_search_accepts_complete_common_names(): void
+    {
+        $gym = Gym::create(['name' => 'Gym catálogo']);
+        $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
+        $extension = Exercise::create(['title' => 'Lever leg extension', 'muscle_group' => 'piernas', 'is_global' => true]);
+        $curl = Exercise::create(['title' => 'Lever lying leg curl', 'muscle_group' => 'piernas', 'is_global' => true]);
+        Livewire::actingAs($coach)
+            ->test(\App\Filament\Resources\Exercises\Pages\ListExercises::class)
+            ->searchTable('sillon de cuadriceps')
+            ->assertCanSeeTableRecords([$extension])
+            ->assertCanNotSeeTableRecords([$curl])
+            ->searchTable('camilla de isquios')
+            ->assertCanSeeTableRecords([$curl])
+            ->assertCanNotSeeTableRecords([$extension]);
+    }
+
     public function test_import_matches_unique_common_names_but_leaves_ambiguous_variants_for_review(): void
     {
         $extension = Exercise::create(['title' => 'Extensiones de cuádriceps', 'muscle_group' => 'piernas', 'is_global' => true]);
