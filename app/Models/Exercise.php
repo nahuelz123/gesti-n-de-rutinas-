@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
+use App\Support\ExerciseNames;
 
 class Exercise extends Model
 {
@@ -27,6 +29,42 @@ class Exercise extends Model
     protected $casts = [
         'is_global' => 'boolean',
     ];
+
+    public function scopeVisibleToGym(Builder $query, ?int $gymId): Builder
+    {
+        return $query->where(function (Builder $visible) use ($gymId): void {
+            $visible->where('is_global', true);
+            if ($gymId !== null) {
+                $visible->orWhere('gym_id', $gymId);
+            }
+        });
+    }
+
+    public function scopeSearchByName(Builder $query, string $search): Builder
+    {
+        $terms = ExerciseNames::searchTerms($search);
+        if ($terms === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $names) use ($terms): void {
+            foreach ($terms as $term) {
+                $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+                $names->orWhereRaw("LOWER(exercises.title) LIKE ? ESCAPE '!'", [$pattern]);
+            }
+        });
+    }
+
+    public static function searchOptionsForGym(string $search, ?int $gymId): array
+    {
+        return static::query()->visibleToGym($gymId)->searchByName($search)
+            ->orderBy('title')->limit(50)->get()
+            ->mapWithKeys(fn (Exercise $exercise): array => [
+                $exercise->id => ($exercise->is_global ? '🌐 ' : '🏠 ').
+                    ExerciseNames::displayName($exercise->title).
+                    ($exercise->is_global ? ' (Catálogo)' : ' (Mi gym)'),
+            ])->all();
+    }
 
     public function gym(): BelongsTo
     {
