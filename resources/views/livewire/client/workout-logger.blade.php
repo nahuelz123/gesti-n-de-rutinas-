@@ -53,9 +53,40 @@
                 letter-spacing:-.02em;
             }
             .vf-day-card p {
-                margin:5px 0 16px;
+                margin:5px 0 12px;
                 color:var(--clr-text-muted);
                 font-size:13px;
+            }
+            .vf-day-progress-row {
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                margin-bottom:8px;
+                color:var(--clr-text-muted);
+                font-size:10px;
+                font-weight:750;
+            }
+            .vf-day-progress-track {
+                height:6px;
+                border-radius:999px;
+                background:rgba(255,255,255,.07);
+                overflow:hidden;
+                margin-bottom:14px;
+            }
+            .vf-day-progress-fill {
+                height:100%;
+                border-radius:inherit;
+                background:var(--clr-primary);
+            }
+            .vf-day-card.in-progress {
+                border-color:rgba(230,57,70,.38);
+                background:
+                    linear-gradient(180deg,rgba(230,57,70,.055),transparent 45%),
+                    var(--clr-surface);
+            }
+            .vf-day-card.done {
+                border-color:rgba(74,222,128,.28);
             }
             @media(max-width:620px) {
                 .vf-day-grid { grid-template-columns:1fr; }
@@ -78,13 +109,29 @@
 
             <div class="vf-day-grid">
                 @foreach($assignment->routine->days as $day)
-                    <article class="vf-day-card">
+                    @php
+                        $dayProgress = $this->dayProgress($day->id);
+                        $dayStarted = $dayProgress['completed'] > 0;
+                        $dayDone = $dayProgress['total'] > 0 && $dayProgress['completed'] >= $dayProgress['total'];
+                    @endphp
+
+                    <article class="vf-day-card {{ $dayDone ? 'done' : ($dayStarted ? 'in-progress' : '') }}">
                         <div class="vf-day-number">Día {{ $day->day_number }}</div>
                         <h3>{{ $day->title }}</h3>
                         <p>{{ $day->exercises->count() }} ejercicios</p>
 
+                        @if($dayProgress['total'] > 0)
+                            <div class="vf-day-progress-row">
+                                <span>{{ $dayStarted ? 'Progreso de hoy' : 'Sin empezar hoy' }}</span>
+                                <span>{{ $dayProgress['completed'] }}/{{ $dayProgress['total'] }} series</span>
+                            </div>
+                            <div class="vf-day-progress-track">
+                                <div class="vf-day-progress-fill" style="width:{{ $dayProgress['percent'] }}%"></div>
+                            </div>
+                        @endif
+
                         <x-client.action-button variant="primary" wire:click="selectDay({{ $day->id }})">
-                            EMPEZAR
+                            {{ $dayDone ? 'REVISAR' : ($dayStarted ? 'CONTINUAR' : 'EMPEZAR') }}
                         </x-client.action-button>
                     </article>
                 @endforeach
@@ -93,7 +140,12 @@
 
     @elseif ($step === 'training')
         <style>
-            .client-bottom-nav { display:none !important; }
+            .client-bottom-nav,
+            .app-nav,
+            .ai-fab,
+            .client-footer {
+                display:none !important;
+            }
             .app-main { padding-bottom:0 !important; }
 
             .vf-workout {
@@ -474,8 +526,8 @@
                     <div class="vf-workout-count">{{ $currentExerciseIndex + 1 }}/{{ $this->exercises->count() }}</div>
                 </div>
 
-                <div class="vf-progress-track">
-                    <div class="vf-progress-fill" style="width:{{ (($currentExerciseIndex + 1) / max(1, $this->exercises->count())) * 100 }}%"></div>
+                <div class="vf-progress-track" title="{{ $this->dayCompletedSets }}/{{ $this->dayTotalSets }} series completadas">
+                    <div class="vf-progress-fill" style="width:{{ $this->dayProgressPercent }}%"></div>
                 </div>
             </div>
 
@@ -492,6 +544,7 @@
 
                         <div class="vf-prescription">
                             <span>{{ $current->sets }} series</span>
+                            <span>{{ $this->currentExerciseCompletedSets }}/{{ $current->sets }} completadas</span>
                             <span>Objetivo: {{ $current->reps ?? '-' }} reps</span>
                             @if($this->restLabel)
                                 <span>{{ $this->restLabel }}</span>
@@ -638,8 +691,15 @@
                             <button wire:click="prevExercise" class="client-btn client-btn-secondary" style="flex:1;">← Anterior</button>
                         @endif
 
-                        <button wire:click="nextExercise" class="client-btn client-btn-secondary" style="flex:1;">
-                            {{ $currentExerciseIndex < $this->exercises->count() - 1 ? 'Siguiente →' : 'Finalizar' }}
+                        <button
+                            wire:click="nextExercise"
+                            class="client-btn client-btn-secondary"
+                            style="flex:1;"
+                            @if($this->currentExerciseCompletedSets < (int) $current->sets)
+                                wire:confirm="Todavía faltan {{ (int) $current->sets - $this->currentExerciseCompletedSets }} serie(s) de este ejercicio. ¿Querés continuar igual?"
+                            @endif
+                        >
+                            {{ $currentExerciseIndex < $this->exercises->count() - 1 ? 'Siguiente ejercicio →' : 'Finalizar entrenamiento' }}
                         </button>
                     </div>
                 </main>

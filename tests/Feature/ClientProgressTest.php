@@ -167,6 +167,46 @@ class ClientProgressTest extends TestCase
         $response->assertSee('80'); // Historial
     }
 
+    public function test_bodyweight_progress_is_presented_without_fake_zero_kg(): void
+    {
+        $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
+        $client = $this->createClient($gym->id);
+        $exercise = Exercise::create(['title' => 'Dominadas', 'muscle_group' => 'espalda', 'is_global' => true]);
+        $routine = Routine::create(['gym_id' => $gym->id, 'title' => 'Rutina', 'coach_id' => $client->id]);
+        $day = RoutineDay::create(['routine_id' => $routine->id, 'day_number' => 1, 'title' => 'Dia 1']);
+        $rdExercise = RoutineDayExercise::create([
+            'routine_day_id' => $day->id,
+            'exercise_id' => $exercise->id,
+            'order' => 1,
+            'sets' => 3,
+            'reps' => '8',
+        ]);
+        $assignment = Assignment::create([
+            'gym_id' => $gym->id,
+            'client_id' => $client->id,
+            'routine_id' => $routine->id,
+            'assigned_by_id' => $client->id,
+        ]);
+
+        ExerciseLog::create([
+            'assignment_id' => $assignment->id,
+            'routine_day_exercise_id' => $rdExercise->id,
+            'set_number' => 1,
+            'weight' => null,
+            'reps' => 12,
+            'logged_at' => now(),
+        ]);
+
+        $response = $this->actingAs($client)->get(route('client.progress.exercise', $exercise));
+
+        $response->assertOk();
+        $response->assertSee('Peso corporal');
+        $response->assertSee('12');
+        $response->assertDontSee('0 kg');
+        $response->assertSee('max="100"', false);
+        $response->assertSee('min="0"', false);
+    }
+
     public function test_client_can_edit_own_log()
     {
         $gym = Gym::create(['name' => 'Test Gym', 'invite_code' => uniqid()]);
