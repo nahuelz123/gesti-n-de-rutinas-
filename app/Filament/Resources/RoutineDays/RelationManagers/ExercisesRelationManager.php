@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\RoutineDays\RelationManagers;
 
+use App\Models\Exercise;
+
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use App\Support\ExerciseNames;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -30,6 +33,9 @@ class ExercisesRelationManager extends RelationManager
                             ->orWhere('gym_id', Auth::user()?->gym_id);
                     })
                 )
+                ->getOptionLabelFromRecordUsing(fn (Exercise $record): string => ExerciseNames::displayName($record->title))
+                ->getSearchResultsUsing(fn (string $search): array => Exercise::searchOptionsForGym($search, Auth::user()?->gym_id))
+                ->searchPrompt('Buscá por nombre habitual: estocadas, sillón, camilla, búlgara…')
                 ->searchable()
                 ->required(),
 
