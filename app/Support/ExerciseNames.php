@@ -29,11 +29,32 @@ class ExerciseNames
             'camilla', 'camilla de isquios', 'camilla de isquiotibiales', 'camilla de femorales',
             'curl femoral acostado', 'curl femoral tumbado', 'curl de piernas acostado',
             'Lever lying leg curl', 'Lying leg curl', 'Prone leg curl',
-        ]],
+        ], 'search_only' => ['Curl femoral']],
         ['label' => 'Sentadilla búlgara', 'terms' => [
             'búlgara', 'bulgara', 'búlgaras', 'bulgaras', 'sentadilla búlgara', 'sentadilla bulgara',
             'Bulgarian split squat', 'Dumbbell Bulgarian split squat', 'Barbell Bulgarian split squat',
         ]],
+    ];
+
+
+    // La búsqueda muestra familias; la importación conserva equipo y variante.
+    private const IMPORT_EQUIVALENTS = [
+        ['estocada', 'estocadas', 'zancada', 'zancadas', 'lunge', 'lunges'],
+        ['estocadas caminando', 'zancadas caminando', 'walking lunge'],
+        ['estocadas con mancuernas', 'zancadas con mancuernas', 'dumbbell lunge'],
+        ['estocadas con barra', 'zancadas con barra', 'barbell lunge'],
+        ['estocadas hacia atrás', 'zancadas hacia atrás', 'reverse lunge'],
+        ['sentadilla', 'sentadillas', 'squat', 'squats'],
+        ['sentadilla con barra', 'barbell squat'],
+        ['sentadilla sin peso', 'sentadilla con peso corporal', 'bodyweight squat'],
+        ['sillón de cuádriceps', 'sillon de cuadriceps', 'extensión de cuádriceps',
+            'extensiones de cuádriceps', 'extensión de piernas', 'lever leg extension', 'leg extension machine'],
+        ['camilla de isquios', 'camilla de isquiotibiales', 'camilla de femorales',
+            'curl femoral acostado', 'curl femoral tumbado', 'curl de piernas acostado',
+            'lever lying leg curl', 'lying leg curl', 'prone leg curl'],
+        ['búlgara', 'búlgaras', 'sentadilla búlgara', 'bulgarian split squat'],
+        ['búlgara con mancuernas', 'sentadilla búlgara con mancuernas', 'dumbbell bulgarian split squat'],
+        ['búlgara con barra', 'sentadilla búlgara con barra', 'barbell bulgarian split squat'],
     ];
 
     public static function normalize(string $name): string
@@ -53,7 +74,7 @@ class ExerciseNames
         foreach (self::GROUPS as $group) {
             foreach ($group['terms'] as $term) {
                 if (str_starts_with(self::normalize($term), $normalized)) {
-                    $terms = array_merge($terms, $group['terms']);
+                    $terms = array_merge($terms, $group['terms'], $group['search_only'] ?? []);
                     break;
                 }
             }
@@ -83,8 +104,8 @@ class ExerciseNames
         if ($exact->isNotEmpty()) {
             return $exact->count() === 1 ? $exact->first() : null;
         }
-        foreach (self::GROUPS as $group) {
-            $terms = array_map(self::normalize(...), $group['terms']);
+        foreach (self::IMPORT_EQUIVALENTS as $group) {
+            $terms = array_map(self::normalize(...), $group);
             if (! in_array($normalized, $terms, true)) {
                 continue;
             }
