@@ -30,13 +30,23 @@ class MealPhotoTest extends TestCase
             'candidates' => [['content' => ['parts' => [['text' => json_encode([
                 'name' => 'Pollo con arroz', 'quantity_grams' => 350, 'calories' => 520,
                 'protein' => 42, 'carbs' => 54, 'fat' => 12, 'note' => 'Aceite no visible',
+                'included_foods' => 'Pollo servido en el plato y arroz, sin bebida',
             ])]]]]],
         ])]);
 
         $this->actingAs($client)->post(route('client.nutrition.photo.analyze'), [
             'photo' => $this->photo(), 'processing_consent' => '1',
+            'meal_scope' => 'Comí el pollo y el arroz del plato, no la bebida',
         ])->assertRedirect(route('client.nutrition.photo.show'))
-            ->assertSessionHas('meal-photo-estimate', fn (array $data) => $data['calories'] === 520.0);
+            ->assertSessionHas('meal-photo-estimate', fn (array $data) => $data['calories'] === 520.0
+                && $data['included_foods'] === 'Pollo servido en el plato y arroz, sin bebida');
+
+        Http::assertSent(fn ($request) => str_contains(
+            $request->data()['contents'][0]['parts'][0]['text'],
+            'Comí el pollo y el arroz del plato, no la bebida'
+        ));
+        $this->actingAs($client)->get(route('client.nutrition.photo.show'))
+            ->assertSee('Pollo servido en el plato y arroz, sin bebida');
 
         $this->assertDatabaseCount('free_meal_logs', 0);
 
