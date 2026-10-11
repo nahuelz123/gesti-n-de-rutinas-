@@ -15,7 +15,7 @@ class ExerciseNames
             'Barbell lunge', 'Dumbbell lunge', 'Reverse lunge',
         ]],
         ['label' => 'Sentadilla', 'terms' => [
-            'sentadilla', 'sentadillas', 'squat', 'squats',
+            'sentadilla', 'sentadillas', 'sentadilla profunda', 'squat', 'squats',
             'Sentadilla con barra', 'Barbell squat', 'Bodyweight squat',
         ]],
         ['label' => 'Sillón de cuádriceps', 'terms' => [
@@ -44,7 +44,7 @@ class ExerciseNames
         ['estocadas con mancuernas', 'zancadas con mancuernas', 'dumbbell lunge'],
         ['estocadas con barra', 'zancadas con barra', 'barbell lunge'],
         ['estocadas hacia atrás', 'zancadas hacia atrás', 'reverse lunge'],
-        ['sentadilla', 'sentadillas', 'squat', 'squats'],
+        ['sentadilla', 'sentadillas', 'sentadilla profunda', 'squat', 'squats'],
         ['sentadilla con barra', 'barbell squat'],
         ['sentadilla sin peso', 'sentadilla con peso corporal', 'bodyweight squat'],
         ['sillón de cuádriceps', 'sillon de cuadriceps', 'extensión de cuádriceps',
