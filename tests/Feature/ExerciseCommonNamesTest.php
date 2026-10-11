@@ -121,4 +121,29 @@ class ExerciseCommonNamesTest extends TestCase
         $this->assertContains('Estocadas', $draft['unmatched']);
         $this->assertDatabaseCount('routines', 0);
     }
+
+    public function test_excel_import_maps_deep_squat_to_the_generic_squat(): void
+    {
+        $squat = Exercise::create(['title' => 'Sentadilla', 'muscle_group' => 'piernas', 'is_global' => true]);
+        Exercise::create(['title' => 'Barbell full squat', 'muscle_group' => 'piernas', 'is_global' => true]);
+        config()->set('services.gemini.key', 'test-key');
+        $routine = ['title' => 'Piernas', 'days' => [[
+            'title' => 'Día 1', 'exercises' => [
+                ['name' => 'Sentadilla profunda', 'sets' => 3, 'reps' => '10'],
+            ],
+        ]]];
+        Http::fake(['generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [['content' => ['parts' => [['text' => json_encode($routine)]]]]],
+        ])]);
+        $draft = app(RoutinePhotoReader::class)->read('xlsx bytes', 'image/png', null);
+        $this->assertSame($squat->id, $draft['days'][0]['exercises'][0]['exercise_id']);
+        $this->assertSame([], $draft['unmatched']);
+    }
+
+    public function test_deep_squat_does_not_choose_an_equipment_variant_when_generic_squat_is_missing(): void
+    {
+        Exercise::create(['title' => 'Barbell full squat', 'muscle_group' => 'piernas', 'is_global' => true]);
+        $catalog = Exercise::query()->get(['id', 'title']);
+        $this->assertNull(\\App\\Support\\ExerciseNames::uniqueMatch($catalog, 'Sentadilla profunda'));
+    }
 }
