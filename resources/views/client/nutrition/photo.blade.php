@@ -15,16 +15,20 @@
 <div class="photo-meal">
     <a class="back-link" href="{{ route('client.nutrition.index') }}">← Mi alimentación</a>
     <h1>Registrar comida con foto</h1>
-    <p>La IA estima lo que se ve. Revisá los alimentos, el tamaño de la porción y las calorías antes de sumarlos a tu diario. El aceite, las salsas y otros ingredientes pueden no verse.</p>
+    <p>La IA estima la porción que comiste. Indicá qué parte de la foto querés contar si hay varios platos o porciones. Revisá los alimentos, las cantidades y las calorías antes de guardarlos.</p>
 
     <form class="photo-meal-card" method="POST" action="{{ route('client.nutrition.photo.analyze') }}" enctype="multipart/form-data">
         @csrf
         <label for="meal-photo">Foto de la comida</label>
         <input id="meal-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required>
-        <small>JPG, PNG o WebP, hasta 5 MB. La imagen se envía a {{ app(\App\Services\FileAiReader::class)->providerName() }} para el análisis y no se guarda en VisionFit.</small>
+        <small>JPG, PNG o WebP, hasta 5 MB. La imagen y tu indicación se envían a {{ app(\App\Services\FileAiReader::class)->providerName() }} para el análisis. La imagen no se guarda en VisionFit.</small>
+        <label for="meal-scope">¿Qué comiste de la foto? (opcional)</label>
+        <input id="meal-scope" name="meal_scope" maxlength="200" value="{{ old('meal_scope') }}" placeholder="Ej.: 1 porción de pizza y el jugo; no la pizza del fondo">
+        <small>Ayuda a distinguir tu porción de otras comidas que aparecen en la imagen.</small>
+        @error('meal_scope') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
         <label style="display:flex; align-items:flex-start; gap:10px; font-weight:500;">
             <input type="checkbox" name="processing_consent" value="1" required style="margin-top:3px;">
-            Autorizo el análisis de esta imagen con {{ app(\App\Services\FileAiReader::class)->providerName() }}.
+            Autorizo el análisis de esta imagen y mi indicación con {{ app(\App\Services\FileAiReader::class)->providerName() }}.
         </label>
         @error('photo') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
         @error('processing_consent') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
@@ -36,6 +40,10 @@
             @csrf
             <h2 style="font-size:20px;">Revisá la estimación</h2>
             <p>Todos los valores son aproximados para la porción completa. Corregilos antes de guardar.</p>
+            <p><strong>La IA contó:</strong> {{ $estimate['included_foods'] ?? $estimate['name'] }}</p>
+            @if ($estimate['meal_scope'] ?? false)
+                <p><strong>Tu indicación:</strong> {{ $estimate['meal_scope'] }}</p>
+            @endif
             @if ($estimate['note'])
                 <p style="margin-top:10px; color:#facc15;">{{ $estimate['note'] }}</p>
             @endif

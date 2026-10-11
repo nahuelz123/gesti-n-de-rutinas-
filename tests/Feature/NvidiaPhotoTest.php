@@ -67,6 +67,7 @@ class NvidiaPhotoTest extends TestCase
             'choices' => [['message' => ['content' => json_encode([
                 'name' => 'Arroz', 'quantity_grams' => 200, 'calories' => 260,
                 'protein' => 5, 'carbs' => 56, 'fat' => 1, 'note' => 'Porción aproximada',
+                'included_foods' => 'Un plato de arroz',
             ])], 'finish_reason' => 'stop']],
         ])]);
 
@@ -139,6 +140,7 @@ class NvidiaPhotoTest extends TestCase
                 'choices' => [['message' => ['content' => json_encode([
                     'name' => 'Arroz', 'quantity_grams' => 200, 'calories' => 260,
                     'protein' => 5, 'carbs' => 56, 'fat' => 1, 'note' => '',
+                    'included_foods' => 'Un plato de arroz',
                 ])], 'finish_reason' => 'stop']],
             ]),
         ]);
