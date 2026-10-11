@@ -77,4 +77,14 @@ class MealPhotoTest extends TestCase
         $this->assertSame(0, FreeMealLog::count());
         Http::assertNothingSent();
     }
+
+    public function test_an_existing_photo_estimate_still_opens_after_the_new_breakdown_is_added(): void
+    {
+        $client = User::factory()->create(['role' => 'client']);
+        $this->actingAs($client)->withSession(['meal-photo-estimate' => [
+            'name' => 'Pizza de muzzarella', 'note' => '', 'quantity_grams' => 400,
+            'calories' => 1040, 'protein' => 44, 'carbs' => 132, 'fat' => 40,
+        ]])->get(route('client.nutrition.photo.show'))
+            ->assertOk()->assertSee('Pizza de muzzarella');
+    }
 }
