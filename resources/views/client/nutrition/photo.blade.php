@@ -40,8 +40,8 @@
             @csrf
             <h2 style="font-size:20px;">Revisá la estimación</h2>
             <p>Todos los valores son aproximados para la porción completa. Corregilos antes de guardar.</p>
-            <p><strong>La IA contó:</strong> {{ $estimate['included_foods'] }}</p>
-            @if ($estimate['meal_scope'])
+            <p><strong>La IA contó:</strong> {{ $estimate['included_foods'] ?? $estimate['name'] }}</p>
+            @if ($estimate['meal_scope'] ?? false)
                 <p><strong>Tu indicación:</strong> {{ $estimate['meal_scope'] }}</p>
             @endif
             @if ($estimate['note'])
