@@ -21,14 +21,14 @@
         @csrf
         <label for="meal-photo">Foto de la comida</label>
         <input id="meal-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" required>
-        <small>JPG, PNG o WebP, hasta 5 MB. La imagen se envía a {{ app(\App\Services\FileAiReader::class)->providerName() }} para el análisis y no se guarda en VisionFit.</small>
+        <small>JPG, PNG o WebP, hasta 5 MB. La imagen y tu indicación se envían a {{ app(\App\Services\FileAiReader::class)->providerName() }} para el análisis. La imagen no se guarda en VisionFit.</small>
         <label for="meal-scope">¿Qué comiste de la foto? (opcional)</label>
         <input id="meal-scope" name="meal_scope" maxlength="200" value="{{ old('meal_scope') }}" placeholder="Ej.: 1 porción de pizza y el jugo; no la pizza del fondo">
         <small>Ayuda a distinguir tu porción de otras comidas que aparecen en la imagen.</small>
         @error('meal_scope') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
         <label style="display:flex; align-items:flex-start; gap:10px; font-weight:500;">
             <input type="checkbox" name="processing_consent" value="1" required style="margin-top:3px;">
-            Autorizo el análisis de esta imagen con {{ app(\App\Services\FileAiReader::class)->providerName() }}.
+            Autorizo el análisis de esta imagen y mi indicación con {{ app(\App\Services\FileAiReader::class)->providerName() }}.
         </label>
         @error('photo') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
         @error('processing_consent') <div class="photo-meal-error" role="alert">{{ $message }}</div> @enderror
