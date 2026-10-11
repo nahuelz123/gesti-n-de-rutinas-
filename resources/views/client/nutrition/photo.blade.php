@@ -15,7 +15,7 @@
 <div class="photo-meal">
     <a class="back-link" href="{{ route('client.nutrition.index') }}">← Mi alimentación</a>
     <h1>Registrar comida con foto</h1>
-    <p>La IA estima lo que se ve. Revisá los alimentos, el tamaño de la porción y las calorías antes de sumarlos a tu diario. El aceite, las salsas y otros ingredientes pueden no verse.</p>
+    <p>La IA estima la porción que comiste. Indicá qué parte de la foto querés contar si hay varios platos o porciones. Revisá los alimentos, las cantidades y las calorías antes de guardarlos.</p>
 
     <form class="photo-meal-card" method="POST" action="{{ route('client.nutrition.photo.analyze') }}" enctype="multipart/form-data">
         @csrf
@@ -36,6 +36,10 @@
             @csrf
             <h2 style="font-size:20px;">Revisá la estimación</h2>
             <p>Todos los valores son aproximados para la porción completa. Corregilos antes de guardar.</p>
+            <p><strong>La IA contó:</strong> {{ $estimate['included_foods'] }}</p>
+            @if ($estimate['meal_scope'])
+                <p><strong>Tu indicación:</strong> {{ $estimate['meal_scope'] }}</p>
+            @endif
             @if ($estimate['note'])
                 <p style="margin-top:10px; color:#facc15;">{{ $estimate['note'] }}</p>
             @endif
