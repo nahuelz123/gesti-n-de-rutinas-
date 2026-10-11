@@ -144,6 +144,6 @@ class ExerciseCommonNamesTest extends TestCase
     {
         Exercise::create(['title' => 'Barbell full squat', 'muscle_group' => 'piernas', 'is_global' => true]);
         $catalog = Exercise::query()->get(['id', 'title']);
-        $this->assertNull(\\App\\Support\\ExerciseNames::uniqueMatch($catalog, 'Sentadilla profunda'));
+        $this->assertNull(\App\Support\ExerciseNames::uniqueMatch($catalog, 'Sentadilla profunda'));
     }
 }
