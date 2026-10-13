@@ -81,6 +81,10 @@ class NvidiaPhotoTest extends TestCase
 
     public function test_pdf_pages_are_read_with_existing_nvidia_key(): void
     {
+        if (! $this->hasPdfTools()) {
+            $this->markTestSkipped('poppler-utils (pdfinfo/pdftoppm) no está instalado en este entorno.');
+        }
+
         $gym = Gym::create(['name' => 'Gym PDF']);
         $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
         Exercise::create(['title' => 'Sentadilla', 'is_global' => true, 'muscle_group' => 'piernas']);
@@ -106,6 +110,10 @@ class NvidiaPhotoTest extends TestCase
 
     public function test_large_pdf_is_rejected_without_partial_reading(): void
     {
+        if (! $this->hasPdfTools()) {
+            $this->markTestSkipped('poppler-utils (pdfinfo/pdftoppm) no está instalado en este entorno.');
+        }
+
         $gym = Gym::create(['name' => 'Gym PDF']);
         $coach = User::factory()->create(['role' => 'coach', 'gym_id' => $gym->id]);
         Http::fake();
@@ -205,5 +213,16 @@ class NvidiaPhotoTest extends TestCase
             'photo' => $this->photo(), 'photo_processing_consent' => '1',
         ])->assertSessionHasErrors('photo')->assertSessionMissing('routine-photo-draft');
         Http::assertNothingSent();
+    }
+
+    private function hasPdfTools(): bool
+    {
+        try {
+            $process = new \Symfony\Component\Process\Process(['pdfinfo', '-v']);
+            $process->run();
+            return $process->isSuccessful() || $process->getExitCode() === 0;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
