@@ -9,6 +9,32 @@ use Illuminate\Support\Str;
 class ExerciseNames
 {
     private const GROUPS = [
+        ['label' => 'Press plano en Smith', 'terms' => [
+            'plano en smit', 'plano en smith', 'press plano smit', 'press plano smith',
+            'press plano en smit', 'press plano en smith', 'press banca plano smith', 'Smith bench press',
+        ]],
+        ['label' => 'Press militar en Smith', 'terms' => [
+            'press militar en smit', 'press militar en smith', 'press militar smith',
+            'Smith standing military press', 'Smith shoulder press',
+        ]],
+        ['label' => 'JM press', 'terms' => ['JM press', 'J press', 'KAS press', 'Kass press']],
+        ['label' => 'Elevaciones laterales', 'terms' => [
+            'vuelos laterales', 'vuelo lateral', 'elevaciones laterales',
+            'Dumbbell lateral raise', 'Cable lateral raise', 'Lever lateral raise',
+        ]],
+        ['label' => 'Press pecho plano en máquina', 'terms' => [
+            'plano en maquina', 'plano en máquina', 'press plano en maquina',
+            'press plano en máquina', 'Press pecho plano en máquina',
+        ]],
+        ['label' => 'Press cerrado con barra', 'terms' => [
+            'press cerrado', 'press plano cerrado', 'Press cerrado con barra',
+        ]],
+        ['label' => 'Tríceps katana bilateral', 'terms' => [
+            'katana a dos brazos', 'triceps katana', 'tríceps katana', 'Tríceps katana bilateral',
+        ]],
+        ['label' => 'Press militar en máquina', 'terms' => [
+            'press militar en maquina', 'press militar en máquina', 'Press militar en máquina',
+        ]],
         ['label' => 'Estocadas', 'terms' => [
             'estocada', 'estocadas', 'zancada', 'zancadas', 'lunge', 'lunges',
             'Zancadas caminando', 'Estocadas caminando', 'Walking lunge',
@@ -57,6 +83,25 @@ class ExerciseNames
         ['búlgara con barra', 'sentadilla búlgara con barra', 'barbell bulgarian split squat'],
     ];
 
+    // Alias del gym con destino concreto: evitan confundir barra, mancuernas, Smith y máquina.
+    private const IMPORT_PREFERRED = [
+        ['title' => 'Smith bench press', 'aliases' => [
+            'plano en smit', 'plano en smith', 'press plano smit', 'press plano smith',
+            'press plano en smit', 'press plano en smith', 'press banca plano smith',
+        ]],
+        ['title' => 'Press militar en Smith', 'aliases' => [
+            'press militar en smit', 'press militar en smith', 'press militar smith',
+        ]],
+        ['title' => 'JM press', 'aliases' => ['j press', 'kas press', 'kass press']],
+        ['title' => 'Elevaciones laterales', 'aliases' => ['vuelos laterales', 'vuelo lateral']],
+        ['title' => 'Press pecho plano en máquina', 'aliases' => [
+            'plano en maquina', 'press plano en maquina',
+        ]],
+        ['title' => 'Press militar en máquina', 'aliases' => ['press militar en maquina']],
+        ['title' => 'Press cerrado con barra', 'aliases' => ['press cerrado', 'press plano cerrado']],
+        ['title' => 'Tríceps katana bilateral', 'aliases' => ['katana a dos brazos', 'triceps katana']],
+    ];
+
     public static function normalize(string $name): string
     {
         return Str::lower(Str::ascii(preg_replace('/\\s+/u', ' ', trim($name))));
@@ -103,6 +148,14 @@ class ExerciseNames
         $exact = $catalog->filter(fn (Exercise $exercise): bool => self::normalize($exercise->title) === $normalized);
         if ($exact->isNotEmpty()) {
             return $exact->count() === 1 ? $exact->first() : null;
+        }
+        foreach (self::IMPORT_PREFERRED as $preferred) {
+            if (! in_array($normalized, array_map(self::normalize(...), $preferred['aliases']), true)) {
+                continue;
+            }
+            $matches = $catalog->filter(fn (Exercise $exercise): bool => self::normalize($exercise->title) === self::normalize($preferred['title']));
+
+            return $matches->count() === 1 ? $matches->first() : null;
         }
         foreach (self::IMPORT_EQUIVALENTS as $group) {
             $terms = array_map(self::normalize(...), $group);
