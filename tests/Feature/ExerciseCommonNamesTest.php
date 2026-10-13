@@ -150,8 +150,8 @@ class ExerciseCommonNamesTest extends TestCase
     public function test_photo_import_resolves_named_gym_variants_without_changing_equipment(): void
     {
         $smithBench = Exercise::create(['title' => 'Smith bench press', 'muscle_group' => 'pecho', 'is_global' => true]);
-        $smithShoulder = Exercise::create(['title' => 'Press militar en Smith', 'muscle_group' => 'hombros', 'is_global' => true]);
-        $jm = Exercise::create(['title' => 'JM press', 'muscle_group' => 'triceps', 'is_global' => true]);
+        $smithShoulder = Exercise::firstOrCreate(['title' => 'Press militar en Smith', 'muscle_group' => 'hombros', 'is_global' => true]);
+        $jm = Exercise::firstOrCreate(['title' => 'JM press', 'muscle_group' => 'triceps', 'is_global' => true]);
         $laterals = Exercise::create(['title' => 'Elevaciones laterales', 'muscle_group' => 'hombros', 'is_global' => true]);
         Exercise::create(['title' => 'Barbell bench press', 'muscle_group' => 'pecho', 'is_global' => true]);
         Exercise::create(['title' => 'Smith seated shoulder press', 'muscle_group' => 'hombros', 'is_global' => true]);
