@@ -10,6 +10,16 @@ class GlobalCatalogSeeder extends Seeder
     public function run(): void
     {
         $exercises = [
+            ['title' => 'Press pecho plano en máquina', 'muscle_group' => 'pecho'],
+            ['title' => 'Press militar en máquina', 'muscle_group' => 'hombros'],
+            ['title' => 'Press militar en Smith', 'muscle_group' => 'hombros'],
+            ['title' => 'Press cerrado con barra', 'muscle_group' => 'triceps'],
+            ['title' => 'JM press', 'muscle_group' => 'triceps'],
+            ['title' => 'Tríceps katana bilateral', 'muscle_group' => 'triceps'],
+            ['title' => 'Remo T con apoyo de pecho', 'muscle_group' => 'espalda'],
+            ['title' => 'Camilla de isquios', 'muscle_group' => 'piernas'],
+            ['title' => 'Prensa unilateral', 'muscle_group' => 'piernas'],
+            ['title' => 'Sillón invertido unilateral', 'muscle_group' => 'piernas'],
             ['title' => 'Press banca', 'muscle_group' => 'pecho'],
             ['title' => 'Press inclinado', 'muscle_group' => 'pecho'],
             ['title' => 'Aperturas', 'muscle_group' => 'pecho'],
