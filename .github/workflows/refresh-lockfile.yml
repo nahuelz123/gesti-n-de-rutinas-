@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '22'
       - name: Refresh package lock
-        run: npm install --package-lock-only --ignore-scripts
+        run: npm audit fix --package-lock-only --ignore-scripts
       - name: Commit refreshed lockfile
         run: |
           if git diff --quiet -- package-lock.json; then
@@ -33,4 +33,4 @@ jobs:
           git commit -m "build: refresh package lock"
           git push
       - name: Audit production dependencies
-        run: npm audit --omit=dev || true
+        run: npm audit --omit=dev
