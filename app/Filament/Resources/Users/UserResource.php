@@ -78,19 +78,8 @@ class UserResource extends Resource
 
     public static function canEdit($record): bool
     {
-        $user = Auth::user();
-
-        if (! $user) return false;
-
-        if (in_array($user->role, ['super_admin', 'admin'])) {
-            return $record->gym_id === $user->gym_id;
-        }
-
-        // coach: no edita users
-        return false;
+        return Auth::user()?->can('update', $record) ?? false;
     }
-
-
 
     public static function canViewAny(): bool
     {
