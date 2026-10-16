@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\Assignments\AssignmentResource;
+use App\Filament\Resources\Routines\RoutineResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Assignment;
 use App\Models\Gym;
@@ -77,6 +78,36 @@ class ResourceAuthorizationTest extends TestCase
         $this->actingAs($superAdmin);
 
         $this->assertTrue(UserResource::canEdit($client));
+    }
+
+    public function test_super_admin_can_edit_and_delete_routines_in_any_gym(): void
+    {
+        [$assignment] = $this->createAssignmentFixture();
+        $otherGym = Gym::create(['name' => 'Other gym']);
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'gym_id' => $otherGym->id]);
+        $this->actingAs($superAdmin);
+
+        $this->assertTrue(RoutineResource::canEdit($assignment->routine));
+        $this->assertTrue(RoutineResource::canDelete($assignment->routine));
+    }
+
+    public function test_client_cannot_use_the_routine_admin_policy_even_in_their_own_gym(): void
+    {
+        [$assignment] = $this->createAssignmentFixture();
+        $client = $assignment->client;
+        $this->actingAs($client);
+
+        $this->assertFalse($client->can('view', $assignment->routine));
+        $this->assertFalse($client->can('update', $assignment->routine));
+    }
+
+    public function test_coach_cannot_delete_routine(): void
+    {
+        [$assignment, $coach] = $this->createAssignmentFixture();
+        $this->actingAs($coach);
+
+        $this->assertTrue(RoutineResource::canEdit($assignment->routine));
+        $this->assertFalse(RoutineResource::canDelete($assignment->routine));
     }
 
     private function createAssignmentFixture(): array
