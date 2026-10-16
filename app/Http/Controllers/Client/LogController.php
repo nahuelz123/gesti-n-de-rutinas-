@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\ExerciseLog;
+use App\Services\ExerciseSetRecorder;
 use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request, ExerciseSetRecorder $recorder)
     {
         $user = $request->user();
 
@@ -23,56 +24,18 @@ class LogController extends Controller
 
         $assignment = Assignment::query()->findOrFail($data['assignment_id']);
 
-        // 1) Solo dueño del assignment
-        abort_unless($assignment->client_id === $user->id, 403);
+        $updated = $recorder->record(
+            $assignment,
+            $user,
+            (int) $data['routine_day_exercise_id'],
+            (int) $data['set_number'],
+            isset($data['weight']) ? (float) $data['weight'] : null,
+            isset($data['reps']) ? (int) $data['reps'] : null,
+        );
 
-        $isActive = $assignment->status === 'active' && $assignment->end_date === null;
-        $isReplay = $assignment->status === 'completed' && 
-                    $assignment->start_date !== null &&
-                    \Carbon\Carbon::parse($assignment->start_date)->isToday() && 
-                    $assignment->end_date !== null &&
-                    \Carbon\Carbon::parse($assignment->end_date)->isToday();
-
-        abort_unless($isActive || $isReplay, 403);
-
-        // 3) Asegurar que ese routine_day_exercise pertenece a la rutina del assignment
-        // (esto evita que un cliente mande un ID de otro day_exercise)
-        $belongs = $assignment->routine
-            ->days()
-            ->whereHas('exercises', fn ($q) => $q->where('routine_day_exercises.id', $data['routine_day_exercise_id']))
-            ->exists();
-
-        abort_unless($belongs, 403);
-
-        // Si ya había una serie cargada hoy con ese mismo número, la pisamos
-        // en vez de crear un duplicado.
-        $existing = ExerciseLog::query()
-            ->where('assignment_id', $assignment->id)
-            ->where('routine_day_exercise_id', $data['routine_day_exercise_id'])
-            ->where('set_number', $data['set_number'])
-            ->whereDate('logged_at', today())
-            ->first();
-
-        if ($existing) {
-            $existing->update([
-                'weight' => $data['weight'] ?? null,
-                'reps' => $data['reps'] ?? null,
-                'logged_at' => now(),
-            ]);
-
-            return back()->with('success', "Ya tenías cargada la serie {$data['set_number']} hoy, la actualicé con estos valores.");
-        }
-
-        ExerciseLog::create([
-            'assignment_id' => $assignment->id,
-            'routine_day_exercise_id' => $data['routine_day_exercise_id'],
-            'set_number' => $data['set_number'],
-            'weight' => $data['weight'] ?? null,
-            'reps' => $data['reps'] ?? null,
-            'logged_at' => now(),
-        ]);
-
-        return back()->with('success', 'Serie registrada.');
+        return back()->with('success', $updated
+            ? "Ya tenías cargada la serie {$data['set_number']} hoy, la actualicé con estos valores."
+            : 'Serie registrada.');
     }
 
     public function update(Request $request, ExerciseLog $log)
