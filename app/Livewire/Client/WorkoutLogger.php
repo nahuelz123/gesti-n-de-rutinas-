@@ -4,6 +4,7 @@ namespace App\Livewire\Client;
 
 use App\Models\Assignment;
 use App\Models\ExerciseLog;
+use App\Services\ExerciseSetRecorder;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -200,6 +201,12 @@ class WorkoutLogger extends Component
         $currentExercise = $this->currentExercise;
         abort_unless($currentExercise, 404);
 
+        if ($setNumber > (int) $currentExercise->sets) {
+            $this->addError('set_' . $setNumber, 'Esta serie no está configurada para el ejercicio.');
+
+            return;
+        }
+
         $rawWeight = $this->inputs[$setNumber]['weight'] ?? null;
 
         if (is_string($rawWeight)) {
@@ -231,54 +238,14 @@ class WorkoutLogger extends Component
             : (float) $validatedWeight;
         $reps = (int) $validated['inputs'][$setNumber]['reps'];
 
-        // Solo el dueño del assignment puede registrar series.
-        if (! $user || $this->assignment->client_id !== $user->id) {
-            abort(403);
-        }
-
-        $isActive = $this->assignment->status === 'active' && $this->assignment->end_date === null;
-        $isReplay = $this->assignment->status === 'completed'
-            && $this->assignment->start_date !== null
-            && \Carbon\Carbon::parse($this->assignment->start_date)->isToday()
-            && $this->assignment->end_date !== null
-            && \Carbon\Carbon::parse($this->assignment->end_date)->isToday();
-
-        if (! $isActive && ! $isReplay) {
-            abort(403);
-        }
-
-        // Ensure the current routine-day exercise belongs to this assignment's routine.
-        $belongs = $this->assignment->routine
-            ->days()
-            ->whereHas('exercises', fn ($query) => $query->where('routine_day_exercises.id', $currentExercise->id))
-            ->exists();
-
-        if (! $belongs) {
-            abort(403);
-        }
-
-        $existing = ExerciseLog::query()
-            ->where('assignment_id', $this->assignment->id)
-            ->where('routine_day_exercise_id', $currentExercise->id)
-            ->where('set_number', $setNumber)
-            ->whereDate('logged_at', today())
-            ->first();
-
-        $payload = [
-            'weight' => $weight,
-            'reps' => $reps,
-            'logged_at' => now(),
-        ];
-
-        if ($existing) {
-            $existing->update($payload);
-        } else {
-            ExerciseLog::create($payload + [
-                'assignment_id' => $this->assignment->id,
-                'routine_day_exercise_id' => $currentExercise->id,
-                'set_number' => $setNumber,
-            ]);
-        }
+        app(ExerciseSetRecorder::class)->record(
+            $this->assignment,
+            $user,
+            (int) $currentExercise->id,
+            (int) $setNumber,
+            $weight,
+            $reps
+        );
 
         $this->dispatch(
             'set-logged',
