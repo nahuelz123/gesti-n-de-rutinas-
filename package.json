@@ -19,5 +19,10 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
-    }
+    },
+    "engines": {
+        "node": "22.x",
+        "npm": ">=10 <11"
+    },
+    "packageManager": "npm@10.9.3"
 }
