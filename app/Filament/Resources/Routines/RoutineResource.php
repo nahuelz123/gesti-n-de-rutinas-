@@ -65,21 +65,12 @@ public static function canCreate(): bool
 
 public static function canEdit($record): bool
 {
-    $user = Auth::user();
-    if (! $user) return false;
-
-    // Admin o coach pueden editar rutinas de su gym
-    return in_array($user->role, ['super_admin', 'admin', 'coach'])
-        && $record->gym_id === $user->gym_id;
+    return Auth::user()?->can('update', $record) ?? false;
 }
 
 public static function canDelete($record): bool
 {
-    $user = Auth::user();
-    if (! $user) return false;
-
-    // Recomendación: solo admin borra (historial/importante)
-    return in_array($user->role, ['super_admin', 'admin']) && $record->gym_id === $user->gym_id;
+    return Auth::user()?->can('delete', $record) ?? false;
 }
 
     public static function getPages(): array

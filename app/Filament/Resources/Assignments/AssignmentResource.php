@@ -89,25 +89,12 @@ public static function canCreate(): bool
 
 public static function canEdit($record): bool
 {
-    $user = Auth::user();
-    if (! $user) return false;
-
-    // Admin puede editar asignaciones de su gym
-    if (in_array($user->role, ['admin', 'coach'])) {
-        return $record->gym_id === $user->gym_id;
-    }
-
-    // Coach: recomendado que NO edite historial
-    return false;
+    return Auth::user()?->can('update', $record) ?? false;
 }
 
 public static function canDelete($record): bool
 {
-    $user = Auth::user();
-
-    return $user
-        && in_array($user->role, ['super_admin', 'admin','coach'])
-        && $record->gym_id === $user->gym_id;
+    return Auth::user()?->can('delete', $record) ?? false;
 }
 
 }
