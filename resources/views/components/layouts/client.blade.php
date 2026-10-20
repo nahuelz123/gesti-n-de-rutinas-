@@ -16,7 +16,7 @@
          Alpine instances and inconsistent component behaviour. --}}
     @vite(['resources/css/app.css', 'resources/css/client.css'])
     @if(config('experience.enabled'))
-        <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css').'?v='.substr(hash_file('sha256', public_path('css/visionfit/experience.css')), 0, 12) }}">
     @endif
 </head>
 <body>
@@ -116,7 +116,7 @@
 
     <script src="{{ asset('js/visionfit/push-alerts.js') }}"></script>
     @if(config('experience.enabled'))
-        <script src="{{ asset('js/visionfit/experience.js') }}"></script>
+        <script src="{{ asset('js/visionfit/experience.js').'?v='.substr(hash_file('sha256', public_path('js/visionfit/experience.js')), 0, 12) }}"></script>
     @endif
     <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts

@@ -173,6 +173,20 @@ class ExperiencePagesTest extends TestCase
             ->assertDontSee('Todavía no tenés una rutina asignada.');
     }
 
+    public function test_both_layouts_version_experience_assets_by_their_current_content(): void
+    {
+        config()->set('experience.enabled', true);
+        $assets = collect(['css/visionfit/experience.css', 'js/visionfit/experience.js'])
+            ->map(fn ($path) => asset($path).'?v='.substr(hash_file('sha256', public_path($path)), 0, 12));
+        $demo = $this->get('/experiencia')->assertOk();
+        $client = User::factory()->create(['role' => 'client']);
+        $classicLayout = $this->actingAs($client)->get('/app/progress')->assertOk();
+        foreach ($assets as $url) {
+            $demo->assertSee($url, false);
+            $classicLayout->assertSee($url, false);
+        }
+    }
+
     private function workout(): array
     {
         $gym = Gym::create(['name' => 'Preview gym']);

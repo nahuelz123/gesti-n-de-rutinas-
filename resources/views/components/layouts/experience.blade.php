@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     <link rel="stylesheet" href="{{ asset('fonts/filament/filament/inter/index.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css').'?v='.substr(hash_file('sha256', public_path('css/visionfit/experience.css')), 0, 12) }}">
     @livewireStyles
 </head>
 <body class="vf-shell">
@@ -63,7 +63,7 @@
         <a href="{{ $profileUrl }}" @if(request()->routeIs('experience.demo.character', 'client.character')) aria-current="page" @endif><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4ZM8 6H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 0v6m-4 2h8"/></svg>Personaje</a>
         <a href="{{ $isDemo ? route('login') : route('client.nutrition.index') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v6a3 3 0 0 0 6 0V3M8 3v18m10-18c-3 3-3 8 0 9h2V3h-2Zm2 9v9"/></svg>Nutrición</a>
     </nav>
-    <script src="{{ asset('js/visionfit/experience.js') }}"></script>
+    <script src="{{ asset('js/visionfit/experience.js').'?v='.substr(hash_file('sha256', public_path('js/visionfit/experience.js')), 0, 12) }}"></script>
     @unless($isDemo)<script src="{{ asset('js/visionfit/push-alerts.js') }}"></script>@endunless
     @livewireScripts
 </body>
