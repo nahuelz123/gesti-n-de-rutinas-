@@ -521,16 +521,6 @@
                         </div>
                         <div class="vf-bodyweight-note">Para ejercicios con peso corporal, dejá el campo Peso vacío.</div>
 
-                        @if(config('experience.enabled'))
-                            @php $muscleMap = \App\Support\MuscleMap::forExercise($performed); @endphp
-                            <details class="vf-workout-muscle-panel" wire:key="muscle-panel-{{ $current->id }}-{{ $performed->id }}" style="margin-top:16px;padding:14px;border:1px solid var(--clr-border);border-radius:14px;">
-                                <summary style="cursor:pointer;min-height:44px;display:flex;align-items:center;gap:10px;color:var(--clr-text);font-weight:700;">Músculos del ejercicio <span style="font-size:12px;color:var(--clr-text-muted);font-weight:400;">{{ $muscleMap['label'] }}</span></summary>
-                                <div data-primary="{{ implode(',', $muscleMap['primary']) }}">
-                                    <x-client.muscle-avatar :primary="$muscleMap['primary']" :secondary="$muscleMap['secondary']" :label="$muscleMap['label']" :available="$muscleMap['available']" :storage-key="'visionfit:avatar:'.auth()->id()" :level="$this->experienceLevel" :compact="true" />
-                                </div>
-                            </details>
-                        @endif
-
                         <div class="vf-exercise-actions">
                             @if ($performed->gif_url || $performed->video_url)
                                 @php

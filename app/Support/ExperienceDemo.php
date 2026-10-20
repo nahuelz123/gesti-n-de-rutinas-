@@ -2,10 +2,42 @@
 
 namespace App\Support;
 
+use App\Models\Assignment;
 use App\Models\Exercise;
+use App\Models\ExerciseLog;
+use App\Models\Routine;
+use App\Models\RoutineDay;
 
 class ExperienceDemo
 {
+    public static function dashboard(): array
+    {
+        // Unsaved models let the demo reuse the real dashboard without creating records.
+        $days = collect(['Pecho y tríceps', 'Espalda y bíceps', 'Piernas', 'Hombros y brazos', 'Torso'])
+            ->map(fn ($title, $index) => new RoutineDay(['title' => $title, 'day_number' => $index + 1]));
+        $routine = (new Routine(['title' => 'Hipertrofia · 5 días']))->setRelation('days', $days);
+        $active = (new Assignment(['status' => 'active']))->setRelation('routine', $routine);
+
+        return [
+            'isDemo' => true,
+            'displayName' => 'Alex Vega',
+            'active' => $active,
+            'weeklyTarget' => 5,
+            'weeklyCompletedSessions' => 2,
+            'weeklyProgressPct' => 40,
+            'hasWorkoutToday' => true,
+            'nextWorkoutDay' => $days->first(),
+            'lastWorkout' => new ExerciseLog(['logged_at' => now()]),
+            'dietAssignment' => true,
+            'todayDietDay' => true,
+            'nutritionSummary' => [
+                'target' => ['calories' => 2400, 'protein' => 160, 'carbs' => 280, 'fat' => 70],
+                'eaten' => ['calories' => 1800],
+                'meals_total' => 5, 'meals_done' => 4,
+            ],
+        ];
+    }
+
     public static function context(): array
     {
         $exercises = collect([

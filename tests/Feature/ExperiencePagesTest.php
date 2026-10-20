@@ -31,9 +31,13 @@ class ExperiencePagesTest extends TestCase
     {
         config()->set('experience.enabled', true);
         $response = $this->get('/experiencia');
-        $response->assertOk()->assertViewIs('experience.overview')
+        $response->assertOk()->assertViewIs('client.dashboard')
             ->assertViewHas('isDemo', true)
-            ->assertSee('Demo')->assertSee('datos de ejemplo');
+            ->assertSee('Modo demo')->assertSee('Datos ficticios')
+            ->assertSee('Tu día en VisionFit')->assertSee('Accesos rápidos')
+            ->assertSee('Hipertrofia · 5 días')->assertSee('1800 / 2400')
+            ->assertSee(route('experience.demo.character'), false)
+            ->assertDontSee('experience.css')->assertDontSee('experience.js');
         $this->get('/experiencia/personaje')->assertOk()
             ->assertViewIs('experience.character')->assertViewHas('isDemo', true);
         $this->assertDatabaseCount('users', 0);
@@ -48,7 +52,7 @@ class ExperiencePagesTest extends TestCase
             ->get('/app/personaje')->assertForbidden();
     }
 
-    public function test_enabled_client_dashboard_uses_own_real_data_and_escapes_names(): void
+    public function test_enabled_feature_keeps_the_original_dashboard_and_adds_a_character_entry(): void
     {
         config()->set('experience.enabled', true);
         [$client, $assignment, $slot] = $this->workout();
@@ -56,10 +60,17 @@ class ExperiencePagesTest extends TestCase
         ExerciseLog::create(['assignment_id' => $assignment->id, 'routine_day_exercise_id' => $slot->id,
             'exercise_id' => $slot->exercise_id, 'set_number' => 1, 'weight' => 40, 'reps' => 10, 'logged_at' => now()]);
         $this->actingAs($client)->get('/app')->assertOk()
-            ->assertViewIs('experience.overview')->assertViewHas('isDemo', false)
-            ->assertViewHas('experience', fn ($data) => $data['xp'] === 100)
+            ->assertViewIs('client.dashboard')->assertViewHas('active', fn ($data) => $data->id === $assignment->id)
+            ->assertSee('Tu día en VisionFit')->assertSee('Accesos rápidos')
+            ->assertSee(route('client.character'), false)
+            ->assertDontSee('experience.css')->assertDontSee('experience.js')
             ->assertDontSee('<script>alert(1)</script>', false);
         $this->get('/app/personaje')->assertOk()->assertViewIs('experience.character')
+            ->assertViewHas('experience', fn ($data) => $data['xp'] === 100)
+            ->assertSee('class="app-nav"', false)
+            ->assertSee('id="btnMoreMenu"', false)
+            ->assertSee('Tu recorrido.')
+            ->assertDontSee('Mostrar niveles y logros en Inicio')
             ->assertViewHas('avatarStorageKey', 'visionfit:avatar:'.$client->id);
     }
 
@@ -67,7 +78,8 @@ class ExperiencePagesTest extends TestCase
     {
         config()->set('experience.enabled', false);
         [$client] = $this->workout();
-        $this->actingAs($client)->get('/app')->assertOk()->assertViewIs('client.dashboard');
+        $this->actingAs($client)->get('/app')->assertOk()->assertViewIs('client.dashboard')
+            ->assertDontSee(route('client.character'), false);
         $this->get('/app/progress')->assertOk()->assertViewIs('client.progress.index');
     }
 
@@ -80,7 +92,7 @@ class ExperiencePagesTest extends TestCase
             ->assertViewHas('workoutTitle', 'Tu próximo entrenamiento');
     }
 
-    public function test_workout_map_tracks_the_actual_replacement_exercise(): void
+    public function test_character_tracks_replacements_while_workout_keeps_its_original_screen(): void
     {
         config()->set('experience.enabled', true);
         [$client, $assignment, $slot] = $this->workout();
@@ -88,13 +100,16 @@ class ExperiencePagesTest extends TestCase
         $this->actingAs($client);
         Livewire::test('client.workout-logger', ['assignment' => $assignment])
             ->call('selectDay', $slot->routine_day_id)
-            ->assertSee('Músculos del ejercicio')
+            ->assertDontSee('Músculos del ejercicio')
             ->call('replaceExercise', $replacement->id)
             ->assertSee('Curl de bíceps')
-            ->assertSee('data-primary="biceps"', false);
+            ->assertSee('Descanso')
+            ->assertDontSee('vf-muscle-avatar');
+        $this->get('/app/personaje')->assertOk()
+            ->assertViewHas('initialMuscleMap', fn ($map) => $map['primary'] === ['biceps']);
     }
 
-    public function test_workout_avatar_keeps_the_clients_unlocked_themes(): void
+    public function test_character_keeps_the_clients_unlocked_themes(): void
     {
         config()->set('experience.enabled', true);
         [$client, $assignment, $slot] = $this->workout();
@@ -103,9 +118,8 @@ class ExperiencePagesTest extends TestCase
                 'exercise_id' => $slot->exercise_id, 'set_number' => 1, 'weight' => 40, 'reps' => 10,
                 'logged_at' => now()->subDays($daysAgo)]);
         }
-        $this->actingAs($client);
-        Livewire::test('client.workout-logger', ['assignment' => $assignment])
-            ->assertSet('experienceLevel', 3);
+        $this->actingAs($client)->get('/app/personaje')->assertOk()
+            ->assertViewHas('experience', fn ($data) => $data['level'] === 3);
     }
 
     public function test_week_calendar_keeps_valid_activity_from_archived_assignments(): void
@@ -117,12 +131,12 @@ class ExperiencePagesTest extends TestCase
             'exercise_id' => $slot->exercise_id, 'set_number' => 1, 'weight' => 40, 'reps' => 10,
             'logged_at' => now()->startOfWeek()->addHours(12)]);
         $assignment->delete();
-        $this->actingAs($client)->get('/app')->assertOk()
+        $this->actingAs($client)->get('/app/personaje')->assertOk()
             ->assertViewHas('weekActivity', fn ($days) => $days[0]['active'] === true)
             ->assertViewHas('experience', fn ($data) => $data['week_days'] === 1);
     }
 
-    public function test_dashboard_opens_the_pending_exercise_instead_of_restarting_the_day(): void
+    public function test_character_context_follows_the_pending_exercise(): void
     {
         config()->set('experience.enabled', true);
         [$client, $assignment, $slot] = $this->workout();
@@ -133,7 +147,7 @@ class ExperiencePagesTest extends TestCase
             ExerciseLog::create(['assignment_id' => $assignment->id, 'routine_day_exercise_id' => $slot->id,
                 'exercise_id' => $slot->exercise_id, 'set_number' => $number, 'weight' => 40, 'reps' => 10, 'logged_at' => now()]);
         }
-        $this->actingAs($client)->get('/app')->assertOk()
+        $this->actingAs($client)->get('/app/personaje')->assertOk()
             ->assertViewHas('nextExercise', fn ($data) => $data['title'] === 'Remo en máquina' && $data['rest'] === '2 min')
             ->assertViewHas('trainingUrl', route('client.routines.active', ['day' => $slot->routine_day_id, 'exercise' => $pending->id]));
     }
@@ -142,9 +156,9 @@ class ExperiencePagesTest extends TestCase
     {
         config()->set('experience.enabled', true);
         $client = User::factory()->create(['role' => 'client']);
-        $this->actingAs($client)->get('/app')->assertOk()
-            ->assertViewHas('nextExercise', null)
-            ->assertSee('Todavía no tenés una rutina asignada.');
+        $this->actingAs($client)->get('/app')->assertOk()->assertViewIs('client.dashboard')
+            ->assertSee('Todavía no tenés una rutina activa asignada.')
+            ->assertSee(route('client.character'), false);
     }
 
     public function test_finished_day_does_not_present_a_completed_exercise_as_pending(): void
@@ -155,12 +169,9 @@ class ExperiencePagesTest extends TestCase
             ExerciseLog::create(['assignment_id' => $assignment->id, 'routine_day_exercise_id' => $slot->id,
                 'exercise_id' => $slot->exercise_id, 'set_number' => $number, 'weight' => 40, 'reps' => 10, 'logged_at' => now()]);
         }
-        $this->actingAs($client)->get('/app')->assertOk()
+        $this->actingAs($client)->get('/app/personaje')->assertOk()
             ->assertViewHas('workoutCompleted', true)
-            ->assertViewHas('nextExercise', null)
-            ->assertSee('Entrenamiento registrado.')
-            ->assertDontSee('Ejercicio pendiente')
-            ->assertDontSee('Todavía no tenés una rutina asignada.');
+            ->assertViewHas('nextExercise', null);
     }
 
     public function test_assigned_but_empty_routine_is_distinguished_from_no_assignment(): void
@@ -168,23 +179,23 @@ class ExperiencePagesTest extends TestCase
         config()->set('experience.enabled', true);
         [$client, $assignment, $slot] = $this->workout();
         $slot->delete();
-        $this->actingAs($client)->get('/app')->assertOk()
-            ->assertSee('Tu rutina todavía no tiene ejercicios.')
-            ->assertDontSee('Todavía no tenés una rutina asignada.');
+        $this->actingAs($client)->get('/app/personaje')->assertOk()
+            ->assertViewHas('hasAssignedRoutine', true)->assertViewHas('nextExercise', null);
     }
 
-    public function test_both_layouts_version_experience_assets_by_their_current_content(): void
+    public function test_only_character_pages_load_versioned_character_assets(): void
     {
         config()->set('experience.enabled', true);
         $assets = collect(['css/visionfit/experience.css', 'js/visionfit/experience.js'])
             ->map(fn ($path) => asset($path).'?v='.substr(hash_file('sha256', public_path($path)), 0, 12));
-        $demo = $this->get('/experiencia')->assertOk();
+        $demo = $this->get('/experiencia/personaje')->assertOk();
         $client = User::factory()->create(['role' => 'client']);
-        $classicLayout = $this->actingAs($client)->get('/app/progress')->assertOk();
+        $character = $this->actingAs($client)->get('/app/personaje')->assertOk();
         foreach ($assets as $url) {
             $demo->assertSee($url, false);
-            $classicLayout->assertSee($url, false);
+            $character->assertSee($url, false);
         }
+        $this->get('/app/progress')->assertOk()->assertDontSee('experience.css')->assertDontSee('experience.js');
     }
 
     private function workout(): array

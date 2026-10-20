@@ -7,7 +7,6 @@ use App\Models\Exercise;
 use App\Models\ExerciseLog;
 use App\Models\WorkoutExerciseReplacement;
 use App\Services\ExerciseSetRecorder;
-use App\Services\TrainingExperience;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
@@ -38,9 +37,6 @@ class WorkoutLogger extends Component
     #[Locked]
     public ?string $sessionDate = null;
 
-    #[Locked]
-    public int $experienceLevel = 1;
-
     // [set_number => ['weight' => x, 'reps' => y]]
     public $inputs = [];
 
@@ -49,10 +45,6 @@ class WorkoutLogger extends Component
         abort_unless(Auth::check() && $assignment->client_id === Auth::id(), 403);
 
         $this->assignment = $assignment;
-
-        if (config('experience.enabled')) {
-            $this->experienceLevel = app(TrainingExperience::class)->forClient(Auth::user())['level'];
-        }
 
         if ($this->selectedDayId !== null) {
             $this->selectDay($this->selectedDayId, $this->selectedExerciseId);

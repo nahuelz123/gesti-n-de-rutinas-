@@ -7,7 +7,7 @@
 @endphp
 
 <x-layouts.experience :is-demo="$isDemo" :display-name="$displayName">
-    <main class="vf-experience vf-character-page" x-data="visionFitExperience({ storageKey: @js($avatarStorageKey), level: @js($experience['level']), isDemo: @js($isDemo), initialMuscleMap: @js($initialMuscleMap), demoExercises: @js($demoExercises) })" :data-theme="theme">
+    <div class="vf-experience vf-character-page" x-data="visionFitExperience({ storageKey: @js($avatarStorageKey), level: @js($experience['level']), isDemo: @js($isDemo), initialMuscleMap: @js($initialMuscleMap), demoExercises: @js($demoExercises) })" :data-theme="theme">
         @if($isDemo)
             <div class="vf-demo-strip"><span class="vf-demo-label"><i aria-hidden="true"></i> Modo demo</span><span>Personaje e historial ficticios. La personalización es local.</span></div>
         @endif
@@ -41,8 +41,6 @@
                         @endforeach
                     </div>
                     <p class="vf-footnote vf-local-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H4Zm4 17h8m-4-4v4"/></svg>Tu elección se guarda en este navegador, para esta cuenta.</p>
-                    <label class="vf-home-progress-toggle"><input type="checkbox" :checked="showHomeProgress" @change="setHomeProgress($event.target.checked)"><span>Mostrar niveles y logros en Inicio</span></label>
-                    <p class="vf-footnote">Tu progreso se mantiene aunque lo ocultes del inicio.</p>
                 </section>
 
                 <div class="vf-profile-stats" aria-label="Resumen de tu recorrido"><div><strong>{{ $experience['xp'] }}</strong><span>XP acumulados</span></div><div><strong>{{ $experience['active_weeks'] }}</strong><span>Semanas activas</span></div><div><strong>{{ $experience['active_days'] }}</strong><span>Días activos</span></div></div>
@@ -73,5 +71,5 @@
             </section>
         </div>
         <p class="vf-page-note"><span class="vf-live-dot" aria-hidden="true"></span>Descansar también es parte del proceso. No perdés XP ni logros por hacerlo.</p>
-    </main>
+    </div>
 </x-layouts.experience>

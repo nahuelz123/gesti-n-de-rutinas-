@@ -1,4 +1,4 @@
-<x-layouts.client>
+<x-layouts.client :is-demo="$isDemo ?? false" :display-name="$displayName ?? null">
 <style>
     .vf-dashboard {
         max-width:1080px;
@@ -275,10 +275,15 @@
 </style>
 
 <div class="vf-dashboard">
+    @if($isDemo ?? false)
+        <p style="padding:14px 16px;margin-bottom:20px;border:1px solid var(--clr-border);border-radius:13px;color:var(--clr-text-muted);font-size:13px;line-height:1.6;">
+            <strong style="color:var(--clr-text);">Modo demo</strong> · Datos ficticios. Explorá Mi personaje sin guardar actividad real. Para usar rutinas y nutrición, <a href="{{ route('login') }}" style="color:var(--clr-primary);">iniciá sesión en el entorno de pruebas</a>.
+        </p>
+    @endif
     <header class="vf-dashboard-header">
         <div>
             <div class="vf-dashboard-kicker">Tu día en VisionFit</div>
-            <h1 class="vf-dashboard-title">Hola, {{ explode(' ', auth()->user()->name)[0] }} 👋</h1>
+            <h1 class="vf-dashboard-title">Hola, {{ explode(' ', $displayName ?? auth()->user()->name)[0] }} 👋</h1>
             <p class="vf-dashboard-subtitle">Tu entrenamiento, nutrición y progreso en un solo lugar.</p>
         </div>
     </header>
@@ -405,6 +410,14 @@
                 <h2 class="vf-section-title">Accesos rápidos</h2>
 
                 <div class="vf-quick-grid">
+                    @if(config('experience.enabled'))
+                        <a class="vf-quick" href="{{ route(($isDemo ?? false) ? 'experience.demo.character' : 'client.character') }}">
+                            <span class="vf-quick-icon">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+                            </span>
+                            <strong>Mi personaje</strong>
+                        </a>
+                    @endif
                     <a class="vf-quick" href="{{ route('client.progress.index') }}">
                         <span class="vf-quick-icon">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">

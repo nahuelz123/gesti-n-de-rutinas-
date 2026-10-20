@@ -20,7 +20,7 @@ class ExperienceController extends Controller
     {
         $this->ensureEnabled();
 
-        return view('experience.overview', ExperienceDemo::context());
+        return view('client.dashboard', ExperienceDemo::dashboard());
     }
 
     public function demoCharacter(): View
@@ -28,13 +28,6 @@ class ExperienceController extends Controller
         $this->ensureEnabled();
 
         return view('experience.character', ExperienceDemo::context());
-    }
-
-    public function dashboard(Request $request): View
-    {
-        $this->ensureEnabled();
-
-        return view('experience.overview', $this->context($request->user()));
     }
 
     public function character(Request $request): View
