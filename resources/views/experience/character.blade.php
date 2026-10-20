@@ -3,7 +3,7 @@
     $unlockedAchievements = collect($experience['achievements'])->where('unlocked', true)->count();
     $maximumMuscleSets = max([1, ...array_column($experience['muscle_activity'], 'sets')]);
     $avatarOptions = ['generic' => ['Genérica', 'Diseño esencial'], 'male' => ['Masculina', 'Marco amplio'], 'female' => ['Femenina', 'Marco estilizado']];
-    $themeOptions = ['ion' => ['Ion', 'Cian eléctrico', 1], 'solar' => ['Solar', 'Lima radiante', 3], 'nova' => ['Nova', 'Violeta orbital', 5]];
+    $themeOptions = ['ion' => ['VisionFit', 'Rojo clásico', 1], 'solar' => ['Fuego', 'Rojo cálido', 3], 'nova' => ['Rubí', 'Rojo rosado', 5]];
 @endphp
 
 <x-layouts.experience :is-demo="$isDemo" :display-name="$displayName">
