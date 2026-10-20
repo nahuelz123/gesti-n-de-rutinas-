@@ -122,6 +122,57 @@ class ExperiencePagesTest extends TestCase
             ->assertViewHas('experience', fn ($data) => $data['week_days'] === 1);
     }
 
+    public function test_dashboard_opens_the_pending_exercise_instead_of_restarting_the_day(): void
+    {
+        config()->set('experience.enabled', true);
+        [$client, $assignment, $slot] = $this->workout();
+        $exercise = Exercise::create(['title' => 'Remo en máquina', 'muscle_group' => 'Espalda', 'is_global' => true]);
+        $pending = RoutineDayExercise::create(['routine_day_id' => $slot->routine_day_id, 'exercise_id' => $exercise->id,
+            'sets' => 3, 'reps' => '10-12', 'rest' => '2 min', 'order' => 2]);
+        foreach (range(1, 3) as $number) {
+            ExerciseLog::create(['assignment_id' => $assignment->id, 'routine_day_exercise_id' => $slot->id,
+                'exercise_id' => $slot->exercise_id, 'set_number' => $number, 'weight' => 40, 'reps' => 10, 'logged_at' => now()]);
+        }
+        $this->actingAs($client)->get('/app')->assertOk()
+            ->assertViewHas('nextExercise', fn ($data) => $data['title'] === 'Remo en máquina' && $data['rest'] === '2 min')
+            ->assertViewHas('trainingUrl', route('client.routines.active', ['day' => $slot->routine_day_id, 'exercise' => $pending->id]));
+    }
+
+    public function test_dashboard_remains_useful_when_no_routine_is_assigned(): void
+    {
+        config()->set('experience.enabled', true);
+        $client = User::factory()->create(['role' => 'client']);
+        $this->actingAs($client)->get('/app')->assertOk()
+            ->assertViewHas('nextExercise', null)
+            ->assertSee('Todavía no tenés una rutina asignada.');
+    }
+
+    public function test_finished_day_does_not_present_a_completed_exercise_as_pending(): void
+    {
+        config()->set('experience.enabled', true);
+        [$client, $assignment, $slot] = $this->workout();
+        foreach (range(1, 3) as $number) {
+            ExerciseLog::create(['assignment_id' => $assignment->id, 'routine_day_exercise_id' => $slot->id,
+                'exercise_id' => $slot->exercise_id, 'set_number' => $number, 'weight' => 40, 'reps' => 10, 'logged_at' => now()]);
+        }
+        $this->actingAs($client)->get('/app')->assertOk()
+            ->assertViewHas('workoutCompleted', true)
+            ->assertViewHas('nextExercise', null)
+            ->assertSee('Entrenamiento registrado.')
+            ->assertDontSee('Ejercicio pendiente')
+            ->assertDontSee('Todavía no tenés una rutina asignada.');
+    }
+
+    public function test_assigned_but_empty_routine_is_distinguished_from_no_assignment(): void
+    {
+        config()->set('experience.enabled', true);
+        [$client, $assignment, $slot] = $this->workout();
+        $slot->delete();
+        $this->actingAs($client)->get('/app')->assertOk()
+            ->assertSee('Tu rutina todavía no tiene ejercicios.')
+            ->assertDontSee('Todavía no tenés una rutina asignada.');
+    }
+
     private function workout(): array
     {
         $gym = Gym::create(['name' => 'Preview gym']);

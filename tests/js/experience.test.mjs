@@ -64,7 +64,7 @@ test('restores allowed choices while rejecting stale locked themes', () => {
     assert.equal(state.level, 1);
 });
 
-test('keeps account preferences independent and persists only cosmetic choices', () => {
+test('keeps account preferences independent and persists only display choices', () => {
     const b = browser();
     const first = b.create({ level: 3 });
     first.selectAvatar('male');
@@ -75,7 +75,7 @@ test('keeps account preferences independent and persists only cosmetic choices',
     const restored = b.create({ level: 3 });
     assert.equal(restored.avatar, 'male');
     assert.equal(restored.theme, 'solar');
-    assert.deepEqual(JSON.parse(b.saved.get('visionfit-avatar:user:12')), { avatar: 'male', theme: 'solar' });
+    assert.deepEqual(JSON.parse(b.saved.get('visionfit-avatar:user:12')), { avatar: 'male', theme: 'solar', showHomeProgress: false });
 });
 
 test('blocked or malformed local storage leaves all controls usable', () => {
@@ -156,4 +156,37 @@ test('changing a client state level cannot unlock a server-locked theme', () => 
     const state = browser().create({ level: 1 });
     state.level = 99;
     assert.equal(state.selectTheme('nova'), false);
+});
+
+test('home levels and achievements are optional without resetting existing appearance', () => {
+    const saved = new Map([['visionfit-avatar:user:12', JSON.stringify({ avatar: 'female', theme: 'solar' })]]);
+    const state = browser(saved).create({ level: 3 });
+    assert.equal(state.showHomeProgress, false);
+    assert.equal(state.avatar, 'female');
+    assert.equal(state.theme, 'solar');
+    assert.equal(state.setHomeProgress(true), true);
+    assert.equal(state.showHomeProgress, true);
+    assert.equal(state.level, 3);
+});
+
+test('home progress visibility survives navigation and stays scoped to the account', () => {
+    const b = browser();
+    b.create().setHomeProgress(true);
+    const restored = b.create();
+    assert.equal(restored.showHomeProgress, true);
+    assert.equal(b.create({ storageKey: 'visionfit-avatar:user:13' }).showHomeProgress, false);
+    restored.selectAvatar('male');
+    assert.equal(b.create().showHomeProgress, true);
+    restored.setHomeProgress(false);
+    assert.equal(b.create().showHomeProgress, false);
+});
+
+test('home progress controls tolerate blocked storage and reject non-boolean preferences', () => {
+    const state = browser(new Map(), true).create();
+    assert.equal(state.setHomeProgress(true), true);
+    assert.equal(state.showHomeProgress, true);
+    assert.equal(state.setHomeProgress('false'), false);
+    assert.equal(state.showHomeProgress, true);
+    const saved = new Map([['visionfit-avatar:user:12', JSON.stringify({ showHomeProgress: 'true' })]]);
+    assert.equal(browser(saved).create().showHomeProgress, false);
 });

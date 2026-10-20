@@ -41,6 +41,8 @@
                         @endforeach
                     </div>
                     <p class="vf-footnote vf-local-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H4Zm4 17h8m-4-4v4"/></svg>Tu elección se guarda en este navegador, para esta cuenta.</p>
+                    <label class="vf-home-progress-toggle"><input type="checkbox" :checked="showHomeProgress" @change="setHomeProgress($event.target.checked)"><span>Mostrar niveles y logros en Inicio</span></label>
+                    <p class="vf-footnote">Tu progreso se mantiene aunque lo ocultes del inicio.</p>
                 </section>
 
                 <div class="vf-profile-stats" aria-label="Resumen de tu recorrido"><div><strong>{{ $experience['xp'] }}</strong><span>XP acumulados</span></div><div><strong>{{ $experience['active_weeks'] }}</strong><span>Semanas activas</span></div><div><strong>{{ $experience['active_days'] }}</strong><span>Días activos</span></div></div>

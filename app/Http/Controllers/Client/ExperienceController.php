@@ -65,11 +65,14 @@ class ExperienceController extends Controller
             }
         }
         $slot = $day?->exercises->sortBy('order')->first();
+        $workoutCompleted = false;
         if ($active && $day) {
             $todayLogs = ExerciseLog::query()->where('assignment_id', $active->id)
                 ->whereIn('routine_day_exercise_id', $day->exercises->pluck('id'))->whereDate('logged_at', today())->get();
-            $slot = $day->exercises->sortBy('order')->first(fn ($item) => $todayLogs
-                ->where('routine_day_exercise_id', $item->id)->unique('set_number')->count() < (int) $item->sets) ?? $slot;
+            $pending = $day->exercises->sortBy('order')->first(fn ($item) => $todayLogs
+                ->where('routine_day_exercise_id', $item->id)->unique('set_number')->count() < (int) $item->sets);
+            $workoutCompleted = $day->exercises->isNotEmpty() && $pending === null;
+            $slot = $pending ?? $slot;
         }
         $exercise = $slot?->exercise;
         if ($active && $slot) {
@@ -84,12 +87,17 @@ class ExperienceController extends Controller
             'isDemo' => false,
             'displayName' => $client->name,
             'avatarStorageKey' => 'visionfit:avatar:'.$client->id,
-            'trainingUrl' => route('client.routines.active', $day ? ['day' => $day->id] : []),
+            'trainingUrl' => route('client.routines.active', array_filter(['day' => $day?->id, 'exercise' => $slot?->id])),
             'progressUrl' => route('client.progress.index'),
             'characterUrl' => route('client.character'),
             'nutritionUrl' => route('client.nutrition.index'),
             'workoutTitle' => $day?->title ?? 'Tu próximo entrenamiento',
             'workoutSubtitle' => $active?->routine?->title ?? 'Tu entrenador puede asignarte una rutina para empezar.',
+            'workoutCompleted' => $workoutCompleted,
+            'hasAssignedRoutine' => $active !== null,
+            'nextExercise' => ! $workoutCompleted && $exercise && $slot ? [
+                'title' => $exercise->title, 'sets' => $slot->sets, 'reps' => $slot->reps, 'rest' => $slot->rest,
+            ] : null,
             'initialMuscleMap' => $exercise ? MuscleMap::forExercise($exercise) : ['primary' => [], 'secondary' => [], 'label' => 'Tu mapa de actividad', 'available' => false],
             'demoExercises' => [],
             'experience' => app(TrainingExperience::class)->forClient($client),

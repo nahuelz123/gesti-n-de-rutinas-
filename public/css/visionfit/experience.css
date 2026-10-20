@@ -311,3 +311,55 @@
 @media(prefers-reduced-motion:reduce){.vf-experience *,.vf-muscle-avatar *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.vf-primary-button:hover,.vf-text-link:hover svg{transform:none}}
 .vf-muscle-avatar .vf-segmented>button{min-height:44px}
 @media(max-width:660px){.vf-mobile-nav>a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:58px;min-height:48px;padding:5px 7px;border-radius:7px;color:#90a9bf;font-size:8px;font-weight:550;line-height:1.5}.vf-mobile-nav>a>svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.vf-mobile-nav>a[aria-current=page]{color:var(--vf-accent)!important;background:#17313e}.vf-experience-footer{padding-bottom:94px}.vf-brand{gap:7px;font-size:17px}.vf-brand>svg{width:29px;height:29px}.vf-account-menu>summary{font-size:10px;padding:5px 6px}.vf-character-page .vf-page-header{margin-bottom:20px}}
+
+/* Training is the first task; character customization stays secondary. */
+.vf-training-first-grid,.vf-support-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:20px;align-items:start}
+.vf-training-first-grid .vf-focus-workout{padding:28px}
+.vf-focus-home .vf-page-header{margin-bottom:24px}
+.vf-focus-home .vf-page-header h1{font-size:clamp(27px,3vw,36px);line-height:1.2}
+.vf-focus-home .vf-page-subtitle{font-size:14px}
+.vf-focus-workout h2{font-size:30px;max-width:none;line-height:1.2}
+.vf-focus-workout>p{font-size:13px;max-width:none}
+.vf-next-exercise{margin:22px 0;padding:18px 0;border-top:1px solid #354653;border-bottom:1px solid #354653}
+.vf-focus-workout .vf-next-exercise:last-child{margin-bottom:0;padding-bottom:0;border-bottom:0}
+.vf-next-label{font-size:11px;color:#a9becd;display:block;margin-bottom:8px}
+.vf-next-exercise h3{font-size:20px;font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.vf-workout-prescription{display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;margin-top:13px;color:#aec0cd;font-size:13px}
+.vf-workout-prescription strong{font-size:15px;color:#edf3f8}
+.vf-workout-prescription>span:last-child{display:flex;gap:6px;align-items:center}
+.vf-workout-prescription svg{width:17px;height:17px;flex-shrink:0}
+.vf-focus-workout .vf-primary-button{min-height:54px;font-size:15px;margin-top:20px}
+.vf-focus-workout .vf-primary-button:disabled{cursor:default;opacity:.65;transform:none}
+.vf-focus-workout .vf-demo-feedback,.vf-workout-helper{font-size:12px;line-height:1.6;margin-top:12px!important;min-height:0;color:#a9becd}
+.vf-unassigned p{font-size:13px;color:#a9becd;line-height:1.6;margin-top:9px}
+.vf-focus-week .vf-week-summary>p,.vf-focus-week .vf-footnote{font-size:12px}
+.vf-focus-week .vf-day-cell{height:38px}
+.vf-today-count{display:flex;align-items:baseline;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--vf-border);font-size:12px;color:#acbdca}
+.vf-today-count strong{font-size:26px;font-variant-numeric:tabular-nums;color:var(--vf-text)}
+.vf-focus-shortcuts{margin:20px 0}
+.vf-focus-shortcuts>a{min-height:74px}
+.vf-focus-shortcuts>a>span:nth-child(2){font-size:14px}
+.vf-focus-shortcuts small{font-size:12px}
+.vf-focus-home .vf-history-row{gap:12px;min-height:80px}
+.vf-focus-home .vf-history-row>div{min-width:0}
+.vf-focus-home .vf-history-row>div>strong{display:flex;align-items:center;min-height:44px;font-size:14px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.vf-focus-home .vf-history-row>div>span{font-size:11px}
+.vf-focus-home .vf-set-result{font-size:16px;flex-shrink:0}
+.vf-focus-home .vf-set-result small{font-size:12px}
+.vf-character-preview{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:center;min-width:0}
+.vf-character-preview .vf-muscle-avatar--compact .vf-avatar-stage{height:164px;margin:0;max-width:112px;border-radius:10px}
+.vf-character-preview .vf-map-legend,.vf-character-preview .vf-map-unavailable,.vf-character-preview .vf-stage-coordinate,.vf-character-preview .vf-avatar-orbit{display:none}
+.vf-character-preview .vf-avatar-figure{width:100%;height:100%}
+.vf-character-preview p{font-size:13px;line-height:1.65;color:#acbdca}
+.vf-character-preview .vf-text-link{font-size:12px;line-height:1.4;margin-top:6px}
+.vf-character-preview .vf-text-link svg{flex-shrink:0}
+.vf-mini-level{font-size:11px;color:var(--vf-accent);border:1px solid #39525e;border-radius:6px;padding:5px 8px;white-space:nowrap}
+.vf-home-progress-toggle{display:flex;align-items:center;gap:11px;min-height:48px;margin-top:14px;padding:10px 0;border-top:1px solid var(--vf-border);color:#bed0dd;font-size:12px;line-height:1.5;cursor:pointer}
+.vf-home-progress-toggle input{appearance:auto!important;width:20px;height:20px;min-width:20px;padding:0;margin:0;accent-color:var(--vf-accent);cursor:pointer}
+.vf-home-progress{margin-top:12px;padding-top:14px;border-top:1px solid var(--vf-border)}
+.vf-home-progress .vf-progress-heading{font-size:12px}
+.vf-home-progress .vf-text-link{font-size:12px;margin-top:6px}
+.vf-focus-home .vf-empty-state p{font-size:13px}
+.vf-focus-home .vf-empty-state h3{font-size:16px}
+@media(max-width:900px){.vf-training-first-grid,.vf-support-grid{grid-template-columns:minmax(0,1.2fr) minmax(270px,1fr);gap:16px}.vf-training-first-grid .vf-focus-workout{padding:22px}.vf-workout-prescription{gap:10px 14px}.vf-character-preview{grid-template-columns:90px minmax(0,1fr);gap:12px}.vf-character-preview .vf-muscle-avatar--compact .vf-avatar-stage{height:146px;max-width:90px}}
+@media(max-width:660px){.vf-training-first-grid,.vf-support-grid{grid-template-columns:minmax(0,1fr);gap:17px}.vf-focus-home .vf-page-header{margin-bottom:19px}.vf-focus-home .vf-page-header .vf-eyebrow{font-size:10px}.vf-focus-home .vf-page-header h1{font-size:28px;letter-spacing:-.8px}.vf-focus-home .vf-page-subtitle{font-size:13px;max-width:none}.vf-focus-home .vf-demo-strip{margin-bottom:19px}.vf-training-first-grid .vf-focus-workout{padding:21px}.vf-focus-workout h2{font-size:27px}.vf-next-exercise{margin:19px 0;padding:16px 0}.vf-next-exercise h3{font-size:19px}.vf-workout-prescription{gap:10px 15px;font-size:12px}.vf-focus-workout .vf-primary-button{font-size:14px;min-height:54px}.vf-focus-week .vf-week-summary{margin:6px 0 16px}.vf-focus-week .vf-week-summary>strong{font-size:37px}.vf-focus-week .vf-week-strip{gap:7px}.vf-focus-week .vf-day-cell{height:38px}.vf-today-count{margin-top:18px;padding-top:14px}.vf-focus-shortcuts{margin:17px 0;gap:10px}.vf-focus-shortcuts>a{padding:14px 12px;min-height:70px}.vf-focus-shortcuts>a>span:nth-child(2){font-size:13px}.vf-focus-shortcuts small{display:block;font-size:10px}.vf-character-preview{grid-template-columns:95px minmax(0,1fr);gap:16px}.vf-character-preview .vf-muscle-avatar--compact .vf-avatar-stage{height:150px;max-width:95px}.vf-character-preview p{font-size:13px}.vf-home-progress-toggle{font-size:12px}.vf-focus-home .vf-history-row{gap:10px}.vf-focus-home .vf-history-row>div>strong{font-size:13px}.vf-focus-home .vf-set-result{font-size:15px}.vf-focus-home .vf-history-dot{display:none}}

@@ -17,6 +17,7 @@
         return {
             avatar: 'generic',
             theme: 'ion',
+            showHomeProgress: false,
             view: 'front',
             level,
             isDemo,
@@ -33,6 +34,7 @@
                     const saved = storageKey ? JSON.parse(root.localStorage.getItem(storageKey)) : null;
                     if (saved && avatars.includes(saved.avatar)) this.avatar = saved.avatar;
                     if (saved && this.themeUnlocked(saved.theme)) this.theme = saved.theme;
+                    if (saved && typeof saved.showHomeProgress === 'boolean') this.showHomeProgress = saved.showHomeProgress;
                 } catch (_) { /* Appearance remains usable when local storage is unavailable. */ }
                 this.applyMap(config.initialMuscleMap || {});
                 if (isDemo && exercises.length) {
@@ -40,14 +42,14 @@
                     this.selectExercise(initial.id);
                 }
             },
-            persistAppearance() {
+            persistPreferences() {
                 if (!storageKey) return;
-                try { root.localStorage.setItem(storageKey, JSON.stringify({ avatar: this.avatar, theme: this.theme })); } catch (_) {}
+                try { root.localStorage.setItem(storageKey, JSON.stringify({ avatar: this.avatar, theme: this.theme, showHomeProgress: this.showHomeProgress })); } catch (_) {}
             },
             selectAvatar(avatar) {
                 if (!avatars.includes(avatar)) return false;
                 this.avatar = avatar;
-                this.persistAppearance();
+                this.persistPreferences();
                 return true;
             },
             themeUnlocked(theme) {
@@ -56,7 +58,13 @@
             selectTheme(theme) {
                 if (!this.themeUnlocked(theme)) return false;
                 this.theme = theme;
-                this.persistAppearance();
+                this.persistPreferences();
+                return true;
+            },
+            setHomeProgress(visible) {
+                if (typeof visible !== 'boolean') return false;
+                this.showHomeProgress = visible;
+                this.persistPreferences();
                 return true;
             },
             setView(view) {

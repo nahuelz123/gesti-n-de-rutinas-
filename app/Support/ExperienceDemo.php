@@ -27,6 +27,9 @@ class ExperienceDemo
             'nutritionUrl' => route('login'),
             'workoutTitle' => 'Torso A · Pecho y brazos',
             'workoutSubtitle' => 'Una rutina de ejemplo para explorar el nuevo diseño.',
+            'workoutCompleted' => false,
+            'hasAssignedRoutine' => true,
+            'nextExercise' => ['title' => 'Press banca en máquina', 'sets' => 3, 'reps' => '8-10', 'rest' => '90'],
             'initialMuscleMap' => array_intersect_key($exercises[0], array_flip(['primary', 'secondary', 'label', 'available'])),
             'demoExercises' => $exercises,
             'weekActivity' => [
