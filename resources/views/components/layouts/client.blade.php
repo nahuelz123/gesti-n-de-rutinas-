@@ -8,6 +8,8 @@
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
     <link rel="icon" href="{{ asset('favicon-16x16.png') }}" sizes="16x16" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <meta name="theme-color" content="#10131b">
     @livewireStyles
 
     {{-- Livewire already ships Alpine. Loading a second CDN copy can cause duplicate
@@ -61,7 +63,7 @@
                         <a href="{{ route('client.account.edit') }}" class="app-nav-account-item">
                             Mi cuenta
                         </a>
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-push-logout>
                             @csrf
                             <button type="submit" class="app-nav-account-item danger" style="width:100%;">
                                 Cerrar sesión
@@ -109,6 +111,7 @@
     </footer>
     @include('partials.cookie-notice')
 
+    <script src="{{ asset('js/visionfit/push-alerts.js') }}"></script>
     <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts
 

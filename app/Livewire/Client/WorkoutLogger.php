@@ -3,9 +3,13 @@
 namespace App\Livewire\Client;
 
 use App\Models\Assignment;
+use App\Models\Exercise;
 use App\Models\ExerciseLog;
+use App\Models\WorkoutExerciseReplacement;
 use App\Services\ExerciseSetRecorder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -22,6 +26,16 @@ class WorkoutLogger extends Component
     public $selectedExerciseId = null;
 
     public $currentExerciseIndex = 0;
+
+    public bool $showAlternatives = false;
+
+    public string $alternativeSearch = '';
+
+    #[Locked]
+    public ?int $displayedExerciseId = null;
+
+    #[Locked]
+    public ?string $sessionDate = null;
 
     // [set_number => ['weight' => x, 'reps' => y]]
     public $inputs = [];
@@ -64,10 +78,12 @@ class WorkoutLogger extends Component
         $index = $this->exercises->search(fn ($exercise) => $exercise->id === (int) $exerciseId);
         abort_if($index === false, 403);
 
+        $this->showAlternatives = false;
+        $this->alternativeSearch = '';
         $this->currentExerciseIndex = $index;
         $this->selectedExerciseId = $this->exercises[$index]->id;
         $this->step = 'training';
-        unset($this->currentExercise, $this->lastLog, $this->restSeconds, $this->restLabel);
+        unset($this->currentExercise, $this->performedExercise, $this->lastLog, $this->restSeconds, $this->restLabel);
         $this->resetValidation();
         $this->initInputsForCurrentExercise();
         $this->dispatch('exercise-changed', rest: $this->restSeconds);
@@ -93,7 +109,7 @@ class WorkoutLogger extends Component
     public function getProgressUrlProperty(): string
     {
         return route('client.progress.exercise', [
-            'exercise' => $this->currentExercise->exercise_id,
+            'exercise' => $this->performedExercise->id,
             'assignment' => $this->assignment->id,
             'day' => $this->selectedDayId,
             'routine_exercise' => $this->selectedExerciseId,
@@ -123,6 +139,63 @@ class WorkoutLogger extends Component
         return $this->exercises[$this->currentExerciseIndex] ?? null;
     }
 
+    public function getPerformedExerciseProperty()
+    {
+        $slot = $this->currentExercise;
+        if (! $slot) {
+            return null;
+        }
+
+        $log = $this->todayLogs->firstWhere('routine_day_exercise_id', $slot->id);
+        if ($log) {
+            return $log->exercise ?? $slot->exercise;
+        }
+
+        return WorkoutExerciseReplacement::query()->with('exercise')
+            ->where('assignment_id', $this->assignment->id)
+            ->where('routine_day_exercise_id', $slot->id)
+            ->whereDate('performed_on', today())->first()?->exercise ?? $slot->exercise;
+    }
+
+    public function getCanReplaceExerciseProperty(): bool
+    {
+        return $this->currentExercise && $this->todayLogs
+            ->where('routine_day_exercise_id', $this->currentExercise->id)->isEmpty();
+    }
+
+    public function toggleAlternatives(): void
+    {
+        abort_unless($this->assignment->client_id === Auth::id(), 403);
+        $this->showAlternatives = ! $this->showAlternatives;
+    }
+
+    public function getAlternativesProperty()
+    {
+        if (! $this->currentExercise || ! $this->showAlternatives) {
+            return collect();
+        }
+        $query = Exercise::query()->visibleToGym(Auth::user()->gym_id)
+            ->whereKeyNot($this->performedExercise->id);
+        $search = mb_substr(trim($this->alternativeSearch), 0, 100);
+        if ($search !== '') {
+            $query->searchByName($search);
+        }
+
+        return $query->orderByRaw('CASE WHEN muscle_group = ? THEN 0 ELSE 1 END', [$this->currentExercise->exercise->muscle_group])
+            ->orderBy('title')->limit(30)->get();
+    }
+
+    public function replaceExercise(int $exerciseId): void
+    {
+        abort_unless($this->currentExercise, 403);
+        app(ExerciseSetRecorder::class)->replace($this->assignment, Auth::user(), $this->currentExercise->id, $exerciseId);
+        unset($this->performedExercise, $this->lastLog, $this->todayLogs);
+        $this->showAlternatives = false;
+        $this->alternativeSearch = '';
+        $this->resetValidation();
+        $this->initInputsForCurrentExercise();
+    }
+
     public function getTodayLogsProperty()
     {
         if (! $this->selectedDayId) {
@@ -145,15 +218,15 @@ class WorkoutLogger extends Component
      */
     public function getLastLogProperty()
     {
-        $current = $this->currentExercise;
+        $current = $this->performedExercise;
 
-        if (! $current || ! $current->exercise_id) {
+        if (! $current) {
             return null;
         }
 
         return ExerciseLog::query()
             ->whereHas('assignment', fn ($query) => $query->where('client_id', Auth::id()))
-            ->whereHas('routineDayExercise', fn ($query) => $query->where('exercise_id', $current->exercise_id))
+            ->forPerformedExercise($current->id)
             ->whereDate('logged_at', '<', today())
             ->latest('logged_at')
             ->first();
@@ -167,6 +240,9 @@ class WorkoutLogger extends Component
         if (! $current) {
             return;
         }
+
+        $this->displayedExerciseId = $this->performedExercise?->id;
+        $this->sessionDate = today()->toDateString();
 
         $logs = $this->todayLogs
             ->where('routine_day_exercise_id', $current->id)
@@ -254,6 +330,7 @@ class WorkoutLogger extends Component
     public function logSet($setNumber)
     {
         $user = Auth::user();
+        $this->resetValidation('workout_context');
 
         if ($setNumber < 1 || $setNumber > 20) {
             $this->addError('set_'.$setNumber, 'Serie inválida.');
@@ -301,14 +378,30 @@ class WorkoutLogger extends Component
             : (float) $validatedWeight;
         $reps = (int) $validated['inputs'][$setNumber]['reps'];
 
-        app(ExerciseSetRecorder::class)->record(
-            $this->assignment,
-            $user,
-            (int) $currentExercise->id,
-            (int) $setNumber,
-            $weight,
-            $reps
-        );
+        try {
+            app(ExerciseSetRecorder::class)->record(
+                $this->assignment,
+                $user,
+                (int) $currentExercise->id,
+                (int) $setNumber,
+                $weight,
+                $reps,
+                $this->displayedExerciseId ?? -1,
+                $this->sessionDate ?? '',
+            );
+        } catch (ValidationException $exception) {
+            if (! isset($exception->errors()['workout_context'])) {
+                throw $exception;
+            }
+            // Discard entered values before adopting the new exercise/date context.
+            unset($this->todayLogs, $this->performedExercise, $this->lastLog);
+            $this->initInputsForCurrentExercise();
+            $this->addError('workout_context', $exception->errors()['workout_context'][0]);
+
+            return;
+        }
+
+        unset($this->todayLogs, $this->performedExercise);
 
         $this->dispatch(
             'set-logged',

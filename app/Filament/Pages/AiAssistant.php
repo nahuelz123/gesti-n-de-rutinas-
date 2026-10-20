@@ -15,6 +15,7 @@ use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AiAssistant extends Page
 {
@@ -80,6 +81,7 @@ class AiAssistant extends Page
                 ->body('El cliente no autorizó el uso de sus datos con el asistente o no pertenece a tu gimnasio.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -121,31 +123,33 @@ class AiAssistant extends Page
                 ->body('El cliente retiró el permiso para usar sus datos con el asistente.')
                 ->warning()
                 ->send();
+
             return;
         }
 
         $client = $validClientId ? User::find($validClientId) : null;
 
-        $keyMin = 'ai_coach_min_' . $coach->id;
-        $keyHr = 'ai_coach_hr_' . $coach->id;
+        $keyMin = 'ai_coach_min_'.$coach->id;
+        $keyHr = 'ai_coach_hr_'.$coach->id;
 
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyMin, 20) || \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($keyHr, 100)) {
+        if (RateLimiter::tooManyAttempts($keyMin, 20) || RateLimiter::tooManyAttempts($keyHr, 100)) {
             $seconds = max(
-                \Illuminate\Support\Facades\RateLimiter::availableIn($keyMin),
-                \Illuminate\Support\Facades\RateLimiter::availableIn($keyHr)
+                RateLimiter::availableIn($keyMin),
+                RateLimiter::availableIn($keyHr)
             );
             $minutes = ceil($seconds / 60);
-            
+
             Notification::make()
                 ->title('Límite alcanzado')
                 ->body("Alcanzaste el límite de uso del asistente IA. Podés volver a intentar en $minutes minuto(s).")
                 ->warning()
                 ->send();
+
             return;
         }
 
-        \Illuminate\Support\Facades\RateLimiter::hit($keyMin, 60);
-        \Illuminate\Support\Facades\RateLimiter::hit($keyHr, 3600);
+        RateLimiter::hit($keyMin, 60);
+        RateLimiter::hit($keyHr, 3600);
 
         // El permiso del cliente se verificó antes de consumir el límite de uso.
         AiConversation::create([
@@ -237,6 +241,7 @@ class AiAssistant extends Page
                 ->body('No tenés permisos para ejecutar acciones sobre este cliente.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -349,7 +354,7 @@ class AiAssistant extends Page
 
             $recentLogs = ExerciseLog::query()
                 ->where('assignment_id', $activeAssignment->id)
-                ->with('routineDayExercise.exercise')
+                ->with(['exercise', 'routineDayExercise.exercise'])
                 ->latest('logged_at')
                 ->take(15)
                 ->get();
@@ -357,7 +362,7 @@ class AiAssistant extends Page
             if ($recentLogs->isNotEmpty()) {
                 $lines[] = 'Últimos registros de entrenamiento (ejercicio: peso x reps):';
                 foreach ($recentLogs as $log) {
-                    $exTitle = $log->routineDayExercise?->exercise?->title ?? '?';
+                    $exTitle = $log->exercise?->title ?? $log->routineDayExercise?->exercise?->title ?? '?';
                     $lines[] = "- {$exTitle}: {$log->weight}kg x {$log->reps} reps ({$log->logged_at->format('d/m')})";
                 }
             }
@@ -380,13 +385,27 @@ class AiAssistant extends Page
 
         if ($lastMeasurement) {
             $lines[] = "Última medición corporal cargada ({$lastMeasurement->measured_at->format('d/m/Y')}):";
-            if ($lastMeasurement->weight) $lines[] = "- Peso: {$lastMeasurement->weight}kg";
-            if ($lastMeasurement->body_fat_percentage) $lines[] = "- % Grasa corporal: {$lastMeasurement->body_fat_percentage}%";
-            if ($lastMeasurement->waist) $lines[] = "- Cintura: {$lastMeasurement->waist}cm";
-            if ($lastMeasurement->chest) $lines[] = "- Pecho/busto: {$lastMeasurement->chest}cm";
-            if ($lastMeasurement->hip) $lines[] = "- Cadera: {$lastMeasurement->hip}cm";
-            if ($lastMeasurement->arm) $lines[] = "- Brazo: {$lastMeasurement->arm}cm";
-            if ($lastMeasurement->thigh) $lines[] = "- Muslo: {$lastMeasurement->thigh}cm";
+            if ($lastMeasurement->weight) {
+                $lines[] = "- Peso: {$lastMeasurement->weight}kg";
+            }
+            if ($lastMeasurement->body_fat_percentage) {
+                $lines[] = "- % Grasa corporal: {$lastMeasurement->body_fat_percentage}%";
+            }
+            if ($lastMeasurement->waist) {
+                $lines[] = "- Cintura: {$lastMeasurement->waist}cm";
+            }
+            if ($lastMeasurement->chest) {
+                $lines[] = "- Pecho/busto: {$lastMeasurement->chest}cm";
+            }
+            if ($lastMeasurement->hip) {
+                $lines[] = "- Cadera: {$lastMeasurement->hip}cm";
+            }
+            if ($lastMeasurement->arm) {
+                $lines[] = "- Brazo: {$lastMeasurement->arm}cm";
+            }
+            if ($lastMeasurement->thigh) {
+                $lines[] = "- Muslo: {$lastMeasurement->thigh}cm";
+            }
         } else {
             $lines[] = 'El cliente todavía no cargó ninguna medición corporal.';
         }

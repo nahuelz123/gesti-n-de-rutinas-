@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\ExerciseLog;
 use App\Services\ExerciseSetRecorder;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LogController extends Controller
@@ -15,11 +16,13 @@ class LogController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'assignment_id' => ['required','integer','exists:assignments,id'],
-            'routine_day_exercise_id' => ['required','integer','exists:routine_day_exercises,id'],
-            'set_number' => ['required','integer','min:1','max:20'],
-            'weight' => ['nullable','numeric','min:0','max:9999.99'],
-            'reps' => ['nullable','integer','min:1','max:100'],
+            'assignment_id' => ['required', 'integer', 'exists:assignments,id'],
+            'routine_day_exercise_id' => ['required', 'integer', 'exists:routine_day_exercises,id'],
+            'set_number' => ['required', 'integer', 'min:1', 'max:20'],
+            'weight' => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
+            'reps' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'expected_exercise_id' => ['nullable', 'required_with:performed_on', 'integer', 'min:1'],
+            'performed_on' => ['nullable', 'required_with:expected_exercise_id', 'date_format:Y-m-d'],
         ]);
 
         $assignment = Assignment::query()->findOrFail($data['assignment_id']);
@@ -31,6 +34,8 @@ class LogController extends Controller
             (int) $data['set_number'],
             isset($data['weight']) ? (float) $data['weight'] : null,
             isset($data['reps']) ? (int) $data['reps'] : null,
+            isset($data['expected_exercise_id']) ? (int) $data['expected_exercise_id'] : null,
+            $data['performed_on'] ?? null,
         );
 
         return back()->with('success', $updated
@@ -51,7 +56,7 @@ class LogController extends Controller
             'logged_at' => ['nullable', 'date'],
         ]);
 
-        $loggedAt = isset($data['logged_at']) ? \Carbon\Carbon::parse($data['logged_at']) : $log->logged_at;
+        $loggedAt = isset($data['logged_at']) ? Carbon::parse($data['logged_at']) : $log->logged_at;
 
         // No dejamos que la edición choque con otra serie del mismo día/ejercicio.
         $duplicate = ExerciseLog::query()

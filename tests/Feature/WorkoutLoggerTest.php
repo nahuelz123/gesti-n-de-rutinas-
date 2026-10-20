@@ -10,6 +10,7 @@ use App\Models\Routine;
 use App\Models\RoutineDay;
 use App\Models\RoutineDayExercise;
 use App\Models\User;
+use App\Services\ExerciseSetRecorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -527,5 +528,132 @@ class WorkoutLoggerTest extends TestCase
             'weight' => 70,
             'reps' => 12,
         ]);
+    }
+
+    public function test_replacement_is_saved_for_today_without_changing_the_coach_routine(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Press con mancuernas', 'muscle_group' => 'pecho']);
+        $this->actingAs($this->client);
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->call('replaceExercise', $alternative->id)
+            ->assertSee('Original del entrenador: Press Banca')
+            ->set('inputs.1.weight', 24)->set('inputs.1.reps', 10)->call('logSet', 1);
+        $this->assertDatabaseHas('exercise_logs', ['exercise_id' => $alternative->id, 'routine_day_exercise_id' => $this->routineDayExercise->id]);
+        $this->assertEquals($this->exercise->id, $this->routineDayExercise->fresh()->exercise_id);
+        $this->get(route('client.progress.exercise', ['exercise' => $alternative->id, 'assignment' => $this->assignment->id, 'day' => $this->day->id, 'routine_exercise' => $this->routineDayExercise->id]))->assertOk()->assertSee('Volver al entrenamiento');
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->assertSee('Press con mancuernas');
+        $this->travel(1)->days();
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->assertDontSee('Original del entrenador:');
+    }
+
+    public function test_replacement_rejects_foreign_and_deleted_catalog_exercises(): void
+    {
+        $foreign = Exercise::create(['gym_id' => Gym::create(['name' => 'Other'])->id, 'title' => 'Private press', 'muscle_group' => 'pecho']);
+        $deleted = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Deleted press', 'muscle_group' => 'pecho']);
+        $deleted->delete();
+        $this->actingAs($this->client);
+        foreach ([$foreign, $deleted] as $exercise) {
+            Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+                ->call('selectDay', $this->day->id)->call('replaceExercise', $exercise->id)->assertForbidden();
+        }
+    }
+
+    public function test_replacement_cannot_relabel_previously_saved_sets(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Alternative', 'muscle_group' => 'pecho']);
+        $this->actingAs($this->client);
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.reps', 10)->call('logSet', 1)
+            ->call('replaceExercise', $alternative->id)->assertHasErrors('replacement');
+        $this->assertDatabaseHas('exercise_logs', ['exercise_id' => $this->exercise->id]);
+        $this->assertDatabaseCount('workout_exercise_replacements', 0);
+    }
+
+    public function test_progress_uses_actual_exercise_with_legacy_log_fallback(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Alternative', 'muscle_group' => 'pecho']);
+        $base = ['assignment_id' => $this->assignment->id, 'routine_day_exercise_id' => $this->routineDayExercise->id, 'set_number' => 1, 'reps' => 8, 'logged_at' => now()->subDay()];
+        ExerciseLog::create($base + ['exercise_id' => $alternative->id, 'weight' => 24]);
+        ExerciseLog::create(array_replace($base, ['weight' => 70, 'set_number' => 2]));
+        $this->actingAs($this->client);
+        $this->get(route('client.progress.exercise', $alternative))->assertOk()->assertViewHas('logs', fn ($logs) => $logs->count() === 1 && (float) $logs->first()->weight === 24.0);
+        $this->get(route('client.progress.exercise', $this->exercise))->assertOk()->assertViewHas('logs', fn ($logs) => $logs->count() === 1 && (float) $logs->first()->weight === 70.0);
+    }
+
+    public function test_alternatives_are_searchable_and_recommend_same_muscle_without_exposing_other_gyms(): void
+    {
+        Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Press recomendado', 'muscle_group' => 'pecho']);
+        Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Sentadilla visible', 'muscle_group' => 'piernas']);
+        Exercise::create(['gym_id' => Gym::create(['name' => 'Other'])->id, 'title' => 'Press secreto', 'muscle_group' => 'pecho']);
+        $this->actingAs($this->client);
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->call('toggleAlternatives')
+            ->assertSee('Press recomendado')->assertSee('Mismo grupo muscular')->assertDontSee('Press secreto')
+            ->set('alternativeSearch', 'Sentadilla')->assertSee('Sentadilla visible')->assertDontSee('Press recomendado');
+    }
+
+    public function test_replacement_requires_an_editable_assignment(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Alternative', 'muscle_group' => 'pecho']);
+        $this->assignment->update(['status' => 'completed', 'end_date' => today()->subDay()]);
+        $this->actingAs($this->client);
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->call('replaceExercise', $alternative->id)->assertForbidden();
+    }
+
+    public function test_replacement_does_not_change_another_day_or_assignment(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Alternative', 'muscle_group' => 'pecho']);
+        $otherDay = RoutineDay::create(['routine_id' => $this->routine->id, 'day_number' => 2, 'title' => 'Otro día']);
+        RoutineDayExercise::create(['routine_day_id' => $otherDay->id, 'exercise_id' => $this->exercise->id, 'sets' => 3, 'reps' => '10', 'order' => 1]);
+        $otherAssignment = Assignment::create(['gym_id' => $this->gym->id, 'client_id' => $this->client->id, 'routine_id' => $this->routine->id, 'status' => 'active']);
+        $this->actingAs($this->client);
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->call('replaceExercise', $alternative->id)
+            ->call('selectDay', $otherDay->id)->assertDontSee('Original del entrenador:');
+        Livewire::test('client.workout-logger', ['assignment' => $otherAssignment])
+            ->call('selectDay', $this->day->id)->assertDontSee('Original del entrenador:');
+    }
+
+    public function test_stale_tab_cannot_save_values_under_an_exercise_changed_in_another_tab(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Press mancuernas', 'muscle_group' => 'pecho']);
+        $this->actingAs($this->client);
+        $page = Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->set('inputs.1.weight', 100)->set('inputs.1.reps', 10);
+        app(ExerciseSetRecorder::class)->replace($this->assignment, $this->client, $this->routineDayExercise->id, $alternative->id);
+        $page->call('logSet', 1)->assertHasErrors('workout_context')->assertNotDispatched('set-logged')
+            ->assertSet('inputs.1.weight', '')->assertSet('inputs.1.reps', '')->assertSee('Volvé a ingresar');
+        $this->assertDatabaseCount('exercise_logs', 0);
+        $page->set('inputs.1.weight', 24)->set('inputs.1.reps', 10)->call('logSet', 1)->assertHasNoErrors();
+        $this->assertDatabaseHas('exercise_logs', ['exercise_id' => $alternative->id, 'weight' => 24]);
+    }
+
+    public function test_overnight_form_cannot_save_yesterdays_alternative_as_todays_original(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Press mancuernas', 'muscle_group' => 'pecho']);
+        $this->actingAs($this->client);
+        $page = Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)->call('replaceExercise', $alternative->id)
+            ->set('inputs.1.weight', 24)->set('inputs.1.reps', 10);
+        $this->travel(1)->days();
+        $page->call('logSet', 1)->assertHasErrors('workout_context')->assertNotDispatched('set-logged')
+            ->assertSet('inputs.1.weight', '')->assertSet('inputs.1.reps', '');
+        $this->assertDatabaseCount('exercise_logs', 0);
+    }
+
+    public function test_http_save_requires_matching_exercise_context_after_a_replacement(): void
+    {
+        $alternative = Exercise::create(['gym_id' => $this->gym->id, 'title' => 'Press mancuernas', 'muscle_group' => 'pecho']);
+        app(ExerciseSetRecorder::class)->replace($this->assignment, $this->client, $this->routineDayExercise->id, $alternative->id);
+        $payload = ['assignment_id' => $this->assignment->id, 'routine_day_exercise_id' => $this->routineDayExercise->id, 'set_number' => 1, 'weight' => 100, 'reps' => 10];
+        $this->actingAs($this->client)->post(route('client.logs.store'), $payload)->assertSessionHasErrors('workout_context');
+        $this->assertDatabaseCount('exercise_logs', 0);
+        $this->post(route('client.logs.store'), $payload + ['expected_exercise_id' => $alternative->id, 'performed_on' => today()->toDateString()])->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('exercise_logs', ['exercise_id' => $alternative->id]);
     }
 }

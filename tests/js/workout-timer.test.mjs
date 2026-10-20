@@ -25,6 +25,7 @@ function browser(saved = new Map(), storageUnavailable = false) {
         create: (options = {}) => { const timer = context.visionFitRestTimer({ storageKey: 'user-1-assignment-2', defaultSeconds: 60, ...options }); timer.init(); return timer; },
         advance: ms => { now += ms; for (const tick of [...intervals.values()]) tick(); },
         flush: () => { for (const fn of [...timeouts.values()]) fn(); timeouts.clear(); },
+        setPush: push => { context.visionFitPush = push; },
         saved, intervals, timeouts, elements,
     };
 }
@@ -109,4 +110,24 @@ test('another assignment cannot restore this timer', () => {
     const b = browser(); const timer = b.create(); timer.start();
     const another = b.create({ storageKey: 'user-1-assignment-3' });
     assert.equal(another.active, false); assert.equal(timer.active, true);
+});
+
+test('start cancel and restored rest synchronize their deadlines with server push', () => {
+    const b = browser(); const calls = [];
+    // Browser bridge is injected by push-alerts.js; timer must tolerate it being absent.
+    const timer = b.create();
+    timer.syncPush = (deadline, sequence) => calls.push({deadline, sequence});
+    timer.start(); timer.stop();
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0].deadline, 1060000); assert.equal(calls[1].deadline, null);
+    assert.ok(calls[1].sequence > calls[0].sequence);
+});
+
+
+test('expired push scheduling reports the rest ended without promising an alert', async () => {
+    const b = browser();
+    b.setPush({schedule: async () => 'expired'});
+    const timer = b.create({assignmentId: 2});
+    await timer.syncPush(999999, timer.sequence);
+    assert.equal(timer.pushMessage, 'El descanso terminó; no se programó un aviso.');
 });
