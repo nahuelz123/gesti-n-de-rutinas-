@@ -15,7 +15,7 @@
 
 <div class="rw">
 
-    <a class="back-link" href="{{ url()->previous() }}">← Volver</a>
+    <a class="back-link" href="{{ $returnUrl }}">← {{ $returnLabel }}</a>
 
     <p class="pg-label">Progreso</p>
     <h1 class="pg-title">{{ $exercise->title }}</h1>
@@ -104,12 +104,12 @@
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
                                 <label style="font-size:10px;color:var(--clr-text-muted);">Peso (kg)</label>
-                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.1" min="0.01" max="9999.99"
+                                <input type="number" name="weight" value="{{ $log->weight }}" step="0.1" min="0" max="9999.99"
                                     style="width:80px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
                             </div>
                             <div style="display:flex;flex-direction:column;gap:3px;">
                                 <label style="font-size:10px;color:var(--clr-text-muted);">Reps</label>
-                                <input type="number" name="reps" value="{{ $log->reps }}" min="1" max="200"
+                                <input type="number" name="reps" value="{{ $log->reps }}" min="1" max="100"
                                     style="width:60px;background:var(--clr-bg);border:1px solid var(--clr-border);color:var(--clr-text);padding:6px;border-radius:6px;font-size:13px;">
                             </div>
                         </div>

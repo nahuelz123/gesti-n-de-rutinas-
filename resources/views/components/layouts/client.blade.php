@@ -109,6 +109,7 @@
     </footer>
     @include('partials.cookie-notice')
 
+    <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts
 
 </body>

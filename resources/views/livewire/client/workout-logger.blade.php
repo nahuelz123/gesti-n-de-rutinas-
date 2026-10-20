@@ -84,8 +84,18 @@
                         <p>{{ $day->exercises->count() }} ejercicios</p>
 
                         <x-client.action-button variant="primary" wire:click="selectDay({{ $day->id }})">
-                            EMPEZAR
+                            EMPEZAR / CONTINUAR
                         </x-client.action-button>
+                        <details style="margin-top:12px;">
+                            <summary style="cursor:pointer;color:var(--clr-text-muted);font-size:13px;">Elegir ejercicio</summary>
+                            <div style="display:grid;gap:6px;margin-top:8px;">
+                                @foreach($day->exercises->sortBy('order') as $item)
+                                    <button type="button" wire:click="selectDay({{ $day->id }}, {{ $item->id }})" class="client-btn client-btn-secondary" style="text-align:left;justify-content:flex-start;white-space:normal;">
+                                        {{ $item->exercise->title }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </details>
                     </article>
                 @endforeach
             </div>
@@ -99,7 +109,7 @@
             .vf-workout {
                 min-height:100svh;
                 background:var(--clr-bg);
-                padding-bottom:96px;
+                padding-bottom:calc(120px + var(--safe-area-bottom, 0px));
             }
             .vf-workout-topbar {
                 position:sticky;
@@ -383,7 +393,7 @@
             .vf-rest-timer {
                 position:fixed;
                 left:50%;
-                bottom:18px;
+                bottom:calc(18px + var(--safe-area-bottom, 0px));
                 transform:translateX(-50%);
                 width:min(440px, calc(100% - 32px));
                 z-index:45;
@@ -486,6 +496,12 @@
 
             @if($current)
                 <main class="vf-workout-body">
+                    <label for="workout-exercise-picker" style="display:block;color:var(--clr-text-muted);font-size:12px;margin-bottom:6px;">Elegir ejercicio</label>
+                    <select id="workout-exercise-picker" wire:change="selectExercise($event.target.value)" style="width:100%;min-height:48px;background:var(--clr-surface);color:var(--clr-text);border:1px solid var(--clr-border);border-radius:12px;padding:10px;margin-bottom:18px;font-size:16px;">
+                        @foreach($this->exercises as $item)
+                            <option value="{{ $item->id }}" @selected((int) $selectedExerciseId === $item->id)>{{ $loop->iteration }}. {{ $item->exercise->title }}</option>
+                        @endforeach
+                    </select>
                     <header class="vf-exercise-head">
                         <div class="vf-exercise-kicker">Ejercicio {{ $currentExerciseIndex + 1 }}</div>
                         <h1 class="vf-exercise-title">{{ $current->exercise->title }}</h1>
@@ -515,7 +531,7 @@
                                 </button>
                             @endif
 
-                            <a class="vf-small-action" href="{{ route('client.progress.exercise', $current->exercise_id) }}">
+                            <a class="vf-small-action" href="{{ $this->progressUrl }}">
                                 ↗ Progreso
                             </a>
                         </div>
@@ -647,97 +663,18 @@
 
             <div
                 class="vf-rest-timer"
-                x-data="{
-                    visible: false,
-                    remaining: 0,
-                    interval: null,
-                    displayTime: '0:00',
-                    stop() {
-                        if (this.interval) {
-                            clearInterval(this.interval);
-                            this.interval = null;
-                        }
-                        this.visible = false;
-                    },
-                    start(seconds) {
-                        seconds = Number(seconds || 0);
-                        if (!Number.isFinite(seconds) || seconds <= 0) return;
-
-                        if (this.interval) clearInterval(this.interval);
-                        this.remaining = Math.round(seconds);
-                        this.visible = true;
-
-                        const tick = () => {
-                            const minutes = Math.floor(this.remaining / 60);
-                            const secs = String(this.remaining % 60).padStart(2, '0');
-                            this.displayTime = minutes + ':' + secs;
-
-                            if (this.remaining <= 0) {
-                                clearInterval(this.interval);
-                                this.interval = null;
-                                this.displayTime = '¡Listo!';
-
-                                if ('vibrate' in navigator) {
-                                    navigator.vibrate([160, 80, 160]);
-                                }
-
-                                setTimeout(() => {
-                                    this.visible = false;
-                                }, 2200);
-
-                                return;
-                            }
-
-                            this.remaining--;
-                        };
-
-                        tick();
-                        this.interval = setInterval(tick, 1000);
-                    },
-                    handleSetLogged(payload) {
-                        payload = payload || {};
-
-                        const setNumber = Number(payload.set || 0);
-                        const nextSetNumber = payload.nextSet ? Number(payload.nextSet) : null;
-                        const row = document.getElementById('set-' + setNumber);
-
-                        document.querySelectorAll('.vf-set.next-up').forEach((element) => {
-                            element.classList.remove('next-up');
-                        });
-
-                        if (row) {
-                            row.style.transform = 'scale(.99)';
-                            setTimeout(() => row.style.transform = 'scale(1)', 140);
-                        }
-
-                        if (nextSetNumber) {
-                            const nextRow = document.getElementById('set-' + nextSetNumber);
-
-                            if (nextRow) {
-                                nextRow.classList.add('next-up');
-
-                                setTimeout(() => {
-                                    nextRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    document.getElementById('weight-' + nextSetNumber)?.focus({ preventScroll: true });
-                                }, 220);
-                            }
-                        }
-
-                        this.start(payload.rest);
-                    }
-                }"
+                wire:key="rest-timer-{{ $assignment->id }}"
+                x-data="visionFitRestTimer({ storageKey: 'visionfit:rest:{{ auth()->id() }}:{{ $assignment->id }}', defaultSeconds: {{ $this->restSeconds ?: 90 }} })"
                 x-cloak
-                x-show="visible"
                 @set-logged.window="handleSetLogged($event.detail)"
-                @exercise-changed.window="stop(); window.scrollTo({ top: 0, behavior: 'smooth' })"
-                aria-live="polite"
+                @exercise-changed.window="updateDefaultSeconds($event.detail.rest); window.scrollTo({ top: 0, behavior: 'smooth' })"
             >
-                <div class="vf-rest-icon">⏱</div>
+                <div class="vf-rest-icon" aria-hidden="true">⏱</div>
                 <div class="vf-rest-copy">
-                    <div class="vf-rest-label">Descanso</div>
-                    <div class="vf-rest-time" x-text="displayTime">0:00</div>
+                    <div class="vf-rest-label" x-text="active ? 'Descanso en curso' : 'Descanso · listo para iniciar'">Descanso</div>
+                    <div class="vf-rest-time" role="timer" aria-label="Tiempo de descanso" x-text="displayTime">{{ intdiv(min(3600, max(1, $this->restSeconds ?: 90)), 60) }}:{{ str_pad((string) (min(3600, max(1, $this->restSeconds ?: 90)) % 60), 2, '0', STR_PAD_LEFT) }}</div>
                 </div>
-                <button type="button" class="vf-rest-skip" @click="stop()">OMITIR</button>
+                <button type="button" class="vf-rest-skip" @click="active ? stop() : start()" x-text="active ? 'OMITIR' : 'INICIAR'">INICIAR</button>
             </div>
         </div>
 

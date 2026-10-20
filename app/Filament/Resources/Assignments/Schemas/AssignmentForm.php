@@ -69,6 +69,11 @@ class AssignmentForm
                 ->default('active')
                 ->required()
                 ->live()
+                ->afterStateUpdated(function ($state, $set) {
+                    if ($state === 'active') {
+                        $set('end_date', null);
+                    }
+                })
                 ->helperText('Si está Activa, la fecha de fin debería quedar vacía.'),
 
             DatePicker::make('start_date')
@@ -85,12 +90,6 @@ class AssignmentForm
                     // si el registro está active, aseguramos que end_date no moleste
                     if ($get('status') === 'active') {
                         $component->state(null);
-                    }
-                })
-                ->afterStateUpdated(function ($state, $set, $get) {
-                    // si cambian a active, limpiamos end_date
-                    if ($get('status') === 'active') {
-                        $set('end_date', null);
                     }
                 }),
 

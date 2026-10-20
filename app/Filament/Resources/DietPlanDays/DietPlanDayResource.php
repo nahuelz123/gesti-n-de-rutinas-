@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DietPlanDays;
 use App\Filament\Resources\DietPlanDays\Pages\CreateDietPlanDay;
 use App\Filament\Resources\DietPlanDays\Pages\EditDietPlanDay;
 use App\Filament\Resources\DietPlanDays\Pages\ListDietPlanDays;
+use App\Filament\Resources\DietPlanDays\RelationManagers\RecipesRelationManager;
 use App\Filament\Resources\DietPlanDays\Schemas\DietPlanDayForm;
 use App\Filament\Resources\DietPlanDays\Tables\DietPlanDaysTable;
 use App\Models\DietPlanDay;
@@ -48,16 +49,15 @@ class DietPlanDayResource extends Resource
 
         return parent::getEloquentQuery()
             ->when(
-                $user,
-                fn (Builder $q) =>
-                $q->whereHas('dietPlan', fn (Builder $pq) => $pq->where('gym_id', $user->gym_id))
+                $user && $user->role !== 'super_admin',
+                fn (Builder $q) => $q->whereHas('dietPlan', fn (Builder $pq) => $pq->where('gym_id', $user->gym_id ?? 0))
             );
     }
 
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Resources\DietPlanDays\RelationManagers\RecipesRelationManager::class,
+            RecipesRelationManager::class,
         ];
     }
 

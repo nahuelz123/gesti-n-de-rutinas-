@@ -4,30 +4,32 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
-use Illuminate\Http\Request;
 use App\Models\Exercise;
 use App\Models\ExerciseLog;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class RoutineController extends Controller
 {
-  public function active(Request $request)
-{
-    $user = $request->user();
-    $assignment = Assignment::query()
-        ->with([
-            'routine.days.exercises.exercise',
-            'logs' => fn($q) => $q
-                ->whereDate('logged_at', today())
-                ->latest('logged_at'),
-        ])
-        ->where('client_id', $user->id)
-        ->where('status', 'active')
-        ->whereNull('end_date')
-        ->latest('assigned_at')
-        ->first();
+    public function active(Request $request)
+    {
+        $user = $request->user();
+        $assignment = Assignment::query()
+            ->with([
+                'routine.days.exercises.exercise',
+                'logs' => fn ($q) => $q
+                    ->whereDate('logged_at', today())
+                    ->latest('logged_at'),
+            ])
+            ->where('client_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('end_date')
+            ->latest('assigned_at')
+            ->first();
 
-    return view('client.routines.active', compact('assignment'));
-}
+        return view('client.routines.active', compact('assignment'));
+    }
+
     public function history(Request $request)
     {
         $user = $request->user();
@@ -54,18 +56,45 @@ class RoutineController extends Controller
     {
         $user = $request->user();
 
+        abort_unless($exercise->is_global || ($user->gym_id !== null && $exercise->gym_id === $user->gym_id), 404);
+
         // Todo el historial para el gráfico y la tabla de progreso
         $logs = ExerciseLog::query()
-            ->whereHas('assignment', fn($q) => $q->where('client_id', $user->id))
-            ->whereHas('routineDayExercise', fn($q) => $q->where('exercise_id', $exercise->id))
+            ->whereHas('assignment', fn ($q) => $q->where('client_id', $user->id))
+            ->whereHas('routineDayExercise', fn ($q) => $q->where('exercise_id', $exercise->id))
             ->orderByDesc('logged_at')
             ->take(100)
             ->get();
 
-        $pr   = $logs->whereNotNull('weight')->max('weight');
+        $pr = $logs->whereNotNull('weight')->max('weight');
         $last = $logs->first();
 
-        return view('client.progress.exercise', compact('exercise', 'logs', 'pr', 'last'));
+        $returnUrl = route('client.progress.index');
+        $returnLabel = 'Volver a mi progreso';
+        if ($request->filled('assignment')) {
+            $context = $request->validate([
+                'assignment' => ['required', 'integer', 'min:1'],
+                'day' => ['required', 'integer', 'min:1'],
+                'routine_exercise' => ['required', 'integer', 'min:1'],
+            ]);
+            $assignment = Assignment::query()->where('client_id', $user->id)->findOrFail($context['assignment']);
+            abort_unless($assignment->routine->days()
+                ->whereKey($context['day'])
+                ->whereHas('exercises', fn ($query) => $query->whereKey($context['routine_exercise'])->where('exercise_id', $exercise->id))
+                ->exists(), 404);
+
+            $parameters = ['day' => $context['day'], 'exercise' => $context['routine_exercise']];
+            if ($assignment->status === 'active' && $assignment->end_date === null) {
+                $returnUrl = route('client.routines.active', $parameters);
+            } elseif ($assignment->start_date?->isToday() && $assignment->end_date?->isToday()) {
+                $returnUrl = route('client.routines.session', ['assignment' => $assignment->id] + $parameters);
+            } else {
+                $returnUrl = route('client.routines.show', $assignment);
+            }
+            $returnLabel = 'Volver al entrenamiento';
+        }
+
+        return view('client.progress.exercise', compact('exercise', 'logs', 'pr', 'last', 'returnUrl', 'returnLabel'));
     }
 
     public function replay(Request $request, Assignment $assignment)
@@ -103,7 +132,7 @@ class RoutineController extends Controller
         abort_unless($assignment->client_id === $user->id, 404);
 
         // Allow viewing only if it's a valid replay session
-        abort_unless($assignment->end_date !== null && \Carbon\Carbon::parse($assignment->start_date)->isToday(), 403);
+        abort_unless($assignment->end_date !== null && Carbon::parse($assignment->start_date)->isToday(), 403);
 
         $assignment->load(['routine.days.exercises.exercise']);
 

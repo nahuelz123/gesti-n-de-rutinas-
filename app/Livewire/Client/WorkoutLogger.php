@@ -6,13 +6,21 @@ use App\Models\Assignment;
 use App\Models\ExerciseLog;
 use App\Services\ExerciseSetRecorder;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class WorkoutLogger extends Component
 {
     public Assignment $assignment;
+
     public $step = 'overview'; // overview, training, completed
+
+    #[Url(as: 'day')]
     public $selectedDayId = null;
+
+    #[Url(as: 'exercise')]
+    public $selectedExerciseId = null;
+
     public $currentExerciseIndex = 0;
 
     // [set_number => ['weight' => x, 'reps' => y]]
@@ -23,9 +31,13 @@ class WorkoutLogger extends Component
         abort_unless(Auth::check() && $assignment->client_id === Auth::id(), 403);
 
         $this->assignment = $assignment;
+
+        if ($this->selectedDayId !== null) {
+            $this->selectDay($this->selectedDayId, $this->selectedExerciseId);
+        }
     }
 
-    public function selectDay($dayId)
+    public function selectDay($dayId, $exerciseId = null)
     {
         abort_unless($this->assignment->client_id === Auth::id(), 403);
 
@@ -33,9 +45,59 @@ class WorkoutLogger extends Component
         abort_unless($day, 403);
 
         $this->selectedDayId = $day->id;
-        $this->currentExerciseIndex = 0;
+        unset($this->day, $this->exercises, $this->todayLogs);
+
+        if ($exerciseId === null) {
+            $logs = $this->todayLogs->groupBy('routine_day_exercise_id');
+            $next = $this->exercises->first(fn ($exercise) => ($logs->get($exercise->id)?->unique('set_number')->count() ?? 0) < (int) $exercise->sets);
+            $exerciseId = ($next ?? $this->exercises->first())?->id;
+        }
+
+        if ($exerciseId !== null) {
+            $this->selectExercise($exerciseId);
+        }
+    }
+
+    public function selectExercise($exerciseId): void
+    {
+        abort_unless($this->assignment->client_id === Auth::id(), 403);
+        $index = $this->exercises->search(fn ($exercise) => $exercise->id === (int) $exerciseId);
+        abort_if($index === false, 403);
+
+        $this->currentExerciseIndex = $index;
+        $this->selectedExerciseId = $this->exercises[$index]->id;
         $this->step = 'training';
+        unset($this->currentExercise, $this->lastLog, $this->restSeconds, $this->restLabel);
+        $this->resetValidation();
         $this->initInputsForCurrentExercise();
+        $this->dispatch('exercise-changed', rest: $this->restSeconds);
+    }
+
+    public function updatedSelectedDayId(): void
+    {
+        if ($this->selectedDayId === null) {
+            $this->exitTraining();
+
+            return;
+        }
+        $this->selectDay($this->selectedDayId, $this->selectedExerciseId);
+    }
+
+    public function updatedSelectedExerciseId(): void
+    {
+        if ($this->selectedExerciseId !== null && $this->selectedDayId !== null) {
+            $this->selectExercise($this->selectedExerciseId);
+        }
+    }
+
+    public function getProgressUrlProperty(): string
+    {
+        return route('client.progress.exercise', [
+            'exercise' => $this->currentExercise->exercise_id,
+            'assignment' => $this->assignment->id,
+            'day' => $this->selectedDayId,
+            'routine_exercise' => $this->selectedExerciseId,
+        ]);
     }
 
     public function getDayProperty()
@@ -162,7 +224,7 @@ class WorkoutLogger extends Component
 
     public function getRestSecondsProperty(): int
     {
-        return $this->normalizeRestSeconds($this->currentExercise?->rest);
+        return $this->normalizeRestSeconds($this->currentExercise?->rest) ?: 90;
     }
 
     public function getRestLabelProperty(): ?string
@@ -176,7 +238,7 @@ class WorkoutLogger extends Component
         if ($seconds % 60 === 0) {
             $minutes = intdiv($seconds, 60);
 
-            return $minutes . ' ' . ($minutes === 1 ? 'min' : 'min') . ' descanso';
+            return $minutes.' '.($minutes === 1 ? 'min' : 'min').' descanso';
         }
 
         if ($seconds > 60) {
@@ -194,7 +256,8 @@ class WorkoutLogger extends Component
         $user = Auth::user();
 
         if ($setNumber < 1 || $setNumber > 20) {
-            $this->addError('set_' . $setNumber, 'Serie inválida.');
+            $this->addError('set_'.$setNumber, 'Serie inválida.');
+
             return;
         }
 
@@ -202,7 +265,7 @@ class WorkoutLogger extends Component
         abort_unless($currentExercise, 404);
 
         if ($setNumber > (int) $currentExercise->sets) {
-            $this->addError('set_' . $setNumber, 'Esta serie no está configurada para el ejercicio.');
+            $this->addError('set_'.$setNumber, 'Esta serie no está configurada para el ejercicio.');
 
             return;
         }
@@ -258,9 +321,7 @@ class WorkoutLogger extends Component
     public function nextExercise()
     {
         if ($this->currentExerciseIndex < $this->exercises->count() - 1) {
-            $this->currentExerciseIndex++;
-            $this->initInputsForCurrentExercise();
-            $this->dispatch('exercise-changed');
+            $this->selectExercise($this->exercises[$this->currentExerciseIndex + 1]->id);
         } else {
             $this->step = 'completed';
         }
@@ -269,9 +330,7 @@ class WorkoutLogger extends Component
     public function prevExercise()
     {
         if ($this->currentExerciseIndex > 0) {
-            $this->currentExerciseIndex--;
-            $this->initInputsForCurrentExercise();
-            $this->dispatch('exercise-changed');
+            $this->selectExercise($this->exercises[$this->currentExerciseIndex - 1]->id);
         }
     }
 
@@ -279,6 +338,9 @@ class WorkoutLogger extends Component
     {
         $this->step = 'overview';
         $this->selectedDayId = null;
+        $this->selectedExerciseId = null;
+        $this->currentExerciseIndex = 0;
+        $this->resetValidation();
     }
 
     public function isSetCompleted($setNumber)
@@ -304,6 +366,15 @@ class WorkoutLogger extends Component
         }
 
         $value = strtolower(trim((string) $rest));
+
+        // Ranges use their lower bound; combined units retain both components.
+        if (preg_match('/^(\d+(?:[.,]\d+)?)\s*[-–]\s*\d+(?:[.,]\d+)?\s*(min|mins|minuto|minutos)$/u', $value, $matches)) {
+            return min(3600, (int) round((float) str_replace(',', '.', $matches[1]) * 60));
+        }
+
+        if (preg_match('/^(\d+)\s*(?:min|mins|minuto|minutos)\s*(\d+)\s*(?:s|seg|segs|segundo|segundos)$/u', $value, $matches)) {
+            return min(3600, ((int) $matches[1] * 60) + (int) $matches[2]);
+        }
 
         if (preg_match('/^(\d+(?:[.,]\d+)?)\s*(min|mins|minuto|minutos)$/u', $value, $matches)) {
             return max(0, (int) round((float) str_replace(',', '.', $matches[1]) * 60));
@@ -335,6 +406,8 @@ class WorkoutLogger extends Component
 
     public function render()
     {
+        $this->assignment->loadMissing('routine.days.exercises.exercise');
+
         return view('livewire.client.workout-logger');
     }
 }
