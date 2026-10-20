@@ -1,7 +1,14 @@
+@props(['isDemo' => false, 'displayName' => null, 'isCharacterPage' => false])
+@php
+    $navigationUser = $isDemo ? null : auth()->user();
+    $homeUrl = route($isDemo ? 'experience.demo' : 'client.dashboard');
+    $characterUrl = route($isDemo ? 'experience.demo.character' : 'client.character');
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Panel Cliente</title>
+    <title>{{ $isCharacterPage ? 'VisionFit · Mi personaje' : 'Panel Cliente' }}</title>
+    @if($isDemo)<meta name="robots" content="noindex, nofollow">@endif
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
@@ -15,28 +22,34 @@
     {{-- Livewire already ships Alpine. Loading a second CDN copy can cause duplicate
          Alpine instances and inconsistent component behaviour. --}}
     @vite(['resources/css/app.css', 'resources/css/client.css'])
+    @if($isCharacterPage && config('experience.enabled'))
+        <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css').'?v='.substr(hash_file('sha256', public_path('css/visionfit/experience.css')), 0, 12) }}">
+    @endif
 </head>
 <body>
 
     <nav class="app-nav">
-        <a href="{{ route('client.dashboard') }}" class="app-nav-logo">
-            @if(auth()->user()->gym?->logo_url)
-                <img src="{{ auth()->user()->gym->logo_url }}" alt="{{ auth()->user()->gym->name }}" style="height:32px; object-fit:contain;">
+        <a href="{{ $homeUrl }}" class="app-nav-logo">
+            @if($navigationUser?->gym?->logo_url)
+                <img src="{{ $navigationUser->gym->logo_url }}" alt="{{ $navigationUser->gym->name }}" style="height:32px; object-fit:contain;">
             @else
                 <img src="{{ asset('images/visionfit-logo-navbar.svg') }}" alt="VisionFit" style="height:26px; object-fit:contain; display:block;">
             @endif
         </a>
 
         <div class="app-nav-main" aria-label="Navegación principal">
-            <a href="{{ route('client.dashboard') }}" class="app-nav-main-link {{ request()->routeIs('client.dashboard') ? 'active' : '' }}" @if(request()->routeIs('client.dashboard')) aria-current="page" @endif>Inicio</a>
+            <a href="{{ $homeUrl }}" class="app-nav-main-link {{ request()->routeIs('client.dashboard', 'experience.demo') ? 'active' : '' }}" @if(request()->routeIs('client.dashboard', 'experience.demo')) aria-current="page" @endif>Inicio</a>
             <a href="{{ route('client.routines.active') }}" class="app-nav-main-link {{ request()->routeIs('client.routines.*') ? 'active' : '' }}" @if(request()->routeIs('client.routines.*')) aria-current="page" @endif>Rutinas</a>
             <a href="{{ route('client.nutrition.index') }}" class="app-nav-main-link {{ request()->routeIs('client.nutrition.*') ? 'active' : '' }}" @if(request()->routeIs('client.nutrition.*')) aria-current="page" @endif>Nutrición</a>
             <a href="{{ route('client.recipes.index') }}" class="app-nav-main-link {{ request()->routeIs('client.recipes.*') ? 'active' : '' }}" @if(request()->routeIs('client.recipes.*')) aria-current="page" @endif>Recetas</a>
         </div>
 
         <div class="app-nav-actions">
+            @if($isDemo)
+                <a href="{{ route('login') }}" class="app-nav-user-btn">Entrar a mi cuenta</a>
+            @else
             <div class="app-nav-quick">
-                @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
+                @php $unread = $navigationUser->unreadNotifications()->count(); @endphp
                 <a href="{{ route('client.notifications.index') }}" class="app-nav-link" title="Notificaciones" style="position:relative; color: var(--clr-text-muted);">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:24px; height:24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
                     @if($unread)
@@ -55,11 +68,14 @@
 
                 <div class="app-nav-account" id="navAccountWrap">
                     <button type="button" class="app-nav-user-btn" id="navAccountBtn" aria-expanded="false">
-                        <span class="app-nav-user">{{ auth()->user()->name }}</span>
+                        <span class="app-nav-user">{{ $navigationUser->name }}</span>
                         <svg class="app-nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
                     </button>
 
                     <div class="app-nav-account-menu" id="navAccountMenu">
+                        @if(config('experience.enabled'))
+                            <a href="{{ $characterUrl }}" class="app-nav-account-item" @if(request()->routeIs('client.character')) aria-current="page" @endif>Mi personaje</a>
+                        @endif
                         <a href="{{ route('client.account.edit') }}" class="app-nav-account-item">
                             Mi cuenta
                         </a>
@@ -72,6 +88,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </nav>
 
@@ -105,13 +122,16 @@
         {{ $slot }}
     </main>
 
-    <x-client.bottom-nav />
+    <x-client.bottom-nav :is-demo="$isDemo" />
     <footer style="padding:12px 16px 90px; text-align:center;">
         @include('partials.legal-links')
     </footer>
     @include('partials.cookie-notice')
 
     <script src="{{ asset('js/visionfit/push-alerts.js') }}"></script>
+    @if($isCharacterPage && config('experience.enabled'))
+        <script src="{{ asset('js/visionfit/experience.js').'?v='.substr(hash_file('sha256', public_path('js/visionfit/experience.js')), 0, 12) }}"></script>
+    @endif
     <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts
 

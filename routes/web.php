@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\Client\AiChatController;
 use App\Http\Controllers\Client\ChatController;
 use App\Http\Controllers\Client\DashboardController;
+use App\Http\Controllers\Client\ExperienceController;
 use App\Http\Controllers\Client\FreeMealLogController;
 use App\Http\Controllers\Client\LogController;
 use App\Http\Controllers\Client\MealLogController;
@@ -26,6 +27,8 @@ Route::get('/', function () {
 Route::get('/privacidad', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::get('/experiencia', [ExperienceController::class, 'demo'])->name('experience.demo');
+Route::get('/experiencia/personaje', [ExperienceController::class, 'demoCharacter'])->name('experience.demo.character');
 
 // iOS may request this legacy icon path automatically.
 Route::redirect('/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', 302);
@@ -55,6 +58,7 @@ Route::middleware(['auth', 'client', 'no-back'])
     ->name('client.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/personaje', [ExperienceController::class, 'character'])->name('character');
         Route::get('/routines/active', [RoutineController::class, 'active'])->name('routines.active');
         Route::get('/routines/history', [RoutineController::class, 'history'])->name('routines.history');
         Route::get('/routines/{assignment}', [RoutineController::class, 'show'])->name('routines.show');
