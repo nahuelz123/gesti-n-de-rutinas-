@@ -129,7 +129,7 @@ class WorkoutLoggerTest extends TestCase
             ->set('inputs.1.weight', 80)
             ->set('inputs.1.reps', 10)
             ->call('logSet', 1)
-            ->assertDispatched('set-logged', set: 1, nextSet: 2, rest: 0);
+            ->assertDispatched('set-logged', set: 1, nextSet: 2, rest: 90);
 
         $this->assertDatabaseHas('exercise_logs', [
             'assignment_id' => $this->assignment->id,
@@ -469,5 +469,63 @@ class WorkoutLoggerTest extends TestCase
         $this->get(route('client.routines.active'))
             ->assertOk()
             ->assertSee('livewire/livewire.js', false);
+    }
+
+    public function test_livewire_rejects_a_set_beyond_the_prescribed_amount(): void
+    {
+        $this->actingAs($this->client);
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.4.weight', '80')
+            ->set('inputs.4.reps', '10')
+            ->call('logSet', 4)
+            ->assertHasErrors('set_4');
+
+        $this->assertDatabaseCount('exercise_logs', 0);
+    }
+
+    public function test_http_endpoint_rejects_a_set_beyond_the_prescribed_amount(): void
+    {
+        $this->actingAs($this->client);
+
+        $this->post(route('client.logs.store'), [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 4,
+            'weight' => 80,
+            'reps' => 10,
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseCount('exercise_logs', 0);
+    }
+
+    public function test_http_and_livewire_update_the_same_set_instead_of_creating_duplicates(): void
+    {
+        $this->actingAs($this->client);
+
+        $this->post(route('client.logs.store'), [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => 60,
+            'reps' => 10,
+        ])->assertSessionDoesntHaveErrors();
+
+        Livewire::test('client.workout-logger', ['assignment' => $this->assignment])
+            ->call('selectDay', $this->day->id)
+            ->set('inputs.1.weight', 70)
+            ->set('inputs.1.reps', 12)
+            ->call('logSet', 1)
+            ->assertDispatched('set-logged');
+
+        $this->assertDatabaseCount('exercise_logs', 1);
+        $this->assertDatabaseHas('exercise_logs', [
+            'assignment_id' => $this->assignment->id,
+            'routine_day_exercise_id' => $this->routineDayExercise->id,
+            'set_number' => 1,
+            'weight' => 70,
+            'reps' => 12,
+        ]);
     }
 }

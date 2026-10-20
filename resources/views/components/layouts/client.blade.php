@@ -12,8 +12,7 @@
 
     {{-- Livewire already ships Alpine. Loading a second CDN copy can cause duplicate
          Alpine instances and inconsistent component behaviour. --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @vite('resources/css/client.css')
+    @vite(['resources/css/app.css', 'resources/css/client.css'])
 </head>
 <body>
 
@@ -110,6 +109,7 @@
     </footer>
     @include('partials.cookie-notice')
 
+    <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts
 
 </body>

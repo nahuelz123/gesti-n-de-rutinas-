@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RoutineDays;
 use App\Filament\Resources\RoutineDays\Pages\CreateRoutineDay;
 use App\Filament\Resources\RoutineDays\Pages\EditRoutineDay;
 use App\Filament\Resources\RoutineDays\Pages\ListRoutineDays;
+use App\Filament\Resources\RoutineDays\RelationManagers\ExercisesRelationManager;
 use App\Filament\Resources\RoutineDays\Schemas\RoutineDayForm;
 use App\Filament\Resources\RoutineDays\Tables\RoutineDaysTable;
 use App\Models\RoutineDay;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 class RoutineDayResource extends Resource
 {
     protected static ?string $model = RoutineDay::class;
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -40,23 +42,24 @@ class RoutineDayResource extends Resource
     {
         return RoutineDaysTable::configure($table);
     }
+
     public static function getEloquentQuery(): Builder
     {
         $user = Auth::user();
 
         return parent::getEloquentQuery()
             ->when(
-                $user,
-                fn(Builder $q) =>
-                $q->whereHas('routine', fn(Builder $rq) => $rq->where('gym_id', $user->gym_id))
+                $user && $user->role !== 'super_admin',
+                fn (Builder $q) => $q->whereHas('routine', fn (Builder $rq) => $rq->where('gym_id', $user->gym_id ?? 0))
             );
     }
-public static function getRelations(): array
-{
-    return [
-        \App\Filament\Resources\RoutineDays\RelationManagers\ExercisesRelationManager::class,
-    ];
-}
+
+    public static function getRelations(): array
+    {
+        return [
+            ExercisesRelationManager::class,
+        ];
+    }
 
     public static function getPages(): array
     {

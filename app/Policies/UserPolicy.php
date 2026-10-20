@@ -3,47 +3,57 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
     public function viewAny(User $user): bool
-{
-    return in_array($user->role, ['super_admin','admin','coach']);
-}
-
-public function view(User $user, User $model): bool
-{
-    if ($user->role === 'super_admin') return true;
-
-    if ($user->gym_id !== $model->gym_id) return false;
-
-    if ($user->role === 'coach') {
-        return $model->role === 'client';
+    {
+        return in_array($user->role, ['super_admin', 'admin', 'coach'], true);
     }
 
-    return $user->role === 'admin';
-}
+    public function view(User $user, User $target): bool
+    {
+        if ($user->role === 'super_admin') {
+            return true;
+        }
 
-public function create(User $user): bool
-{
-    return in_array($user->role, ['super_admin','admin']);
-}
+        if (! $this->belongsToSameGym($user, $target)) {
+            return false;
+        }
 
-public function update(User $user, User $model): bool
-{
-    if ($user->role === 'super_admin') return true;
-    if ($user->gym_id !== $model->gym_id) return false;
+        return match ($user->role) {
+            'admin' => $target->role !== 'super_admin',
+            'coach' => $target->role === 'client',
+            default => false,
+        };
+    }
 
-    return $user->role === 'admin';
-}
+    public function create(User $user): bool
+    {
+        return in_array($user->role, ['super_admin', 'admin'], true);
+    }
 
-public function delete(User $user, User $model): bool
-{
-    if ($user->role === 'super_admin') return true;
-    if ($user->gym_id !== $model->gym_id) return false;
+    public function update(User $user, User $target): bool
+    {
+        if ($user->role === 'super_admin') {
+            return true;
+        }
 
-    return $user->role === 'admin';
-}
+        return $user->role === 'admin'
+            && $target->role !== 'super_admin'
+            && $this->belongsToSameGym($user, $target);
+    }
 
+    public function delete(User $user, User $target): bool
+    {
+        return $this->update($user, $target) && $user->id !== $target->id;
+    }
+
+    private function belongsToSameGym(User $user, User $target): bool
+    {
+        // A missing gym is not a shared tenant.
+        return $user->gym_id !== null
+            && $target->gym_id !== null
+            && $user->gym_id === $target->gym_id;
+    }
 }
