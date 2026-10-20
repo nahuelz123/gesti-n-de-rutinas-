@@ -15,6 +15,9 @@
     {{-- Livewire already ships Alpine. Loading a second CDN copy can cause duplicate
          Alpine instances and inconsistent component behaviour. --}}
     @vite(['resources/css/app.css', 'resources/css/client.css'])
+    @if(config('experience.enabled'))
+        <link rel="stylesheet" href="{{ asset('css/visionfit/experience.css') }}">
+    @endif
 </head>
 <body>
 
@@ -112,6 +115,9 @@
     @include('partials.cookie-notice')
 
     <script src="{{ asset('js/visionfit/push-alerts.js') }}"></script>
+    @if(config('experience.enabled'))
+        <script src="{{ asset('js/visionfit/experience.js') }}"></script>
+    @endif
     <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
     @livewireScripts
 

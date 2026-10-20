@@ -9,6 +9,9 @@
 
     <p class="pg-label">Seguimiento</p>
     <h1 class="pg-title">Mi progreso</h1>
+    @if(config('experience.enabled'))
+        <a class="back-link" style="display:inline-flex;align-items:center;min-height:44px;margin-bottom:18px;" href="{{ route('client.character') }}">Ver mi personaje, niveles y logros →</a>
+    @endif
 
     @if (!$hasProfile)
         <div class="section">

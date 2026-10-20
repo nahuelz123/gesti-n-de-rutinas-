@@ -12,6 +12,10 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        if (config('experience.enabled')) {
+            return app(ExperienceController::class)->dashboard($request);
+        }
+
         $user = $request->user();
 
         $active = Assignment::query()
