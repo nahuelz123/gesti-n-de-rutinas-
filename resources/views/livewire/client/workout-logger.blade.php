@@ -109,7 +109,7 @@
             .vf-workout {
                 min-height:100svh;
                 background:var(--clr-bg);
-                padding-bottom:calc(120px + var(--safe-area-bottom, 0px));
+                padding-bottom:calc(220px + var(--safe-area-bottom, 0px));
             }
             .vf-workout-topbar {
                 position:sticky;
@@ -492,6 +492,7 @@
             @php
                 $current = $this->currentExercise;
                 $lastLog = $this->lastLog;
+                $performed = $this->performedExercise;
             @endphp
 
             @if($current)
@@ -504,7 +505,12 @@
                     </select>
                     <header class="vf-exercise-head">
                         <div class="vf-exercise-kicker">Ejercicio {{ $currentExerciseIndex + 1 }}</div>
-                        <h1 class="vf-exercise-title">{{ $current->exercise->title }}</h1>
+                        <h1 class="vf-exercise-title">{{ $performed->title }}</h1>
+
+                        @if($performed->id !== $current->exercise_id)
+                            <p style="margin-top:8px;color:var(--clr-text-muted);font-size:13px;">Original del entrenador: {{ $current->exercise->title }}</p>
+                            <p style="color:var(--clr-primary);font-size:12px;">Reemplazo solo por hoy · se registra el ejercicio realizado.</p>
+                        @endif
 
                         <div class="vf-prescription">
                             <span>{{ $current->sets }} series</span>
@@ -516,15 +522,15 @@
                         <div class="vf-bodyweight-note">Para ejercicios con peso corporal, dejá el campo Peso vacío.</div>
 
                         <div class="vf-exercise-actions">
-                            @if ($current->exercise->gif_url || $current->exercise->video_url)
+                            @if ($performed->gif_url || $performed->video_url)
                                 @php
-                                    $mediaType = $current->exercise->video_url ? 'video' : 'gif';
-                                    $mediaUrl = $current->exercise->video_url ?? $current->exercise->gif_url;
+                                    $mediaType = $performed->video_url ? 'video' : 'gif';
+                                    $mediaUrl = $performed->video_url ?? $performed->gif_url;
                                 @endphp
                                 <button
                                     type="button"
                                     class="vf-small-action"
-                                    x-data="{{ json_encode(['type' => $mediaType, 'url' => $mediaUrl, 'title' => $current->exercise->title]) }}"
+                                    x-data="{{ json_encode(['type' => $mediaType, 'url' => $mediaUrl, 'title' => $performed->title]) }}"
                                     @click="$dispatch('open-tutorial', { type, url, title })"
                                 >
                                     ▶ Tutorial
@@ -536,6 +542,37 @@
                             </a>
                         </div>
                     </header>
+
+                    <section aria-label="Reemplazar ejercicio" style="margin:0 0 18px;padding:14px;border:1px solid var(--clr-border);border-radius:14px;background:var(--clr-surface);">
+                        @if($this->canReplaceExercise)
+                            <button type="button" class="vf-small-action" style="width:100%;" wire:click="toggleAlternatives" aria-expanded="{{ $showAlternatives ? 'true' : 'false' }}" aria-controls="workout-alternatives">
+                                {{ $showAlternatives ? 'Cerrar alternativas' : '¿Máquina ocupada? Cambiar ejercicio' }}
+                            </button>
+                            @if($showAlternatives)
+                                <div id="workout-alternatives" style="margin-top:12px;">
+                                    <p style="color:var(--clr-text-muted);font-size:13px;margin-bottom:12px;">Elegí una alternativa para hoy. Se mantienen las series, repeticiones y descanso del entrenador. Confirmá que se adapten al ejercicio elegido.</p>
+                                    <label for="alternative-search" style="display:block;font-size:13px;margin-bottom:6px;">Buscar alternativa</label>
+                                    <input id="alternative-search" type="search" maxlength="100" wire:model.live.debounce.300ms="alternativeSearch" placeholder="Nombre del ejercicio" style="width:100%;min-height:44px;padding:10px;background:var(--clr-bg);color:var(--clr-text);border:1px solid var(--clr-border);border-radius:10px;">
+                                    <ul style="display:grid;gap:8px;list-style:none;padding:0;margin:12px 0 0;max-height:320px;overflow:auto;">
+                                        @forelse($this->alternatives as $alternative)
+                                            <li wire:key="alternative-{{ $current->id }}-{{ $alternative->id }}">
+                                                <button type="button" wire:click="replaceExercise({{ $alternative->id }})" wire:confirm="¿Usar {{ $alternative->title }} solo por hoy? Se registrará este ejercicio y se mantendrá la prescripción del entrenador." wire:loading.attr="disabled" class="vf-small-action" style="width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px;text-align:left;">
+                                                    <span>{{ $alternative->title }}</span>
+                                                    <span style="font-size:11px;color:var(--clr-text-muted);">{{ $alternative->muscle_group }}{{ $alternative->muscle_group === $current->exercise->muscle_group ? ' · Mismo grupo muscular' : '' }}</span>
+                                                </button>
+                                            </li>
+                                        @empty
+                                            <li style="color:var(--clr-text-muted);font-size:13px;">No hay alternativas con ese nombre.</li>
+                                        @endforelse
+                                    </ul>
+                                    <p style="font-size:11px;color:var(--clr-text-muted);margin-top:10px;">Mismo grupo muscular es una sugerencia; consultá al entrenador si tenés dudas.</p>
+                                </div>
+                            @endif
+                        @else
+                            <p style="color:var(--clr-text-muted);font-size:13px;">Ya guardaste series. El ejercicio no se puede cambiar para no alterar tu historial.</p>
+                        @endif
+                        @error('replacement') <p class="vf-error" role="alert">{{ $message }}</p> @enderror
+                    </section>
 
                     @if($lastLog)
                         <div class="vf-last-log">
@@ -555,6 +592,9 @@
                         </div>
                     @endif
 
+                    @error('workout_context')
+                        <p class="vf-error" role="alert" style="margin-bottom:14px;">{{ $message }}</p>
+                    @enderror
                     <div class="vf-set-list">
                         @for($i = 1; $i <= $current->sets; $i++)
                             @php $isCompleted = $this->isSetCompleted($i); @endphp
@@ -663,8 +703,9 @@
 
             <div
                 class="vf-rest-timer"
+                style="flex-wrap:wrap;"
                 wire:key="rest-timer-{{ $assignment->id }}"
-                x-data="visionFitRestTimer({ storageKey: 'visionfit:rest:{{ auth()->id() }}:{{ $assignment->id }}', defaultSeconds: {{ $this->restSeconds ?: 90 }} })"
+                x-data="visionFitRestTimer({ storageKey: 'visionfit:rest:{{ auth()->id() }}:{{ $assignment->id }}', defaultSeconds: {{ $this->restSeconds ?: 90 }}, assignmentId: {{ $assignment->id }} })"
                 x-cloak
                 @set-logged.window="handleSetLogged($event.detail)"
                 @exercise-changed.window="updateDefaultSeconds($event.detail.rest); window.scrollTo({ top: 0, behavior: 'smooth' })"
@@ -673,6 +714,10 @@
                 <div class="vf-rest-copy">
                     <div class="vf-rest-label" x-text="active ? 'Descanso en curso' : 'Descanso · listo para iniciar'">Descanso</div>
                     <div class="vf-rest-time" role="timer" aria-label="Tiempo de descanso" x-text="displayTime">{{ intdiv(min(3600, max(1, $this->restSeconds ?: 90)), 60) }}:{{ str_pad((string) (min(3600, max(1, $this->restSeconds ?: 90)) % 60), 2, '0', STR_PAD_LEFT) }}</div>
+                </div>
+                <div style="flex:0 0 100%;order:2;font-size:11px;line-height:1.35;">
+                    <button type="button" class="vf-rest-skip" @click="enablePush()" :disabled="pushBusy" x-text="pushBusy ? 'ACTIVANDO…' : 'ACTIVAR AVISOS'">ACTIVAR AVISOS</button>
+                    <p role="status" x-text="pushMessage"></p>
                 </div>
                 <button type="button" class="vf-rest-skip" @click="active ? stop() : start()" x-text="active ? 'OMITIR' : 'INICIAR'">INICIAR</button>
             </div>

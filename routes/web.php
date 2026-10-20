@@ -1,21 +1,23 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Client\DashboardController;
-use App\Http\Controllers\Client\RoutineController;
-use App\Http\Controllers\Client\LogController;
-use App\Http\Controllers\Client\NutritionController;
-use App\Http\Controllers\Client\MealLogController;
-use App\Http\Controllers\Client\ChatController;
+
+use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\Client\AiChatController;
+use App\Http\Controllers\Client\ChatController;
+use App\Http\Controllers\Client\DashboardController;
+use App\Http\Controllers\Client\FreeMealLogController;
+use App\Http\Controllers\Client\LogController;
+use App\Http\Controllers\Client\MealLogController;
+use App\Http\Controllers\Client\MealPhotoController;
+use App\Http\Controllers\Client\NotificationsController;
+use App\Http\Controllers\Client\NutritionController;
 use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
-use App\Http\Controllers\Client\NotificationsController;
-use App\Http\Controllers\Client\FreeMealLogController;
-use App\Http\Controllers\Client\MealPhotoController;
-use App\Http\Controllers\Client\AccountController;
+use App\Http\Controllers\Client\RestAlertController;
+use App\Http\Controllers\Client\RoutineController;
 use App\Http\Controllers\GymJoinController;
-use App\Http\Controllers\RoutinePhotoController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\RoutinePhotoController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -39,6 +41,7 @@ Route::get('dashboard', function () {
     if ($user->role === 'client') {
         return redirect()->route('client.dashboard');
     }
+
     return redirect('/admin');
 })->middleware(['auth'])->name('dashboard');
 
@@ -98,4 +101,11 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
     });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';
+
+Route::middleware(['auth', 'client', 'throttle:120,1'])->prefix('app')->group(function () {
+    Route::get('/push/key', [RestAlertController::class, 'key']);
+    Route::post('/push/subscriptions', [RestAlertController::class, 'subscribe']);
+    Route::delete('/push/subscriptions', [RestAlertController::class, 'unsubscribe']);
+    Route::put('/rest-alerts/{assignment}', [RestAlertController::class, 'schedule']);
+});

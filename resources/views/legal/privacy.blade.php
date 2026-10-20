@@ -44,6 +44,12 @@
     </section>
 
     <section>
+        <h2 class="text-xl font-semibold text-white">Avisos de descanso opcionales</h2>
+        <p>Si activás las notificaciones, guardamos cifrada la suscripción de ese navegador y programamos los avisos de descanso. El servicio de notificaciones del navegador (Apple, Google o Mozilla) recibe mensajes genéricos, sin ejercicios, pesos ni datos de salud. Podés retirar el permiso desde los ajustes del navegador o del teléfono.</p>
+        <p>Los registros de avisos se eliminan después de siete días y las suscripciones sin uso después de noventa días. El cierre de sesión intenta dar de baja los avisos de ese dispositivo. La entrega, el sonido y la vibración dependen de la conexión y de los ajustes del sistema.</p>
+    </section>
+
+    <section>
         <h2 class="text-xl font-semibold text-white">Acceso, almacenamiento y conservación</h2>
         <p>Los entrenadores y administradores autorizados de tu gimnasio pueden consultar la información necesaria para prestarte el servicio. Los datos se alojan en la infraestructura que el operador tenga configurada, actualmente Railway para la aplicación, y se transmiten a los proveedores de IA solo en las funciones indicadas.</p>
         <p>Las conversaciones con la IA se conservan en el historial de la cuenta hasta que uses la opción para borrarlas. Los demás registros permanecen asociados a la cuenta mientras se presta el servicio. Para consultar, corregir o pedir la baja/eliminación de información, contactá al gimnasio y al operador de la plataforma.</p>

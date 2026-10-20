@@ -10,6 +10,7 @@ class ExerciseLog extends Model
     protected $fillable = [
         'assignment_id',
         'routine_day_exercise_id',
+        'exercise_id',
         'set_number',
         'weight',
         'reps',
@@ -20,6 +21,22 @@ class ExerciseLog extends Model
         'logged_at' => 'datetime',
         'weight' => 'decimal:2',
     ];
+
+    public function exercise(): BelongsTo
+    {
+        return $this->belongsTo(Exercise::class)->withTrashed();
+    }
+
+    public function scopeForPerformedExercise($query, int $exerciseId)
+    {
+        return $query->where(function ($query) use ($exerciseId) {
+            $query->where('exercise_id', $exerciseId)
+                ->orWhere(function ($legacy) use ($exerciseId) {
+                    $legacy->whereNull('exercise_id')
+                        ->whereHas('routineDayExercise', fn ($row) => $row->where('exercise_id', $exerciseId));
+                });
+        });
+    }
 
     public function assignment(): BelongsTo
     {

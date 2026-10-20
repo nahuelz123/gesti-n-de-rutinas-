@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\Exercise;
 use App\Models\ExerciseLog;
+use App\Models\WorkoutExerciseReplacement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -61,7 +62,7 @@ class RoutineController extends Controller
         // Todo el historial para el gráfico y la tabla de progreso
         $logs = ExerciseLog::query()
             ->whereHas('assignment', fn ($q) => $q->where('client_id', $user->id))
-            ->whereHas('routineDayExercise', fn ($q) => $q->where('exercise_id', $exercise->id))
+            ->forPerformedExercise($exercise->id)
             ->orderByDesc('logged_at')
             ->take(100)
             ->get();
@@ -80,8 +81,16 @@ class RoutineController extends Controller
             $assignment = Assignment::query()->where('client_id', $user->id)->findOrFail($context['assignment']);
             abort_unless($assignment->routine->days()
                 ->whereKey($context['day'])
-                ->whereHas('exercises', fn ($query) => $query->whereKey($context['routine_exercise'])->where('exercise_id', $exercise->id))
+                ->whereHas('exercises', fn ($query) => $query->whereKey($context['routine_exercise']))
                 ->exists(), 404);
+
+            $slot = $assignment->routine->days()->findOrFail($context['day'])->exercises()->findOrFail($context['routine_exercise']);
+            $actualId = ExerciseLog::query()->where('assignment_id', $assignment->id)
+                ->where('routine_day_exercise_id', $slot->id)->whereDate('logged_at', today())->first();
+            $actualId = $actualId ? ($actualId->exercise_id ?? $slot->exercise_id)
+                : (WorkoutExerciseReplacement::query()->where('assignment_id', $assignment->id)
+                    ->where('routine_day_exercise_id', $slot->id)->whereDate('performed_on', today())->value('exercise_id') ?? $slot->exercise_id);
+            abort_unless((int) $actualId === $exercise->id, 404);
 
             $parameters = ['day' => $context['day'], 'exercise' => $context['routine_exercise']];
             if ($assignment->status === 'active' && $assignment->end_date === null) {
