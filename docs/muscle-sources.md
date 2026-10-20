@@ -8,6 +8,12 @@ Revisión: 20 de octubre de 2026. El mapa simplifica grupos musculares para visu
 
 Los alias se comparan completos; no se infiere una anatomía por una coincidencia parcial como `curl`, `press` o `remo`. No se añaden secundarios a todos los ejercicios de una región.
 
+## Variantes y vista diaria
+
+Se incluyen alias completos de press plano/inclinado con máquina, Smith, barra o mancuernas; press militar; remos/jalones; y press cerrado. Se conservan las categorías concretas del catálogo y se amplía la correspondencia editorial a esas variantes reconocidas. Referencias adicionales: [ACE, press cerrado](https://www.acefitness.org/resources/everyone/exercise-library/189/seated-close-grip-chest-press/), [ACE, press de hombros](https://www.acefitness.org/resources/everyone/exercise-library/186/seated-shoulder-press/), [ACE, mecánica de hombros](https://www.acefitness.org/continuing-education/certified/september-2025/8951/a-pro-s-guide-to-muscle-mechanics-the-shoulders/).
+
+La vista «Entrenamiento de hoy» reúne los ejercicios efectivamente registrados por el cliente en la fecha local de la app, incluidos reemplazos. No representa el ejercicio pendiente ni la rutina planificada. Los músculos principales de cualquier ejercicio del día prevalecen en rojo sobre el trabajo secundario ámbar. Cada ejercicio registrado también puede consultarse por separado. No se convierte el mapa en una medición de activación o recuperación.
+
 ## Correspondencias verificadas
 
 | Correspondencia | Fuente primaria oficial | Uso en la aplicación |

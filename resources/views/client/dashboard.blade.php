@@ -410,6 +410,10 @@
                 <h2 class="vf-section-title">Accesos rápidos</h2>
 
                 <div class="vf-quick-grid">
+                    <a class="vf-quick" href="{{ route(($isDemo ?? false) ? 'experience.demo.activity' : 'client.activities.index') }}">
+                        <span class="vf-quick-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h5l3-8 4 16 3-8h5"/></svg></span>
+                        <strong>Cardio y gasto</strong>
+                    </a>
                     @if(config('experience.enabled'))
                         <a class="vf-quick" href="{{ route(($isDemo ?? false) ? 'experience.demo.character' : 'client.character') }}">
                             <span class="vf-quick-icon">

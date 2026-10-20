@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Models\WorkoutExerciseReplacement;
 use App\Services\TrainingExperience;
 use App\Support\ExperienceDemo;
-use App\Support\MuscleMap;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -76,6 +75,8 @@ class ExperienceController extends Controller
             }
         }
 
+        $experience = app(TrainingExperience::class)->forClient($client);
+
         return [
             'isDemo' => false,
             'displayName' => $client->name,
@@ -91,9 +92,9 @@ class ExperienceController extends Controller
             'nextExercise' => ! $workoutCompleted && $exercise && $slot ? [
                 'title' => $exercise->title, 'sets' => $slot->sets, 'reps' => $slot->reps, 'rest' => $slot->rest,
             ] : null,
-            'initialMuscleMap' => $exercise ? MuscleMap::forExercise($exercise) : ['primary' => [], 'secondary' => [], 'label' => 'Tu mapa de actividad', 'available' => false],
+            'initialMuscleMap' => $experience['today_map'],
             'demoExercises' => [],
-            'experience' => app(TrainingExperience::class)->forClient($client),
+            'experience' => $experience,
             'weekActivity' => $this->weekActivity($client),
         ];
     }

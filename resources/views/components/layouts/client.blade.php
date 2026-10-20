@@ -73,6 +73,7 @@
                     </button>
 
                     <div class="app-nav-account-menu" id="navAccountMenu">
+                        <a href="{{ route('client.activities.index') }}" class="app-nav-account-item">Cardio y gasto</a>
                         @if(config('experience.enabled'))
                             <a href="{{ $characterUrl }}" class="app-nav-account-item" @if(request()->routeIs('client.character')) aria-current="page" @endif>Mi personaje</a>
                         @endif

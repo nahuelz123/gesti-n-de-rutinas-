@@ -4,10 +4,13 @@
     $maximumMuscleSets = max([1, ...array_column($experience['muscle_activity'], 'sets')]);
     $avatarOptions = ['generic' => ['Genérica', 'Diseño esencial'], 'male' => ['Masculina', 'Marco amplio'], 'female' => ['Femenina', 'Marco estilizado']];
     $themeOptions = ['ion' => ['VisionFit', 'Rojo clásico', 1], 'solar' => ['Fuego', 'Rojo cálido', 3], 'nova' => ['Rubí', 'Rojo rosado', 5]];
+    $todayMap = $experience['today_map'] ?? $initialMuscleMap;
+    $mapOptions = [['id' => 'today', 'title' => 'Entrenamiento de hoy'] + $todayMap, ...($isDemo ? $demoExercises : $experience['today_exercises'])];
+    $initialMuscleMap = $todayMap;
 @endphp
 
 <x-layouts.experience :is-demo="$isDemo" :display-name="$displayName">
-    <div class="vf-experience vf-character-page" x-data="visionFitExperience({ storageKey: @js($avatarStorageKey), level: @js($experience['level']), isDemo: @js($isDemo), initialMuscleMap: @js($initialMuscleMap), demoExercises: @js($demoExercises) })" :data-theme="theme">
+    <div class="vf-experience vf-character-page" x-data="visionFitExperience({ storageKey: @js($avatarStorageKey), level: @js($experience['level']), isDemo: @js($isDemo), initialMuscleMap: @js($initialMuscleMap), mapOptions: @js($mapOptions), initialExerciseId: 'today' })" :data-theme="theme">
         @if($isDemo)
             <div class="vf-demo-strip"><span class="vf-demo-label"><i aria-hidden="true"></i> Modo demo</span><span>Personaje e historial ficticios. La personalización es local.</span></div>
         @endif
@@ -18,9 +21,9 @@
             <section class="vf-panel vf-avatar-card vf-character-avatar" aria-label="Tu personaje y nivel">
                 <div class="vf-panel-heading"><div><p class="vf-eyebrow">{{ $isDemo ? 'Atleta de ejemplo' : 'Tu identidad en VisionFit' }}</p><h2>{{ $displayName }}</h2></div><span class="vf-level-chip"><span>NV</span> {{ str_pad((string) $experience['level'], 2, '0', STR_PAD_LEFT) }}</span></div>
                 <x-client.muscle-avatar :primary="$initialMuscleMap['primary']" :secondary="$initialMuscleMap['secondary']" :label="$initialMuscleMap['label']" :available="$initialMuscleMap['available']" :inherit-state="true" />
-                @if($isDemo)
-                    <div class="vf-character-exercise"><label for="vf-character-exercise">Explorá el mapa</label><select id="vf-character-exercise" :value="selectedExerciseId" @change="selectExercise($event.target.value)">@foreach($demoExercises as $exercise)<option value="{{ $exercise['id'] }}">{{ $exercise['title'] }}</option>@endforeach</select></div>
-                @endif
+                <div class="vf-character-exercise"><label for="vf-character-exercise">Mapa del entrenamiento</label><select id="vf-character-exercise" :value="selectedExerciseId" @change="selectExercise($event.target.value)">@foreach($mapOptions as $exercise)<option value="{{ $exercise['id'] }}">{{ $exercise['title'] }}</option>@endforeach</select></div>
+                <p class="vf-footnote">Hoy reúne las series que registraste, incluidos los reemplazos. Rojo: trabajo principal; ámbar: secundario. Un músculo trabajado directamente tiene prioridad en rojo.</p>
+                @if(!$isDemo && !$experience['today_sets'])<p class="vf-footnote">Todavía no registraste series hoy. El mapa se completa al guardar tu entrenamiento.</p>@endif
                 <div class="vf-level-progress"><div class="vf-progress-heading"><strong>Nivel {{ $experience['level'] }}</strong><span class="vf-mono">{{ $experience['level_xp'] }} <span class="vf-muted">/ {{ $experience['next_level_xp'] }} XP</span></span></div><div class="vf-xp-track" role="progressbar" aria-label="Experiencia del nivel actual" aria-valuenow="{{ $experience['level_xp'] }}" aria-valuemin="0" aria-valuemax="{{ $experience['next_level_xp'] }}"><span style="width: {{ $levelPercent }}%"></span></div><p>{{ $experience['next_level_xp'] - $experience['level_xp'] }} XP para tu próximo nivel. Cada día activo suma 100.</p></div>
             </section>
 

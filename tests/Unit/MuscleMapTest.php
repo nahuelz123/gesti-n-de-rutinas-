@@ -74,6 +74,30 @@ class MuscleMapTest extends TestCase
         $this->assertSame(['glutes'], $squat['secondary']);
     }
 
+    #[DataProvider('compoundVariants')]
+    public function test_common_gym_variants_include_their_secondary_muscles(string $title, string $group, array $secondary): void
+    {
+        $map = MuscleMap::forExercise(new Exercise(['title' => $title, 'muscle_group' => $group]));
+        $this->assertSame($secondary, $map['secondary']);
+    }
+
+    public static function compoundVariants(): array
+    {
+        return [
+            ['Press banca en máquina', 'Pecho', ['shoulders', 'triceps']],
+            ['Press pecho plano en máquina', 'Pecho', ['shoulders', 'triceps']],
+            ['Press inclinado con mancuernas', 'Pecho', ['shoulders', 'triceps']],
+            ['Smith bench press', 'Pecho', ['shoulders', 'triceps']],
+            ['Press militar en máquina', 'Hombros', ['triceps']],
+            ['Press militar con mancuernas', 'Hombros', ['triceps']],
+            ['Remo en máquina', 'Espalda', ['biceps']],
+            ['Jalón al pecho', 'Espalda', ['biceps']],
+            ['Press cerrado con barra', 'Tríceps', ['chest', 'shoulders']],
+            ['Cruce en polea', 'Pecho', []],
+            ['Elevaciones laterales', 'Hombros', []],
+        ];
+    }
+
     public function test_romanian_deadlift_preserves_concrete_catalog_group_and_maps_its_known_partner(): void
     {
         $legs = MuscleMap::forExercise(new Exercise(['title' => 'Peso muerto rumano', 'muscle_group' => 'piernas']));
