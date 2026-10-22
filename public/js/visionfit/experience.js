@@ -11,7 +11,9 @@
         const level = Math.max(1, Math.floor(Number(config.level) || 1));
         const isDemo = config.isDemo === true;
         const storageKey = typeof config.storageKey === 'string' ? config.storageKey.trim() : '';
-        const exercises = Array.isArray(config.demoExercises) ? config.demoExercises.filter(exercise => exercise && exercise.id != null) : [];
+        const canSelectMap = isDemo || Array.isArray(config.mapOptions);
+        const providedMaps = config.mapOptions ?? config.demoExercises;
+        const exercises = Array.isArray(providedMaps) ? providedMaps.filter(exercise => exercise && exercise.id != null) : [];
         const limit = Math.min(3, Math.max(1, Math.floor(Number(config.demoSetLimit) || 3)));
 
         return {
@@ -37,7 +39,7 @@
                     if (saved && typeof saved.showHomeProgress === 'boolean') this.showHomeProgress = saved.showHomeProgress;
                 } catch (_) { /* Appearance remains usable when local storage is unavailable. */ }
                 this.applyMap(config.initialMuscleMap || {});
-                if (isDemo && exercises.length) {
+                if (canSelectMap && exercises.length) {
                     const initial = exercises.find(exercise => String(exercise.id) === String(config.initialExerciseId)) || exercises[0];
                     this.selectExercise(initial.id);
                 }
@@ -84,7 +86,7 @@
                 return this.secondary.includes(id) ? 'is-secondary' : '';
             },
             selectExercise(id) {
-                if (!isDemo) return false;
+                if (!canSelectMap) return false;
                 const exercise = exercises.find(item => String(item.id) === String(id));
                 if (!exercise) return false;
                 this.selectedExerciseId = String(exercise.id);

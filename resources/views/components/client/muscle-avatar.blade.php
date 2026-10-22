@@ -121,5 +121,5 @@
         <span><i class="vf-legend-primary" aria-hidden="true"></i> Principal</span>
         <span><i class="vf-legend-secondary" aria-hidden="true"></i> Secundario</span>
     </div>
-    <p class="vf-map-unavailable" x-show="!mapAvailable" @if($available && count($primary) + count($secondary) > 0) x-cloak @endif>Este ejercicio todavía no tiene un mapa muscular. Tus series se registran igual.</p>
+    <p class="vf-map-unavailable" x-show="!mapAvailable" @if($available && count($primary) + count($secondary) > 0) x-cloak @endif>No hay un mapa disponible para esta selección. Guardá series de ejercicios con grupos musculares conocidos para verlos acá.</p>
 </div>

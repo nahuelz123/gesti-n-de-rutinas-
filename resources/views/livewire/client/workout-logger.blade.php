@@ -737,6 +737,7 @@
             <p style="font-size:14px;line-height:1.55;color:var(--clr-text-muted);margin-bottom:24px;max-width:320px;">
                 Listo. Tus series quedaron registradas y ya podés seguir comparando tu progreso en la próxima sesión.
             </p>
+            <a href="{{ route('client.activities.index') }}" class="client-btn client-btn-secondary" style="text-decoration:none;width:100%;max-width:320px;margin-bottom:12px;">Registrar cardio o tiempo de fuerza</a>
 
             @if($assignment->status === 'completed' && $assignment->end_date && \Carbon\Carbon::parse($assignment->end_date)->isToday())
                 <a href="{{ route('client.routines.history') }}" style="text-decoration:none;width:100%;max-width:320px;">

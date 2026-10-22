@@ -102,6 +102,7 @@ class ExperiencePagesTest extends TestCase
             ->call('selectDay', $slot->routine_day_id)
             ->assertDontSee('Músculos del ejercicio')
             ->call('replaceExercise', $replacement->id)
+            ->set('inputs.1.weight', '10')->set('inputs.1.reps', '10')->call('logSet', 1)
             ->assertSee('Curl de bíceps')
             ->assertSee('Descanso')
             ->assertDontSee('vf-muscle-avatar');

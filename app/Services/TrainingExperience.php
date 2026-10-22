@@ -25,6 +25,7 @@ class TrainingExperience
         $recent = [];
         $totalSets = 0;
         $todaySets = 0;
+        $todayExercises = [];
 
         // Joining includes archived assignments/exercises without loading a relation for every set.
         // COALESCE falls back only for legacy logs whose performed exercise was not stored.
@@ -69,6 +70,9 @@ class TrainingExperience
                 $map = $maps[$exerciseId] ??= MuscleMap::forExercise(new Exercise([
                     'title' => $log->title, 'muscle_group' => $log->muscle_group,
                 ]));
+                if ($date === $today) {
+                    $todayExercises[$exerciseId] = ['id' => 'exercise-'.$exerciseId, 'title' => $log->title] + $map;
+                }
                 foreach (array_unique([...$map['primary'], ...$map['secondary']]) as $muscle) {
                     $muscleSets[$muscle] = ($muscleSets[$muscle] ?? 0) + 1;
                 }
@@ -112,6 +116,8 @@ class TrainingExperience
             'muscle_activity' => $muscleActivity,
             'achievements' => $this->achievements($activeDays, $activeWeeks, count($muscles)),
             'recent_exercises' => $recent,
+            'today_map' => MuscleMap::combine(array_values($todayExercises), 'Entrenamiento de hoy'),
+            'today_exercises' => array_values($todayExercises),
         ];
     }
 

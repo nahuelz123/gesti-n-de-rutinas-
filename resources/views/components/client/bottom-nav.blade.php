@@ -10,6 +10,8 @@
             'client.account',
             'client.notifications',
             'client.character',
+            'client.activities',
+            'experience.demo.activity',
             'experience.demo.character',
         ]);
         $mobileUnread = $isDemo ? 0 : auth()->user()->unreadNotifications()->count();
@@ -49,6 +51,10 @@
     <div style="width:40px; height:4px; background:var(--clr-border); border-radius:4px; margin:0 auto 20px auto;"></div>
     
     <div style="display:flex; flex-direction:column; gap:8px;">
+        <a href="{{ route($isDemo ? 'experience.demo.activity' : 'client.activities.index') }}" class="app-nav-account-item" @if(request()->routeIs('client.activities.*', 'experience.demo.activity')) aria-current="page" @endif>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h5l3-8 4 16 3-8h5"/></svg>
+            Cardio y gasto
+        </a>
         @if(config('experience.enabled'))
             <a href="{{ route($isDemo ? 'experience.demo.character' : 'client.character') }}" class="app-nav-account-item" @if(request()->routeIs('client.character', 'experience.demo.character')) aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>

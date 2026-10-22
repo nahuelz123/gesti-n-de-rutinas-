@@ -58,7 +58,33 @@ class MuscleMap
     private const CHEST_PRESSES = [
         'press banca', 'press banca con barra', 'barbell bench press', 'bench press',
         'press banca con mancuernas', 'dumbbell bench press',
+        'press banca plano', 'press banca en maquina', 'press pecho plano en maquina',
+        'press pecho en maquina', 'press plano en maquina', 'plano en maquina',
+        'press inclinado', 'press inclinado con barra', 'press inclinado barra',
+        'press inclinado con mancuernas', 'press inclinado mancuernas',
+        'press inclinado en maquina', 'press inclinado en smith',
+        'press plano en smith', 'press plano en smit', 'plano en smith', 'plano en smit',
+        'smith bench press', 'smith incline bench press', 'lever chest press',
+        'lever incline chest press', 'barbell incline bench press', 'dumbbell incline bench press',
     ];
+
+    private const SHOULDER_PRESSES = [
+        'press militar', 'press militar con barra', 'press militar con mancuernas',
+        'press militar mancuernas', 'press militar en maquina', 'press militar en smith',
+        'press militar en smit', 'press de hombros', 'press de hombros en maquina',
+        'press hombros en maquina', 'dumbbell shoulder press', 'lever shoulder press',
+        'smith shoulder press', 'smith standing military press', 'military press',
+    ];
+
+    private const BACK_PULLS = [
+        'jalon al pecho', 'jalon al pecho agarre neutro', 'lat pulldown',
+        'remo con barra', 'remo barra', 'remo en maquina', 'remo maquina',
+        'remo t', 'remo en t', 'remo unilateral', 'remo polea', 'remo en polea',
+        'remo con mancuerna', 'remo mancuerna', 'cable seated row',
+        'lever t bar row', 'barbell bent over row',
+    ];
+
+    private const CLOSE_GRIP_PRESSES = ['press cerrado', 'press cerrado con barra', 'press plano cerrado'];
 
     /** @return array<string, string> */
     public static function labels(): array
@@ -101,6 +127,10 @@ class MuscleMap
         // Complete curated names only; sources and editorial limits live in docs/muscle-sources.md.
         $secondary = match (true) {
             $primary === 'chest' && in_array($title, self::CHEST_PRESSES, true) => ['shoulders', 'triceps'],
+            $primary === 'chest' && in_array($title, self::CLOSE_GRIP_PRESSES, true) => ['shoulders', 'triceps'],
+            $primary === 'shoulders' && in_array($title, self::SHOULDER_PRESSES, true) => ['triceps'],
+            $primary === 'back' && in_array($title, self::BACK_PULLS, true) => ['biceps'],
+            $primary === 'triceps' && in_array($title, self::CLOSE_GRIP_PRESSES, true) => ['chest', 'shoulders'],
             $primary === 'quadriceps' && in_array($title, self::SQUATS_AND_LUNGES, true) => ['glutes'],
             $primary === 'hamstrings' && in_array($title, self::ROMANIAN_DEADLIFTS, true) => ['glutes'],
             $primary === 'glutes' && in_array($title, self::ROMANIAN_DEADLIFTS, true) => ['hamstrings'],
@@ -111,5 +141,17 @@ class MuscleMap
             'primary' => [$primary], 'secondary' => $secondary,
             'label' => $labels[$primary], 'available' => true,
         ];
+    }
+
+    public static function combine(array $maps, string $label): array
+    {
+        $primary = array_merge([], ...array_column($maps, 'primary'));
+        $secondary = array_merge([], ...array_column($maps, 'secondary'));
+        $known = array_keys(self::labels());
+        $primary = array_values(array_intersect($known, $primary));
+        $secondary = array_values(array_diff(array_intersect($known, $secondary), $primary));
+
+        return ['primary' => $primary, 'secondary' => $secondary, 'label' => $label,
+            'available' => $primary !== [] || $secondary !== []];
     }
 }

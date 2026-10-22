@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Client\AccountController;
+use App\Http\Controllers\Client\ActivityController;
 use App\Http\Controllers\Client\AiChatController;
 use App\Http\Controllers\Client\ChatController;
 use App\Http\Controllers\Client\DashboardController;
@@ -29,6 +30,7 @@ Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms
 Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
 Route::get('/experiencia', [ExperienceController::class, 'demo'])->name('experience.demo');
 Route::get('/experiencia/personaje', [ExperienceController::class, 'demoCharacter'])->name('experience.demo.character');
+Route::get('/experiencia/actividad', [ActivityController::class, 'demo'])->name('experience.demo.activity');
 
 // iOS may request this legacy icon path automatically.
 Route::redirect('/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', 302);
@@ -59,6 +61,11 @@ Route::middleware(['auth', 'client', 'no-back'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/personaje', [ExperienceController::class, 'character'])->name('character');
+        Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+        Route::post('/activities', [ActivityController::class, 'store'])->middleware('throttle:60,1')->name('activities.store');
+        Route::get('/activities/{activityLog}/edit', [ActivityController::class, 'edit'])->name('activities.edit');
+        Route::put('/activities/{activityLog}', [ActivityController::class, 'update'])->name('activities.update');
+        Route::delete('/activities/{activityLog}', [ActivityController::class, 'destroy'])->name('activities.destroy');
         Route::get('/routines/active', [RoutineController::class, 'active'])->name('routines.active');
         Route::get('/routines/history', [RoutineController::class, 'history'])->name('routines.history');
         Route::get('/routines/{assignment}', [RoutineController::class, 'show'])->name('routines.show');

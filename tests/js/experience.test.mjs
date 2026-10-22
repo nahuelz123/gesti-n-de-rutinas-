@@ -30,6 +30,16 @@ const exercises = [
     { id: 'unknown', title: 'Ejercicio sin mapa', primary: [], secondary: [], available: false },
 ];
 
+test('real accounts can inspect only the maps supplied for their own recorded exercises', () => {
+    const state = browser().create({ mapOptions: exercises, initialExerciseId: 'press', isDemo: false });
+    assert.equal(state.muscleClass('chest'), 'is-primary');
+    assert.equal(state.muscleClass('triceps'), 'is-secondary');
+    assert.equal(state.selectExercise('squat'), true);
+    assert.equal(state.muscleClass('quadriceps'), 'is-primary');
+    assert.equal(state.selectExercise('foreign'), false);
+    assert.equal(state.simulateSet(), false);
+});
+
 test('supports the three allowed avatars and rejects arbitrary appearance values', () => {
     const state = browser().create();
     assert.equal(state.avatar, 'generic');

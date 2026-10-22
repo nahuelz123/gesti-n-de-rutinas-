@@ -56,7 +56,7 @@ class TrainingExperienceTest extends TestCase
         $this->assertSame([
             'xp', 'level', 'level_xp', 'next_level_xp', 'level_percent', 'active_days',
             'active_weeks', 'total_sets', 'today_sets', 'week_days', 'muscles',
-            'muscle_activity', 'achievements', 'recent_exercises',
+            'muscle_activity', 'achievements', 'recent_exercises', 'today_map', 'today_exercises',
         ], array_keys($experience));
         foreach (['xp', 'level_xp', 'level_percent', 'active_days', 'active_weeks', 'total_sets', 'today_sets', 'week_days'] as $key) {
             $this->assertSame(0, $experience[$key], $key);
@@ -99,6 +99,25 @@ class TrainingExperienceTest extends TestCase
 
         $log->update(['weight' => 350, 'reps' => 100]);
         $this->assertSame(200, $this->experience()['xp']);
+    }
+
+    public function test_today_map_combines_recorded_muscles_and_excludes_other_days(): void
+    {
+        $this->exercise->update(['title' => 'Press banca en máquina', 'muscle_group' => 'Pecho']);
+        $this->log();
+        $map = $this->experience()['today_map'];
+        $this->assertSame(['chest'], $map['primary']);
+        $this->assertSame(['shoulders', 'triceps'], $map['secondary']);
+        foreach ([['Press militar en máquina', 'Hombros'], ['Tríceps soga', 'Tríceps']] as [$title, $group]) {
+            $exercise = Exercise::create(['title' => $title, 'muscle_group' => $group, 'is_global' => true]);
+            $this->log(['exercise_id' => $exercise->id]);
+        }
+        $legs = Exercise::create(['title' => 'Sentadilla', 'muscle_group' => 'Piernas', 'is_global' => true]);
+        $this->log(['exercise_id' => $legs->id, 'logged_at' => now()->subDay()]);
+        $experience = $this->experience();
+        $this->assertSame(['chest', 'shoulders', 'triceps'], $experience['today_map']['primary']);
+        $this->assertSame([], $experience['today_map']['secondary']);
+        $this->assertCount(3, $experience['today_exercises']);
     }
 
     public function test_invalid_and_future_sets_are_excluded_while_bodyweight_is_valid(): void
