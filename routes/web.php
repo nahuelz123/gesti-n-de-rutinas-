@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginSessionController;
 use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\Client\ActivityController;
 use App\Http\Controllers\Client\AiChatController;
@@ -28,6 +29,7 @@ Route::get('/', function () {
 Route::get('/privacidad', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::get('/auth/session', LoginSessionController::class)->name('login.session');
 Route::get('/experiencia', [ExperienceController::class, 'demo'])->name('experience.demo');
 Route::get('/experiencia/personaje', [ExperienceController::class, 'demoCharacter'])->name('experience.demo.character');
 Route::get('/experiencia/actividad', [ActivityController::class, 'demo'])->name('experience.demo.activity');

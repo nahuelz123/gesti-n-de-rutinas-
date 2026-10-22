@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -28,23 +28,24 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->singleton(LoginResponse::class, function () {
-        return new class implements LoginResponse {
-            public function toResponse($request)
+            return new class implements LoginResponse
             {
-                $user = $request->user();
+                public function toResponse($request)
+                {
+                    $user = $request->user();
 
-                if ($user->role === 'client') {
-                    return redirect('/app');
+                    if ($user->role === 'client') {
+                        return redirect('/app');
+                    }
+
+                    if (in_array($user->role, ['super_admin', 'admin', 'coach'])) {
+                        return redirect('/admin');
+                    }
+
+                    return redirect('/');
                 }
-
-                if (in_array($user->role, ['super_admin', 'admin', 'coach'])) {
-                    return redirect('/admin');
-                }
-
-                return redirect('/');
-            }
-        };
-    });
+            };
+        });
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
@@ -63,25 +64,28 @@ class FortifyServiceProvider extends ServiceProvider
      * Configure Fortify views.
      */
     private function configureViews(): void
-{
-    Fortify::loginView(function () {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->role === 'client') {
-                return redirect()->route('client.dashboard');
-            }
-            return redirect('/admin');
-        }
-        return view('livewire.auth.login');
-    });
+    {
+        Fortify::loginView(function () {
+            if (auth()->check()) {
+                $user = auth()->user();
+                if ($user->role === 'client') {
+                    return redirect()->route('client.dashboard');
+                }
 
-    Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
-    Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
-    Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
-    Fortify::registerView(fn () => view('livewire.auth.register'));
-    Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
-    Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
-}
+                return redirect('/admin');
+            }
+
+            return response()->view('livewire.auth.login')->header('Cache-Control', 'private, no-store');
+        });
+
+        Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
+        Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
+        Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
+        Fortify::registerView(fn () => view('livewire.auth.register'));
+        Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
+        Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
+    }
+
     /**
      * Configure rate limiting.
      */
