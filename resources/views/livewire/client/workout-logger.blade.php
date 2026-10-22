@@ -418,6 +418,16 @@
                 color:var(--clr-primary);
                 font-size:18px;
             }
+            .vf-rest-timer.vf-rest-timer--minimized {
+                left:auto;
+                right:16px;
+                transform:none;
+                width:auto;
+                max-width:calc(100% - 32px);
+                border-radius:999px;
+                padding:4px;
+                gap:0;
+            }
             .vf-rest-copy { flex:1; min-width:0; }
             .vf-rest-label {
                 color:var(--clr-text-muted);
@@ -703,6 +713,7 @@
 
             <div
                 class="vf-rest-timer"
+                :class="{ 'vf-rest-timer--minimized': minimized }"
                 style="flex-wrap:wrap;"
                 wire:key="rest-timer-{{ $assignment->id }}"
                 x-data="visionFitRestTimer({ storageKey: 'visionfit:rest:{{ auth()->id() }}:{{ $assignment->id }}', defaultSeconds: {{ $this->restSeconds ?: 90 }}, assignmentId: {{ $assignment->id }} })"
@@ -710,16 +721,20 @@
                 @set-logged.window="handleSetLogged($event.detail)"
                 @exercise-changed.window="updateDefaultSeconds($event.detail.rest); window.scrollTo({ top: 0, behavior: 'smooth' })"
             >
-                <div class="vf-rest-icon" aria-hidden="true">⏱</div>
-                <div class="vf-rest-copy">
+                <button x-show="minimized" x-ref="miniTimer" type="button" class="vf-rest-skip" style="min-height:44px;padding:10px 16px;" @click="expand(); $nextTick(() => $refs.hideTimer.focus())" aria-label="Mostrar cronómetro de descanso">
+                    ⏱ <span x-text="active ? displayTime : 'Descanso'"></span>
+                </button>
+                <div x-show="!minimized" class="vf-rest-icon" aria-hidden="true">⏱</div>
+                <div x-show="!minimized" class="vf-rest-copy">
                     <div class="vf-rest-label" x-text="active ? 'Descanso en curso' : 'Descanso · listo para iniciar'">Descanso</div>
                     <div class="vf-rest-time" role="timer" aria-label="Tiempo de descanso" x-text="displayTime">{{ intdiv(min(3600, max(1, $this->restSeconds ?: 90)), 60) }}:{{ str_pad((string) (min(3600, max(1, $this->restSeconds ?: 90)) % 60), 2, '0', STR_PAD_LEFT) }}</div>
                 </div>
-                <div style="flex:0 0 100%;order:2;font-size:11px;line-height:1.35;">
+                <div x-show="!minimized" style="flex:0 0 100%;order:2;font-size:11px;line-height:1.35;">
                     <button type="button" class="vf-rest-skip" @click="enablePush()" :disabled="pushBusy" x-text="pushBusy ? 'ACTIVANDO…' : 'ACTIVAR AVISOS'">ACTIVAR AVISOS</button>
                     <p role="status" x-text="pushMessage"></p>
                 </div>
-                <button type="button" class="vf-rest-skip" @click="active ? stop() : start()" x-text="active ? 'OMITIR' : 'INICIAR'">INICIAR</button>
+                <button x-show="!minimized" type="button" class="vf-rest-skip" @click="active ? stop() : start()" x-text="active ? 'OMITIR' : 'INICIAR'">INICIAR</button>
+                <button x-show="!minimized" x-ref="hideTimer" type="button" class="vf-rest-skip" style="min-width:44px;min-height:44px;font-size:22px;" @click="minimize(); $nextTick(() => $refs.miniTimer.focus())" aria-label="Ocultar cronómetro sin detener el descanso" title="Ocultar cronómetro">×</button>
             </div>
         </div>
 

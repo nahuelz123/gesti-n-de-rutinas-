@@ -17,7 +17,9 @@ class ActivityLogRequest extends FormRequest
     {
         $rules = ['performed_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:2000-01-01', 'before_or_equal:today'],
             'activity_key' => ['required', Rule::in(array_keys(ActivityCatalog::all()))],
-            'duration_minutes' => ['required', 'integer', 'min:1', 'max:600'],
+            'duration_minutes' => ['exclude_if:activity_key,walk_steps', 'required', 'integer', 'min:1', 'max:600'],
+            'step_count' => ['exclude_unless:activity_key,walk_steps', 'required', 'integer', 'min:1', 'max:60000'],
+            'untracked_steps' => ['exclude_unless:activity_key,walk_steps', 'required', 'accepted'],
             'body_weight' => ['required', 'numeric', 'min:20', 'max:400'],
             'notes' => ['nullable', 'string', 'max:500']];
         if ($this->isMethod('post')) {
@@ -30,6 +32,7 @@ class ActivityLogRequest extends FormRequest
     public function attributes(): array
     {
         return ['performed_on' => 'fecha', 'activity_key' => 'actividad',
-            'duration_minutes' => 'duración en minutos', 'body_weight' => 'peso corporal', 'notes' => 'notas'];
+            'duration_minutes' => 'duración en minutos', 'body_weight' => 'peso corporal', 'notes' => 'notas',
+            'step_count' => 'cantidad de pasos', 'untracked_steps' => 'confirmación de pasos adicionales'];
     }
 }

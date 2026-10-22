@@ -11,7 +11,8 @@ class ActivitySummary
     public static function emptyTotals(): array
     {
         return ['cardio_kcal' => 0.0, 'strength_kcal' => 0.0, 'total_kcal' => 0.0,
-            'cardio_minutes' => 0, 'strength_minutes' => 0, 'record_count' => 0];
+            'cardio_minutes' => 0, 'strength_minutes' => 0, 'record_count' => 0, 'steps' => 0,
+            'estimated_strength_sets' => 0, 'unestimated_strength_sets' => 0];
     }
 
     public function forClient(User $client, CarbonImmutable $date): array
@@ -23,7 +24,7 @@ class ActivitySummary
         $rows = ActivityLog::query()->where('client_id', $client->id)
             ->whereBetween('performed_on', [$date->startOfWeek()->startOfDay(), $date->endOfWeek()->endOfDay()])
             ->where('performed_on', '<=', now()->endOfDay())
-            ->selectRaw('performed_on, category, SUM(active_kcal) AS kcal, SUM(duration_minutes) AS minutes, COUNT(*) AS records')
+            ->selectRaw('performed_on, category, SUM(active_kcal) AS kcal, SUM(duration_minutes) AS minutes, COUNT(*) AS records, SUM(COALESCE(step_count, 0)) AS steps')
             ->groupBy('performed_on', 'category')->get();
         foreach ($rows as $row) {
             $day = $row->performed_on->toDateString();
@@ -33,6 +34,21 @@ class ActivitySummary
             $days[$day][$row->category.'_kcal'] = (float) $row->kcal;
             $days[$day][$row->category.'_minutes'] = (int) $row->minutes;
             $days[$day]['record_count'] += (int) $row->records;
+            $days[$day]['steps'] += (int) $row->steps;
+            $days[$day]['total_kcal'] = round($days[$day]['cardio_kcal'] + $days[$day]['strength_kcal'], 2);
+        }
+        foreach (app(AutomaticStrengthEnergy::class)->forClient($client, $date) as $day => $estimate) {
+            if (! isset($days[$day]) || $days[$day]['strength_minutes'] > 0) {
+                continue; // Recorded strength duration replaces the model for the entire day.
+            }
+            if ($estimate['active_kcal'] === null) {
+                $days[$day]['unestimated_strength_sets'] = $estimate['sets'];
+
+                continue;
+            }
+            $days[$day]['estimated_strength_sets'] = $estimate['sets'];
+            $days[$day]['strength_minutes'] = $estimate['duration_minutes'];
+            $days[$day]['strength_kcal'] = $estimate['active_kcal'];
             $days[$day]['total_kcal'] = round($days[$day]['cardio_kcal'] + $days[$day]['strength_kcal'], 2);
         }
         $week = self::emptyTotals();

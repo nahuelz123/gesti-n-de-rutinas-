@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\BodyMeasurement;
+use App\Services\ProgressFeedback;
 use Illuminate\Http\Request;
 
 class ProgressController extends Controller
@@ -12,7 +13,7 @@ class ProgressController extends Controller
     {
         $user = $request->user();
 
-        $measurements = $user->bodyMeasurements()->get(); // desc por measured_at
+        $measurements = $user->bodyMeasurements()->whereDate('measured_at', '<=', today()->toDateString())->get(); // desc por measured_at
 
         $latest = $measurements->first();
         $previous = $measurements->get(1);
@@ -23,6 +24,7 @@ class ProgressController extends Controller
             'hasProfile' => (bool) ($user->height_cm && $user->sex),
             'latest' => $latest,
             'previous' => $previous,
+            'feedback' => app(ProgressFeedback::class)->forClient($user),
         ]);
     }
 

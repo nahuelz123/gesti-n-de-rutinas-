@@ -45,6 +45,27 @@
         </div>
     @endif
 
+    <section class="vf-progress-feedback section-card" aria-labelledby="progress-feedback-heading">
+        <div class="vf-progress-feedback-head">
+            <div><p class="pg-label">Últimos 7 días</p><h2 id="progress-feedback-heading">Tu seguimiento, en claro</h2></div>
+            <div class="vf-progress-feedback-stats"><span><strong>{{ $feedback['training_days'] }}</strong> días registrados</span><span><strong>{{ $feedback['sets'] }}</strong> series guardadas</span></div>
+        </div>
+        <div class="vf-progress-feedback-columns">
+            <div><h3>Qué venís haciendo bien</h3>
+                @forelse($feedback['positives'] as $positive)
+                    <article><strong>{{ $positive['title'] }}</strong><p>{{ $positive['text'] }}</p></article>
+                @empty
+                    <p class="vf-progress-feedback-empty">Todavía no hay entrenamientos registrados esta semana. Tu feedback aparecerá a medida que guardes tus series.</p>
+                @endforelse
+            </div>
+            <div><h3>Para mejorar tu seguimiento</h3>
+                @foreach($feedback['suggestions'] as $suggestion)
+                    <article><p>{{ $suggestion['text'] }}</p><a href="{{ $suggestion['url'] }}">{{ $suggestion['link'] }} →</a></article>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     {{-- Hero: último peso + tendencia + % grasa, estilo pr-card --}}
     @if ($latest)
         @php
@@ -58,7 +79,7 @@
                 @if ($latest->weight)
                     <div class="pr-value">{{ $latest->weight }}<span class="pr-unit">kg</span></div>
                     @if ($weightDiff !== null)
-                        <div style="font-size:12px; font-weight:700; margin-top:4px; color: {{ $weightDiff <= 0 ? '#4ade80' : '#e63946' }};">
+                        <div style="font-size:12px; font-weight:700; margin-top:4px; color:var(--clr-text-muted);">
                             {{ $weightDiff > 0 ? '+' : '' }}{{ $weightDiff }}kg desde la última medición
                         </div>
                     @endif
@@ -115,7 +136,7 @@
     </div>
 
     {{-- Formulario nueva medición --}}
-    <div class="section">
+    <div class="section" id="measurement-form">
         <div class="section-card">
             <div class="section-header">
                 <span class="section-title">Nueva medición</span>

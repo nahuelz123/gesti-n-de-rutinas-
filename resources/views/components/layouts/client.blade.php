@@ -133,7 +133,7 @@
     @if($isCharacterPage && config('experience.enabled'))
         <script src="{{ asset('js/visionfit/experience.js').'?v='.substr(hash_file('sha256', public_path('js/visionfit/experience.js')), 0, 12) }}"></script>
     @endif
-    <script src="{{ asset('js/visionfit/workout-timer.js') }}"></script>
+    <script src="{{ asset('js/visionfit/workout-timer.js') }}?v={{ filemtime(public_path('js/visionfit/workout-timer.js')) }}"></script>
     @livewireScripts
 
 </body>

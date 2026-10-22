@@ -131,3 +131,36 @@ test('expired push scheduling reports the rest ended without promising an alert'
     await timer.syncPush(999999, timer.sequence);
     assert.equal(timer.pushMessage, 'El descanso terminó; no se programó un aviso.');
 });
+
+test('minimizing keeps the countdown and scheduled push running and can be reversed', () => {
+    const b = browser(); const calls = []; const timer = b.create();
+    timer.syncPush = deadline => calls.push(deadline);
+    timer.start(); timer.minimize(); b.advance(20_000);
+    assert.equal(timer.minimized, true);
+    assert.equal(timer.active, true); assert.equal(timer.remaining, 40);
+    assert.equal(calls.length, 1); assert.equal(b.intervals.size, 1);
+    assert.equal(b.saved.get('user-1-assignment-2'), '1060000');
+    timer.expand(); assert.equal(timer.minimized, false); assert.equal(timer.remaining, 40);
+});
+
+test('minimized preference survives navigation without leaking to another assignment', () => {
+    const b = browser(); const first = b.create(); first.start(); first.minimize(); first.destroy();
+    const restored = b.create();
+    assert.equal(restored.minimized, true); assert.equal(restored.active, true);
+    assert.equal(b.create({storageKey: 'user-2-assignment-3'}).minimized, false);
+    restored.expand(); restored.destroy(); assert.equal(b.create().minimized, false);
+});
+
+test('a new set preserves minimized mode and hidden countdown still finishes', () => {
+    const b = browser(); const timer = b.create(); timer.minimize();
+    timer.handleSetLogged({rest: 30}); assert.equal(timer.minimized, true);
+    b.advance(31_000);
+    assert.equal(timer.active, false); assert.equal(timer.displayTime, '¡Listo!');
+    assert.equal(b.intervals.size, 0);
+});
+
+test('minimizing and reopening work when storage is blocked', () => {
+    const b = browser(new Map(), true); const timer = b.create(); timer.start();
+    timer.minimize(); b.advance(5000); timer.expand();
+    assert.equal(timer.minimized, false); assert.equal(timer.remaining, 55);
+});

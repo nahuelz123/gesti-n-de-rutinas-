@@ -12,6 +12,7 @@
         return {
             defaultSeconds: duration(defaultSeconds),
             active: false,
+            minimized: false,
             remaining: 0,
             displayTime: '',
             endAt: null,
@@ -48,6 +49,7 @@
             },
             init() {
                 this.showReady();
+                try { this.minimized = root.sessionStorage.getItem(storageKey + ':minimized') === 'true'; } catch (_) {}
                 let saved = null;
                 try { saved = Number(root.sessionStorage.getItem(storageKey)); } catch (_) { /* Storage may be disabled. */ }
                 if (Number.isFinite(saved) && saved > Date.now() && saved <= Date.now() + 3600000) {
@@ -63,6 +65,14 @@
             },
             format(seconds) {
                 return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+            },
+            minimize() {
+                this.minimized = true;
+                try { root.sessionStorage.setItem(storageKey + ':minimized', 'true'); } catch (_) {}
+            },
+            expand() {
+                this.minimized = false;
+                try { root.sessionStorage.removeItem(storageKey + ':minimized'); } catch (_) {}
             },
             showReady() {
                 this.remaining = this.defaultSeconds;
