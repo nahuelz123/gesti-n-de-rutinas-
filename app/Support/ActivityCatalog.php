@@ -9,6 +9,7 @@ class ActivityCatalog
     public static function all(): array
     {
         $rows = [
+            ['walk_steps', 'Pasos caminando · tiempo estimado', 3.0, '17170', 'Pasos'],
             ['elliptical_moderate', 'Elíptico · moderado', 5.0, '02048', 'Elíptico'],
             ['elliptical_vigorous', 'Elíptico · intenso', 9.0, '02049', 'Elíptico'],
             ['bike_light', 'Bicicleta fija · suave, ~50 W', 4.0, '01214', 'Bicicleta'],

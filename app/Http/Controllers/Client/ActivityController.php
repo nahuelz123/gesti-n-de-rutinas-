@@ -97,9 +97,13 @@ class ActivityController extends Controller
 
     private function attributes(array $data, ActivityEnergy $energy): array
     {
-        return ['performed_on' => $data['performed_on'], 'duration_minutes' => (int) $data['duration_minutes'],
+        $steps = $data['activity_key'] === 'walk_steps' ? (int) $data['step_count'] : null;
+        $minutes = $steps === null ? (int) $data['duration_minutes'] : (int) ceil($steps / 100);
+
+        return ['performed_on' => $data['performed_on'], 'duration_minutes' => $minutes, 'step_count' => $steps,
             'body_weight' => round((float) $data['body_weight'], 2), 'notes' => $data['notes'] ?? null,
-            ...$energy->estimate($data['activity_key'], (int) $data['duration_minutes'], round((float) $data['body_weight'], 2))];
+            ...$energy->estimate($data['activity_key'], $minutes, round((float) $data['body_weight'], 2)),
+            ...($steps === null ? [] : ['calculation_version' => 'steps100-compendium2024-net-v1'])];
     }
 
     private function authorizeOwner(Request $request, ActivityLog $log): void
