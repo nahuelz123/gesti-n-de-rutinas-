@@ -60,8 +60,9 @@
 
         <x-auth-session-status class="mb-4 text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
+        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5" data-vf-login data-session-url="{{ route('login.session', absolute: false) }}">
             @csrf
+            <p data-login-session-error hidden role="alert" class="text-sm text-red-400"></p>
 
             <flux:input
                 name="email"
@@ -106,4 +107,5 @@
             </div>
         @endif
     </div>
+    <script src="{{ asset('js/visionfit/login-session.js') }}?v={{ filemtime(public_path('js/visionfit/login-session.js')) }}" defer data-navigate-once></script>
 </x-layouts.auth>

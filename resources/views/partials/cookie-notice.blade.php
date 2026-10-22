@@ -7,20 +7,4 @@
         <button id="vf-cookie-notice-dismiss" type="button" style="border:0; border-radius:8px; padding:9px 14px; background:#e63946; color:#fff; font-weight:700; cursor:pointer;">Entendido</button>
     </div>
 </aside>
-<script>
-(() => {
-    const notice = document.getElementById('vf-cookie-notice');
-    const dismiss = document.getElementById('vf-cookie-notice-dismiss');
-    if (!notice || !dismiss) return;
-
-    try {
-        if (window.sessionStorage.getItem('vf-cookie-notice-seen') === '1') return;
-    } catch (_) {}
-
-    notice.hidden = false;
-    dismiss.addEventListener('click', () => {
-        try { window.sessionStorage.setItem('vf-cookie-notice-seen', '1'); } catch (_) {}
-        notice.hidden = true;
-    });
-})();
-</script>
+<script src="{{ asset('js/visionfit/cookie-notice.js') }}?v={{ filemtime(public_path('js/visionfit/cookie-notice.js')) }}" defer data-navigate-once></script>
