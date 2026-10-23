@@ -13,7 +13,7 @@ class CommercialSubscription extends Model
 
     protected function casts(): array
     {
-        return ['trial_ends_at' => 'datetime', 'paid_until' => 'datetime', 'cancel_at_period_end' => 'boolean', 'renewal_consented_at' => 'datetime', 'last_synced_at' => 'datetime', 'amount_cents' => 'integer', 'next_amount_cents' => 'integer', 'next_plan_effective_at' => 'datetime'];
+        return ['reminder_due_at' => 'datetime', 'trial_ends_at' => 'datetime', 'paid_until' => 'datetime', 'cancel_at_period_end' => 'boolean', 'renewal_consented_at' => 'datetime', 'last_synced_at' => 'datetime', 'amount_cents' => 'integer', 'next_amount_cents' => 'integer', 'next_plan_effective_at' => 'datetime'];
     }
 
     public function user(): BelongsTo

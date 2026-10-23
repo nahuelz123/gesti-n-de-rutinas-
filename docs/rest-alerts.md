@@ -26,3 +26,7 @@ The service worker only handles push and notification clicks. It has no offline 
 ## Verification
 
 Run the normal PHP feature suite and `node --test tests/js/*.mjs`. On a physical iPhone, verify install, permission, start-and-lock, restart, skip, browser navigation during rest, and permission denied. A server test cannot confirm physical lock-screen delivery or vibration.
+
+## Membership summaries
+
+The normal worker checks optional reminder settings every15 minutes during Argentine daytime and launches the mail command in an independent child bounded to60 seconds. SMTP stays off the timer loop. --once processes rest alerts only. Email defaults disabled; see commercial-setup.md.

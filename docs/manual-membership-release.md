@@ -32,3 +32,5 @@ Los seis planes y sus cupos se conservan. Los gimnasios anteriores mantienen su 
 Menores diferidos por la revisión: ninguno.
 
 El procedimiento detallado está en [commercial-setup.md](commercial-setup.md).
+
+Actualización posterior: avisos de vencimiento y resumen diario configurable amplían el alcance inicial. Ver commercial-setup.md; entrega real requiere configuración del operador.

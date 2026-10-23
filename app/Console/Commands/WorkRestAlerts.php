@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\CommercialReminderProcess;
 use App\Services\RestAlertDispatcher;
 use Illuminate\Console\Command;
 use Throwable;
@@ -12,7 +13,7 @@ class WorkRestAlerts extends Command
 
     protected $description = 'Deliver durable rest alerts without relying on a browser timer or queue driver';
 
-    public function handle(RestAlertDispatcher $dispatcher): int
+    public function handle(RestAlertDispatcher $dispatcher, CommercialReminderProcess $reminders): int
     {
         $sleep = min(5, max(1, (int) $this->option('sleep')));
         $lastPrune = 0;
@@ -38,6 +39,7 @@ class WorkRestAlerts extends Command
             if ($this->option('once')) {
                 break;
             }
+            $reminders->tick();
             sleep($sleep);
         } while (true);
 

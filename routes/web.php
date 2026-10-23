@@ -24,6 +24,7 @@ use App\Http\Controllers\CommercialManagementController;
 use App\Http\Controllers\CommercialManualPaymentsController;
 use App\Http\Controllers\CommercialManualPlansController;
 use App\Http\Controllers\CommercialReceiptController;
+use App\Http\Controllers\CommercialReminderController;
 use App\Http\Controllers\CommercialSettingsController;
 use App\Http\Controllers\CommercialSubscriptionController;
 use App\Http\Controllers\CommercialWebhookController;
@@ -56,6 +57,8 @@ Route::post('/gestion-comercial/membresias', [CommercialManualPlansController::c
 Route::post('/gestion-comercial/membresias/{subscription}/plan', [CommercialManualPlansController::class, 'schedule'])->middleware(['auth', 'throttle:20,1']);
 Route::post('/gestion-comercial/membresias/{subscription}/baja', [CommercialManualPlansController::class, 'cancel'])->middleware(['auth', 'throttle:20,1']);
 Route::post('/gestion-comercial/membresias/{subscription}/reanudar', [CommercialManualPlansController::class, 'resume'])->middleware(['auth', 'throttle:20,1']);
+Route::get('/gestion-comercial/recordatorios', [CommercialReminderController::class, 'index'])->middleware('auth');
+Route::post('/gestion-comercial/recordatorios/configuracion', [CommercialReminderController::class, 'configure'])->middleware(['auth', 'throttle:10,1']);
 Route::get('/gestion-comercial/membresias', [CommercialManagementController::class, 'index'])->middleware('auth');
 Route::get('/gestion-comercial/membresias/{subscription}', [CommercialManagementController::class, 'show'])->middleware('auth');
 Route::get('/gestion-comercial/movimientos.csv', CommercialExportController::class)->middleware(['auth', 'throttle:10,1']);
