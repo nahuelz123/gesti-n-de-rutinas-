@@ -76,6 +76,9 @@ class CommercialCatalogWriter
                     if ($item['price_cents'] < 1) {
                         throw ValidationException::withMessages(['promotion' => 'El descuento dejaría un precio por debajo de un centavo. Aumentá el precio o reducí el porcentaje.']);
                     }
+                    if ($item['discount_percent'] && $item['price_cents'] >= $item['base_price_cents']) {
+                        throw ValidationException::withMessages(['promotion' => 'El descuento debe reducir al menos un centavo en cada producto incluido. Revisá el precio o el porcentaje.']);
+                    }
                 }
             }
             $after['catalog_version'] = $version + 1;

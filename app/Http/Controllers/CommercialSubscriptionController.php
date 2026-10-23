@@ -6,6 +6,7 @@ use App\Models\CommercialSubscription;
 use App\Models\Gym;
 use App\Models\User;
 use App\Services\CommercialBilling;
+use App\Services\CommercialPricing;
 use App\Services\ManualMembershipPlans;
 use App\Services\MercadoPagoSubscriptions;
 use App\Support\CommercialCatalog;
@@ -37,8 +38,10 @@ class CommercialSubscriptionController extends Controller
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(10)],
             'privacy_accepted' => ['accepted'], 'terms_accepted' => ['accepted'],
+            'catalog_quote' => ['required', 'string', 'size:64'],
         ]);
-        $user = DB::transaction(function () use ($data, $plan, $selected) {
+        $user = DB::transaction(function () use ($data, $plan) {
+            $selected = app(CommercialPricing::class)->quotedPlan($plan, $data['catalog_quote']);
             $gym = Gym::create(['name' => $data['business_name'], 'plan' => $plan, 'active' => true, 'privacy_contact_name' => $data['business_name'], 'privacy_contact_email' => $data['email']]);
             $gym->forceFill(['billing_managed' => true])->save();
             $user = User::create(['gym_id' => $gym->id, 'name' => $data['name'], 'email' => $data['email'], 'password' => $data['password'], 'role' => 'admin']);

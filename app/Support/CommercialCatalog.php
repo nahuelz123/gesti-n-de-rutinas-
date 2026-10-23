@@ -21,6 +21,11 @@ class CommercialCatalog
         return app(CommercialPricing::class)->promotion();
     }
 
+    public static function quote(): string
+    {
+        return app(CommercialPricing::class)->quote();
+    }
+
     public static function plan(string $code): array
     {
         abort_unless(isset(self::plans()[$code]), 404);

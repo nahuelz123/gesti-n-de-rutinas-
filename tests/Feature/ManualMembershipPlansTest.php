@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CommercialSubscription;
 use App\Models\User;
 use App\Services\CommercialMemberWriter;
+use App\Support\CommercialCatalog;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -27,7 +28,7 @@ class ManualMembershipPlansTest extends TestCase
 
     private function assign(User $owner, string $plan = 'coach-inicial'): CommercialSubscription
     {
-        $this->post('/gestion-comercial/membresias', ['operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => $plan, 'confirmed' => '1'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->post('/gestion-comercial/membresias', ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => $plan, 'confirmed' => '1'])->assertRedirect()->assertSessionHasNoErrors();
 
         return CommercialSubscription::where('user_id', $owner->id)->firstOrFail();
     }
@@ -39,7 +40,7 @@ class ManualMembershipPlansTest extends TestCase
 
     private function changeData(string $plan): array
     {
-        return ['operation_id' => (string) Str::uuid(), 'plan_code' => $plan, 'reason' => 'Cambio acordado con el titular', 'confirmed' => '1'];
+        return ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'plan_code' => $plan, 'reason' => 'Cambio acordado con el titular', 'confirmed' => '1'];
     }
 
     public function test_assigning_an_existing_workspace_keeps_legacy_access_until_the_first_payment(): void
@@ -57,7 +58,7 @@ class ManualMembershipPlansTest extends TestCase
     public function test_assignments_are_idempotent_and_do_not_duplicate_subscriptions(): void
     {
         $owner = $this->owner();
-        $data = ['operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'];
+        $data = ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'];
         $this->post('/gestion-comercial/membresias', $data)->assertRedirect()->assertSessionHasNoErrors();
         $this->post('/gestion-comercial/membresias', $data)->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseCount('commercial_subscriptions', 1);
@@ -68,7 +69,7 @@ class ManualMembershipPlansTest extends TestCase
     public function test_only_root_can_assign_a_membership(): void
     {
         $owner = $this->owner();
-        $this->actingAs($owner)->post('/gestion-comercial/membresias', ['operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'])->assertForbidden();
+        $this->actingAs($owner)->post('/gestion-comercial/membresias', ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'])->assertForbidden();
         $this->assertDatabaseCount('commercial_subscriptions', 0);
     }
 
@@ -76,7 +77,7 @@ class ManualMembershipPlansTest extends TestCase
     {
         $this->owner();
         $client = User::factory()->create(['role' => 'client']);
-        $data = ['operation_id' => (string) Str::uuid(), 'user_id' => $client->id, 'plan_code' => 'asesoria', 'confirmed' => '1'];
+        $data = ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $client->id, 'plan_code' => 'asesoria', 'confirmed' => '1'];
         $this->post('/gestion-comercial/membresias', $data)->assertSessionHasErrors('user_id');
         config(['commerce.coaching_gym_id' => $client->gym_id]);
         $this->post('/gestion-comercial/membresias', $data)->assertRedirect()->assertSessionHasNoErrors();

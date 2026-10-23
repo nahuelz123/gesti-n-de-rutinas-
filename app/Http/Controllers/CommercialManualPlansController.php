@@ -12,8 +12,8 @@ class CommercialManualPlansController extends Controller
     public function store(Request $request, ManualMembershipPlans $plans)
     {
         abort_unless($request->user()->role === 'super_admin', 403);
-        $data = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id'], 'plan_code' => ['required', 'string'], 'operation_id' => ['required', 'uuid'], 'confirmed' => ['accepted']]);
-        $subscription = $plans->assign(User::findOrFail($data['user_id']), $request->user(), $data['plan_code'], $data['operation_id']);
+        $data = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id'], 'plan_code' => ['required', 'string'], 'operation_id' => ['required', 'uuid'], 'confirmed' => ['accepted'], 'catalog_quote' => ['required', 'string', 'size:64']]);
+        $subscription = $plans->assign(User::findOrFail($data['user_id']), $request->user(), $data['plan_code'], $data['operation_id'], $data['catalog_quote']);
 
         return $this->back($subscription, 'Membresía preparada. No se registró ni ejecutó un cobro.');
     }

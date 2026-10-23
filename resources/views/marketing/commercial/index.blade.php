@@ -31,7 +31,7 @@
     </section>
     <section class="m-section m-soft"><div class="m-wrap m-two">
         <section><h2>Asignar una membresía.</h2><p class="m-section-description">Creá primero la cuenta en Usuarios. Para software, elegí al administrador del espacio. Para asesorías, al cliente del espacio configurado en Datos del servicio.</p>
-            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias') }}">@csrf
+            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias') }}">@csrf<input type="hidden" name="catalog_quote" value="{{ \App\Support\CommercialCatalog::quote() }}">
                 <input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
                 <label>Titular<select name="user_id" required><option value="">Elegir cuenta</option>@foreach($accounts as $account)<option value="{{ $account->id }}" @selected((string) old('user_id') === (string) $account->id)>{{ $account->name }} · {{ $account->email }} · {{ $account->role === 'client' ? 'Asesoría' : 'Licencia' }}</option>@endforeach</select></label>
                 <label>Plan<select name="plan_code" required>@foreach(\App\Support\CommercialCatalog::plans() as $code => $plan)<option value="{{ $code }}" @selected(old('plan_code') === $code)>{{ $plan['name'] }} · ${{ \App\Services\CommercialAmounts::format($plan['price_cents']) }}/mes</option>@endforeach</select></label>

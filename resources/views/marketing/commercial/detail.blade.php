@@ -41,7 +41,7 @@
         </section>
         <section><h2>Plan y continuidad.</h2><p class="m-section-description">Guardá el acuerdo con el titular. Para bajar de plan, primero archivá accesos que excedan el nuevo cupo.</p>
             @if(!$subscription->next_plan_effective_at || $subscription->next_plan_effective_at->lessThanOrEqualTo(now()))
-            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias/'.$subscription->id.'/plan') }}">@csrf<input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
+            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias/'.$subscription->id.'/plan') }}">@csrf<input type="hidden" name="catalog_quote" value="{{ \App\Support\CommercialCatalog::quote() }}"><input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
                 <label>Plan para la próxima renovación<select name="plan_code"><option value="">Retirar un cambio pendiente</option>@foreach(\App\Support\CommercialCatalog::plans() as $code => $choice)@if($choice['kind'] === $subscription->kind)<option value="{{ $code }}">{{ $choice['name'] }} · ${{ \App\Services\CommercialAmounts::format($choice['price_cents']) }}/mes</option>@endif@endforeach</select></label>
                 <label>Motivo o acuerdo<textarea name="reason" required minlength="5" maxlength="500" rows="2"></textarea></label>
                 <label class="m-checkbox"><input type="checkbox" name="confirmed" value="1" required><span>El cambio está acordado con el titular y entra en su próximo período.</span></label>

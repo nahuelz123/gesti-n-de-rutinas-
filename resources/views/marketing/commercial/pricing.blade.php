@@ -1,4 +1,12 @@
 <x-layouts.marketing :meta="$meta" :noindex="true">
+    @php
+        $scalarInput = static function (string $key, mixed $fallback) {
+            $value = old($key, $fallback);
+            return is_scalar($value) || $value === null ? $value : $fallback;
+        };
+        $selectedProducts = old('promotion.plan_codes', $promotion['plan_codes']);
+        $selectedProducts = is_array($selectedProducts) ? array_filter($selectedProducts, 'is_string') : [];
+    @endphp
     <section class="m-page-head m-wrap">
         <span class="m-eyebrow">ADMINISTRACIÓN DE LA WEB</span>
         <h1>Precios y promociones.</h1>
@@ -31,14 +39,14 @@
 
         <form class="m-form m-form-spaced" method="POST" action="{{ url('/gestion-comercial/precios') }}">
             @csrf
-            <input type="hidden" name="catalog_version" value="{{ old('catalog_version', $version) }}">
+            <input type="hidden" name="catalog_version" value="{{ $scalarInput('catalog_version', $version) }}">
             <fieldset class="m-catalog-fieldset">
                 <legend>Precios base en pesos argentinos</legend>
                 <p class="m-small">Importes mensuales, salvo la rutina puntual que se abona una vez. Podés usar hasta dos decimales.</p>
                 <div class="m-catalog-grid">
                     @foreach($items as $code => $item)
                         <label>{{ $item['name'] }}
-                            <input type="number" name="prices[{{ $code }}]" min="0.01" max="1000000" step="0.01" inputmode="decimal" required value="{{ old('prices.'.$code, number_format($item['base_price_cents'] / 100, 2, '.', '')) }}">
+                            <input type="number" name="prices[{{ $code }}]" min="0.01" max="1000000" step="0.01" inputmode="decimal" required value="{{ $scalarInput('prices.'.$code, number_format($item['base_price_cents'] / 100, 2, '.', '')) }}">
                             <span class="m-small">Publicado ahora: ${{ \App\Services\CommercialAmounts::format($item['price_cents']) }}{{ $item['kind'] === 'one_off' ? ' · pago único' : '/mes' }}{{ $item['discount_percent'] ? ' · '.$item['discount_percent'].' % de descuento' : '' }}</span>
                         </label>
                     @endforeach
@@ -46,14 +54,14 @@
             </fieldset>
             <fieldset class="m-catalog-fieldset">
                 <legend>Detalles de la promoción</legend>
-                <label>Título del cartel<input name="promotion[title]" maxlength="120" required value="{{ old('promotion.title', $promotion['title']) }}"></label>
-                <label>Texto de la oferta<textarea name="promotion[description]" rows="3" maxlength="280">{{ old('promotion.description', $promotion['description']) }}</textarea></label>
-                <label>Porcentaje de descuento<input type="number" name="promotion[percent]" min="1" max="99" step="1" required value="{{ old('promotion.percent', $promotion['percent']) }}"></label>
+                <label>Título del cartel<input name="promotion[title]" maxlength="120" required value="{{ $scalarInput('promotion.title', $promotion['title']) }}"></label>
+                <label>Texto de la oferta<textarea name="promotion[description]" rows="3" maxlength="280">{{ $scalarInput('promotion.description', $promotion['description']) }}</textarea></label>
+                <label>Porcentaje de descuento<input type="number" name="promotion[percent]" min="1" max="99" step="1" required value="{{ $scalarInput('promotion.percent', $promotion['percent']) }}"></label>
                 <p class="m-small">Se descuenta del precio base de los productos seleccionados. La oferta permanece activa hasta que la desactives.</p>
                 <fieldset class="m-promotion-scope">
                     <legend>Aplicar el descuento a</legend>
                     @foreach($items as $code => $item)
-                        <label class="m-checkbox"><input type="checkbox" name="promotion[plan_codes][]" value="{{ $code }}" @checked(in_array($code, old('promotion.plan_codes', $promotion['plan_codes']), true))><span>{{ $item['name'] }}</span></label>
+                        <label class="m-checkbox"><input type="checkbox" name="promotion[plan_codes][]" value="{{ $code }}" @checked(in_array($code, $selectedProducts, true))><span>{{ $item['name'] }}</span></label>
                     @endforeach
                 </fieldset>
             </fieldset>

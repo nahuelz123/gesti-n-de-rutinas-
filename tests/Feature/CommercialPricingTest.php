@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CommercialSettings;
 use App\Models\CommercialSubscription;
 use App\Models\User;
+use App\Support\CommercialCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -226,12 +227,12 @@ class CommercialPricingTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'admin']);
         $this->root();
-        $this->post('/gestion-comercial/membresias', ['operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'])->assertSessionHasNoErrors();
+        $this->post('/gestion-comercial/membresias', ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'])->assertSessionHasNoErrors();
         $sub = CommercialSubscription::where('user_id', $owner->id)->firstOrFail();
         $this->save($this->data());
         $this->enable();
         $this->assertSame(1490000, $sub->fresh()->amount_cents);
-        $this->post('/gestion-comercial/membresias/'.$sub->id.'/plan', ['operation_id' => (string) Str::uuid(), 'plan_code' => 'coach-inicial', 'reason' => 'Nuevo precio acordado con titular', 'confirmed' => '1'])->assertSessionHasNoErrors();
+        $this->post('/gestion-comercial/membresias/'.$sub->id.'/plan', ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'plan_code' => 'coach-inicial', 'reason' => 'Nuevo precio acordado con titular', 'confirmed' => '1'])->assertSessionHasNoErrors();
         $this->assertSame(1800045, $sub->fresh()->next_amount_cents);
         $this->post('/gestion-comercial/membresias/'.$sub->id.'/cobros', ['operation_id' => (string) Str::uuid(), 'amount' => '18000.45', 'months' => 1, 'method' => 'cash', 'paid_on' => now()->toDateString(), 'confirmed' => '1'])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('commercial_payments', ['commercial_subscription_id' => $sub->id, 'amount_cents' => 1800045]);
@@ -244,8 +245,89 @@ class CommercialPricingTest extends TestCase
         $this->save($this->data());
         $this->enable();
         auth()->logout();
-        $this->post('/empezar/coach-inicial', ['name' => 'Nueva cuenta', 'business_name' => 'Nuevo espacio', 'email' => 'alta@example.test', 'password' => 'password-segura-10', 'password_confirmation' => 'password-segura-10', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertRedirect('/mi-suscripcion')->assertSessionHasNoErrors();
+        $this->post('/empezar/coach-inicial', ['catalog_quote' => CommercialCatalog::quote(), 'name' => 'Nueva cuenta', 'business_name' => 'Nuevo espacio', 'email' => 'alta@example.test', 'password' => 'password-segura-10', 'password_confirmation' => 'password-segura-10', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertRedirect('/mi-suscripcion')->assertSessionHasNoErrors();
         $this->assertDatabaseHas('commercial_subscriptions', ['plan_code' => 'coach-inicial', 'amount_cents' => 1800045]);
         $this->get('/mi-suscripcion')->assertSee('$18.000,45');
+    }
+
+    private function displayedQuote(string $path): string
+    {
+        preg_match('/name="catalog_quote" value="([^"]+)"/', $this->get($path)->assertOk()->getContent(), $match);
+
+        return html_entity_decode($match[1] ?? 'missing-quote');
+    }
+
+    public function test_a_changed_price_requires_reconfirmation_before_scheduling_a_plan(): void
+    {
+        $owner = User::factory()->create(['role' => 'admin']);
+        $this->root();
+        $this->post('/gestion-comercial/membresias', ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => '1'])->assertSessionHasNoErrors();
+        $sub = CommercialSubscription::where('user_id', $owner->id)->firstOrFail();
+        $this->save($this->data());
+        $this->enable();
+        $quote = $this->displayedQuote('/gestion-comercial/membresias/'.$sub->id);
+        $this->post('/gestion-comercial/precios/promocion', ['enabled' => 0, 'catalog_version' => 2])->assertSessionHasNoErrors();
+        $this->post('/gestion-comercial/membresias/'.$sub->id.'/plan', ['catalog_quote' => $quote, 'operation_id' => (string) Str::uuid(), 'plan_code' => 'coach-inicial', 'reason' => 'Confirmar el precio que estaba publicado', 'confirmed' => 1])->assertSessionHasErrors('catalog_quote');
+        $this->assertNull($sub->fresh()->next_amount_cents);
+        $this->assertSame(1490000, $sub->fresh()->amount_cents);
+    }
+
+    public function test_a_changed_catalog_cannot_silently_reprice_an_open_assignment_form(): void
+    {
+        $owner = User::factory()->create(['role' => 'admin']);
+        $this->root();
+        $quote = $this->displayedQuote('/gestion-comercial/membresias');
+        $this->save($this->data());
+        $this->post('/gestion-comercial/membresias', ['catalog_quote' => $quote, 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => 1])->assertSessionHasErrors('catalog_quote');
+        $this->assertDatabaseCount('commercial_subscriptions', 0);
+    }
+
+    public function test_a_stale_signup_quote_does_not_create_an_account_at_a_different_price(): void
+    {
+        $root = $this->root();
+        $this->save($this->data());
+        $this->enable();
+        auth()->logout();
+        $quote = $this->displayedQuote('/empezar/coach-inicial');
+        $this->actingAs($root)->post('/gestion-comercial/precios/promocion', ['enabled' => 0, 'catalog_version' => 2])->assertSessionHasNoErrors();
+        auth()->logout();
+        $this->post('/empezar/coach-inicial', ['catalog_quote' => $quote, 'name' => 'Alta obsoleta', 'business_name' => 'Espacio', 'email' => 'viejo@example.test', 'password' => 'password-segura-10', 'password_confirmation' => 'password-segura-10', 'privacy_accepted' => 1, 'terms_accepted' => 1])->assertSessionHasErrors('catalog_quote');
+        $this->assertDatabaseMissing('users', ['email' => 'viejo@example.test']);
+        $this->assertDatabaseCount('commercial_subscriptions', 0);
+    }
+
+    public function test_missing_or_forged_quotes_cannot_create_price_agreements(): void
+    {
+        $owner = User::factory()->create(['role' => 'admin']);
+        $this->root();
+        foreach ([null, str_repeat('0', 64)] as $quote) {
+            $this->post('/gestion-comercial/membresias', ['catalog_quote' => $quote, 'operation_id' => (string) Str::uuid(), 'user_id' => $owner->id, 'plan_code' => 'coach-inicial', 'confirmed' => 1])->assertSessionHasErrors('catalog_quote');
+        }
+        $this->assertDatabaseCount('commercial_subscriptions', 0);
+    }
+
+    public function test_a_discount_must_produce_actual_savings_before_it_is_advertised(): void
+    {
+        $this->root();
+        $data = $this->data();
+        $data['prices']['coach-inicial'] = '0.01';
+        $this->save($data);
+        $this->post('/gestion-comercial/precios/promocion', ['enabled' => 1, 'catalog_version' => 1])->assertSessionHasErrors('promotion');
+        $this->get('/planes')->assertDontSee('data-promotion-banner', false);
+    }
+
+    public function test_invalid_nested_input_returns_a_usable_editor_after_validation(): void
+    {
+        $this->root();
+        $data = $this->data();
+        $data['catalog_version'] = ['nested' => 'invalid'];
+        $data['prices']['coach-inicial'] = ['nested' => 'invalid'];
+        $data['promotion']['title'] = ['nested' => 'invalid'];
+        $data['promotion']['description'] = ['nested' => 'invalid'];
+        $data['promotion']['percent'] = ['nested' => 'invalid'];
+        $data['promotion']['plan_codes'] = 'invalid';
+        $this->from('/gestion-comercial/precios')->post('/gestion-comercial/precios', $data)->assertRedirect('/gestion-comercial/precios')->assertSessionHasErrors();
+        $this->get('/gestion-comercial/precios')->assertOk()->assertSee('Guardar precios y detalles');
+        $this->assertDatabaseCount('commercial_operations', 0);
     }
 }

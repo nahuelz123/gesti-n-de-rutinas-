@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CommercialSettings;
+use Illuminate\Validation\ValidationException;
 
 class CommercialPricing
 {
@@ -48,5 +49,24 @@ class CommercialPricing
     public function version(): int
     {
         return (int) (CommercialSettings::values()['catalog_version'] ?? 0);
+    }
+
+    public function quote(?array $values = null): string
+    {
+        $values ??= CommercialSettings::values();
+        $prices = array_map(fn ($item) => $item['price_cents'], $this->items($values));
+
+        return hash_hmac('sha256', json_encode([(int) ($values['catalog_version'] ?? 0), $prices], JSON_THROW_ON_ERROR), (string) config('app.key'));
+    }
+
+    public function quotedPlan(string $code, string $quote): array
+    {
+        // Call inside the agreement transaction; keep the quote stable until it commits.
+        $values = CommercialSettings::lockForUpdate()->findOrFail(1)->values ?? [];
+        if (! hash_equals($this->quote($values), $quote)) {
+            throw ValidationException::withMessages(['catalog_quote' => 'El precio o la oferta cambió. Recargá la pantalla, revisá el nuevo importe y volvé a confirmar.']);
+        }
+
+        return $this->items($values)[$code] ?? abort(404);
     }
 }

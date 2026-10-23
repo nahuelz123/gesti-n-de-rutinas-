@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CommercialSubscription;
 use App\Models\User;
 use App\Services\CommercialMemberWriter;
+use App\Support\CommercialCatalog;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +18,7 @@ class CommercialSubscriptionsTest extends TestCase
 
     private function enroll(): CommercialSubscription
     {
-        $this->post('/empezar/coach-inicial', ['name' => 'Entrenador Demo', 'business_name' => 'Mi espacio', 'email' => 'nuevo@example.test', 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])
+        $this->post('/empezar/coach-inicial', ['catalog_quote' => CommercialCatalog::quote(), 'name' => 'Entrenador Demo', 'business_name' => 'Mi espacio', 'email' => 'nuevo@example.test', 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])
             ->assertRedirect('/mi-suscripcion');
 
         return CommercialSubscription::firstOrFail();
@@ -64,7 +65,7 @@ class CommercialSubscriptionsTest extends TestCase
     public function test_existing_email_cannot_be_moved_to_another_gym_by_public_signup(): void
     {
         $user = User::factory()->create(['email' => 'nuevo@example.test']);
-        $this->post('/empezar/coach-inicial', ['name' => 'Otro', 'business_name' => 'Otro espacio', 'email' => $user->email, 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertSessionHasErrors('email');
+        $this->post('/empezar/coach-inicial', ['catalog_quote' => CommercialCatalog::quote(), 'name' => 'Otro', 'business_name' => 'Otro espacio', 'email' => $user->email, 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertSessionHasErrors('email');
         $this->assertDatabaseHas('users', ['id' => $user->id, 'gym_id' => $user->gym_id]);
     }
 
@@ -204,7 +205,7 @@ class CommercialSubscriptionsTest extends TestCase
         $admin = User::factory()->create(['role' => 'super_admin']);
         $client = User::factory()->create(['role' => 'client']);
         config(['commerce.coaching_gym_id' => $client->gym_id]);
-        $this->actingAs($admin)->post('/gestion-comercial/asesorias', ['user_id' => $client->id, 'plan_code' => 'asesoria'])->assertRedirect();
+        $this->actingAs($admin)->post('/gestion-comercial/asesorias', ['catalog_quote' => CommercialCatalog::quote(), 'user_id' => $client->id, 'plan_code' => 'asesoria'])->assertRedirect();
         $this->assertDatabaseHas('commercial_subscriptions', ['user_id' => $client->id, 'kind' => 'coaching', 'amount_cents' => 6990000]);
         $this->actingAs($client)->get('/app')->assertRedirect('/mi-suscripcion');
         $this->get('/mi-suscripcion')->assertOk()->assertSee('Asesoría mensual');
@@ -236,7 +237,7 @@ class CommercialSubscriptionsTest extends TestCase
         $admin = User::factory()->create(['role' => 'super_admin']);
         $client = User::factory()->create(['role' => 'client']);
         config(['commerce.coaching_gym_id' => $client->gym_id]);
-        $this->actingAs($admin)->post('/gestion-comercial/asesorias', ['user_id' => $client->id, 'plan_code' => 'asesoria'])->assertRedirect();
+        $this->actingAs($admin)->post('/gestion-comercial/asesorias', ['catalog_quote' => CommercialCatalog::quote(), 'user_id' => $client->id, 'plan_code' => 'asesoria'])->assertRedirect();
         app(CommercialMemberWriter::class)->update($client, ['goals' => 'Registrar mi entrenamiento']);
         $this->assertSame('Registrar mi entrenamiento', $client->fresh()->goals);
     }
