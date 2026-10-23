@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\CommercialBilling;
 use App\Services\CommercialMemberWriter;
 use App\Services\RoutinePhotoReader;
+use App\Support\CommercialCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
@@ -27,7 +28,7 @@ class CommercialReviewRegressionsTest extends TestCase
 
     private function enroll(): CommercialSubscription
     {
-        $this->post('/empezar/coach-inicial', ['name' => 'Profesional', 'business_name' => 'Espacio', 'email' => 'owner@example.test', 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertRedirect('/mi-suscripcion');
+        $this->post('/empezar/coach-inicial', ['catalog_quote' => CommercialCatalog::quote(), 'name' => 'Profesional', 'business_name' => 'Espacio', 'email' => 'owner@example.test', 'password' => 'Password-test-123!', 'password_confirmation' => 'Password-test-123!', 'privacy_accepted' => '1', 'terms_accepted' => '1'])->assertRedirect('/mi-suscripcion');
 
         return CommercialSubscription::firstOrFail();
     }

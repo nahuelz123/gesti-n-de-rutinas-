@@ -6,6 +6,11 @@ use Illuminate\Validation\ValidationException;
 
 class CommercialAmounts
 {
+    public static function format(int $cents): string
+    {
+        return number_format($cents / 100, $cents % 100 === 0 ? 0 : 2, ',', '.');
+    }
+
     public static function cents(string $amount): int
     {
         if (! preg_match('/^\d{1,8}(\.\d{1,2})?$/D', $amount)) {

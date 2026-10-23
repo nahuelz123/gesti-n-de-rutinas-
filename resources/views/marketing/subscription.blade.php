@@ -9,11 +9,11 @@
         @php($plan = config('commerce.plans.'.$subscription->currentPlanCode()))
         <div class="m-dashboard">
             <section><span class="m-eyebrow">PLAN ACTUAL</span><h2>{{ $plan['name'] ?? $subscription->currentPlanCode() }}</h2>
-                <p class="m-price">${{ number_format($subscription->currentAmountCents() / 100, 0, ',', '.') }}<small>ARS / mes</small></p>
+                <p class="m-price">${{ \App\Services\CommercialAmounts::format($subscription->currentAmountCents()) }}<small>ARS / mes</small></p>
                 @include('marketing.commercial.status')
                 @if($subscription->trial_ends_at && !$subscription->paid_until)<p>Prueba hasta el {{ $subscription->trial_ends_at->format('d/m/Y') }}. Sin débito automático.</p>@endif
                 @if($subscription->paid_until)<p>Períodos abonados hasta el {{ $subscription->paid_until->format('d/m/Y H:i') }}.</p>@endif
-                @if($subscription->next_plan_code && (!$subscription->next_plan_effective_at || $subscription->next_plan_effective_at->isFuture()))<p class="m-note">Próximo plan acordado: {{ config('commerce.plans.'.$subscription->next_plan_code.'.name', $subscription->next_plan_code) }}, ${{ number_format($subscription->next_amount_cents / 100, 0, ',', '.') }}/mes. {{ $subscription->next_plan_effective_at ? 'Comienza el '.$subscription->next_plan_effective_at->format('d/m/Y').'.' : 'Se aplica en la próxima renovación abonada.' }}</p>@endif
+                @if($subscription->next_plan_code && (!$subscription->next_plan_effective_at || $subscription->next_plan_effective_at->isFuture()))<p class="m-note">Próximo plan acordado: {{ config('commerce.plans.'.$subscription->next_plan_code.'.name', $subscription->next_plan_code) }}, ${{ \App\Services\CommercialAmounts::format($subscription->next_amount_cents) }}/mes. {{ $subscription->next_plan_effective_at ? 'Comienza el '.$subscription->next_plan_effective_at->format('d/m/Y').'.' : 'Se aplica en la próxima renovación abonada.' }}</p>@endif
                 <p class="m-small m-code">Referencia de tu membresía: {{ $subscription->public_id }}</p>
                 <a href="{{ url('/contacto?plan=cambio-'.$subscription->currentPlanCode()) }}">Solicitar cambio de plan</a>
             </section>
@@ -38,7 +38,7 @@
                     <p>La continuidad está cancelada. Conservás los períodos pagados. Para retomar, <a href="{{ url('/contacto') }}">contactanos</a>.</p>
                 @elseif($ready && (!$subscription->isManual() || (!$subscription->paid_until?->isFuture() && !$subscription->next_plan_code)))
                     <form class="m-form m-form-spaced" method="POST" action="{{ url('/mi-suscripcion/checkout') }}">@csrf
-                        <label class="m-checkbox"><input type="checkbox" name="renewal_accepted" value="1" required><span>Quiero contratar {{ $plan['name'] ?? $subscription->currentPlanCode() }} por ${{ number_format($subscription->currentAmountCents() / 100, 0, ',', '.') }} ARS mensuales con renovación automática hasta cancelarla. Leí las <a href="{{ route('legal.terms') }}">condiciones</a>.</span></label>
+                        <label class="m-checkbox"><input type="checkbox" name="renewal_accepted" value="1" required><span>Quiero contratar {{ $plan['name'] ?? $subscription->currentPlanCode() }} por ${{ \App\Services\CommercialAmounts::format($subscription->currentAmountCents()) }} ARS mensuales con renovación automática hasta cancelarla. Leí las <a href="{{ route('legal.terms') }}">condiciones</a>.</span></label>
                         <button class="m-button" type="submit">{{ $subscription->provider_id ? 'Abrir mi contratación en Mercado Pago' : 'Contratar con Mercado Pago' }} ↗</button><p class="m-small">El pago se completa en Mercado Pago. Volver del checkout no confirma un pago.</p>
                     </form>
                 @elseif(!$subscription->isManual())<p>El servicio de cobro online requiere atención del equipo. Podés registrar una solicitud de baja si necesitás detener tu renovación.</p>
@@ -48,7 +48,7 @@
             </section>
             <section><span class="m-eyebrow">PAGOS</span><h2>Tu historial.</h2>
                 <div class="m-table-wrap"><table class="m-table"><thead><tr><th>Fecha</th><th>Importe</th><th>Estado</th><th>Registro</th></tr></thead><tbody>
-                    @forelse($payments as $payment)<tr><td>{{ ($payment->paid_at ?? $payment->created_at)->format('d/m/Y') }}</td><td>${{ number_format($payment->amount_cents / 100, 0, ',', '.') }}<br><small>ARS</small></td><td>{{ ['approved' => 'Aprobado', 'rejected' => 'Rechazado', 'refunded' => 'Reintegrado', 'charged_back' => 'Contracargo'][$payment->status] ?? 'En proceso' }}@if($payment->refunded_cents)<br><small>Reintegrado: ${{ number_format($payment->refunded_cents / 100, 0, ',', '.') }}</small>@endif</td><td><a href="{{ url('/mi-suscripcion/comprobantes/'.$payment->public_id) }}">Comprobante</a></td></tr>@empty<tr><td colspan="4">Todavía no hay pagos registrados.</td></tr>@endforelse
+                    @forelse($payments as $payment)<tr><td>{{ ($payment->paid_at ?? $payment->created_at)->format('d/m/Y') }}</td><td>${{ \App\Services\CommercialAmounts::format($payment->amount_cents) }}<br><small>ARS</small></td><td>{{ ['approved' => 'Aprobado', 'rejected' => 'Rechazado', 'refunded' => 'Reintegrado', 'charged_back' => 'Contracargo'][$payment->status] ?? 'En proceso' }}@if($payment->refunded_cents)<br><small>Reintegrado: ${{ \App\Services\CommercialAmounts::format($payment->refunded_cents) }}</small>@endif</td><td><a href="{{ url('/mi-suscripcion/comprobantes/'.$payment->public_id) }}">Comprobante</a></td></tr>@empty<tr><td colspan="4">Todavía no hay pagos registrados.</td></tr>@endforelse
                 </tbody></table></div><div class="m-pagination">{{ $payments->links() }}</div>
                 <p class="m-small">El registro interno no reemplaza la factura fiscal. Pedila al titular del servicio.</p>
                 @if($subscription->provider_id && $ready)<form method="POST" action="{{ url('/mi-suscripcion/actualizar') }}">@csrf<button type="submit" class="m-button m-button-dark">Actualizar estado de cobros</button></form>@endif

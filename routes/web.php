@@ -18,6 +18,7 @@ use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\RestAlertController;
 use App\Http\Controllers\Client\RoutineController;
 use App\Http\Controllers\CommercialAdminController;
+use App\Http\Controllers\CommercialCatalogController;
 use App\Http\Controllers\CommercialExportController;
 use App\Http\Controllers\CommercialInquiryController;
 use App\Http\Controllers\CommercialManagementController;
@@ -49,6 +50,9 @@ foreach (['baja', 'arrepentimiento', 'privacidad/solicitud'] as $type) {
     Route::post('/'.$type, [CommercialInquiryController::class, 'store'])->defaults('type', $type)->middleware('throttle:6,1');
 }
 Route::get('/gestion-comercial', [CommercialAdminController::class, 'index'])->middleware('auth');
+Route::get('/gestion-comercial/precios', [CommercialCatalogController::class, 'index'])->middleware('auth');
+Route::post('/gestion-comercial/precios', [CommercialCatalogController::class, 'update'])->middleware(['auth', 'throttle:20,1']);
+Route::post('/gestion-comercial/precios/promocion', [CommercialCatalogController::class, 'promotion'])->middleware(['auth', 'throttle:20,1']);
 Route::get('/gestion-comercial/configuracion', [CommercialSettingsController::class, 'index'])->middleware('auth');
 Route::post('/gestion-comercial/configuracion', [CommercialSettingsController::class, 'update'])->middleware(['auth', 'throttle:10,1']);
 Route::post('/gestion-comercial/membresias/{subscription}/cobros', [CommercialManualPaymentsController::class, 'store'])->middleware(['auth', 'throttle:20,1']);

@@ -9,6 +9,7 @@ use App\Services\CommercialBilling;
 use App\Services\CommercialMemberWriter;
 use App\Services\ManualMembershipPayments;
 use App\Services\ManualMembershipPlans;
+use App\Support\CommercialCatalog;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Database\Query\Builder;
@@ -29,12 +30,12 @@ class ManualMembershipReviewTest extends TestCase
         $owner = User::factory()->create(['role' => 'admin']);
         $this->actingAs(User::factory()->create(['role' => 'super_admin']));
 
-        return app(ManualMembershipPlans::class)->assign($owner, auth()->user(), 'coach-inicial', (string) Str::uuid());
+        return app(ManualMembershipPlans::class)->assign($owner, auth()->user(), 'coach-inicial', (string) Str::uuid(), CommercialCatalog::quote());
     }
 
     private function action(string $plan): array
     {
-        return ['operation_id' => (string) Str::uuid(), 'plan_code' => $plan, 'reason' => 'Cambio acordado con el titular', 'confirmed' => '1'];
+        return ['catalog_quote' => CommercialCatalog::quote(), 'operation_id' => (string) Str::uuid(), 'plan_code' => $plan, 'reason' => 'Cambio acordado con el titular', 'confirmed' => '1'];
     }
 
     private function pay(CommercialSubscription $sub, string $amount): void

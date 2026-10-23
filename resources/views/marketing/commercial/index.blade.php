@@ -9,8 +9,8 @@
         <div class="m-metrics">
             <article><span>Membresías</span><strong>{{ $totalCount }}</strong></article>
             <article><span>Con período vigente</span><strong>{{ $activeCount }}</strong></article>
-            <article><span>Recibido este mes</span><strong>${{ number_format($received / 100, 0, ',', '.') }}</strong></article>
-            <article><span>Reintegrado este mes</span><strong>${{ number_format($returned / 100, 0, ',', '.') }}</strong></article>
+            <article><span>Recibido este mes</span><strong>${{ \App\Services\CommercialAmounts::format((int) $received) }}</strong></article>
+            <article><span>Reintegrado este mes</span><strong>${{ \App\Services\CommercialAmounts::format((int) $returned) }}</strong></article>
         </div>
         <form class="m-filter-form" method="GET" action="{{ url('/gestion-comercial/membresias') }}">
             <label>Buscar titular, correo o espacio<input name="search" value="{{ $search }}" maxlength="120" type="search"></label>
@@ -21,7 +21,7 @@
             <thead><tr><th>Titular / espacio</th><th>Plan</th><th>Período</th><th>Estado</th><th>Gestión</th></tr></thead>
             <tbody>@forelse($subscriptions as $subscription)<tr>
                 <td><strong>{{ $subscription->user?->name }}</strong><br>{{ $subscription->user?->email }}<br>{{ $subscription->gym?->name }}</td>
-                <td>{{ config('commerce.plans.'.$subscription->currentPlanCode().'.name', $subscription->currentPlanCode()) }}<br>${{ number_format($subscription->currentAmountCents() / 100, 0, ',', '.') }}/mes<br><small>{{ $subscription->isManual() ? 'Cobro manual' : 'Mercado Pago' }}</small></td>
+                <td>{{ config('commerce.plans.'.$subscription->currentPlanCode().'.name', $subscription->currentPlanCode()) }}<br>${{ \App\Services\CommercialAmounts::format($subscription->currentAmountCents()) }}/mes<br><small>{{ $subscription->isManual() ? 'Cobro manual' : 'Mercado Pago' }}</small></td>
                 <td>{{ $subscription->paid_until?->format('d/m/Y') ?? $subscription->trial_ends_at?->format('d/m/Y') ?? 'Pendiente del primer cobro' }}</td>
                 <td>@include('marketing.commercial.status') @if($subscription->gym && !$subscription->gym->billing_managed)<p class="m-small">Esquema anterior conservado hasta el primer cobro.</p>@endif</td>
                 <td><a class="m-button m-button-small" href="{{ url('/gestion-comercial/membresias/'.$subscription->id) }}">Abrir</a></td>
@@ -31,10 +31,10 @@
     </section>
     <section class="m-section m-soft"><div class="m-wrap m-two">
         <section><h2>Asignar una membresía.</h2><p class="m-section-description">Creá primero la cuenta en Usuarios. Para software, elegí al administrador del espacio. Para asesorías, al cliente del espacio configurado en Datos del servicio.</p>
-            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias') }}">@csrf
+            <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias') }}">@csrf<input type="hidden" name="catalog_quote" value="{{ \App\Support\CommercialCatalog::quote() }}">
                 <input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
                 <label>Titular<select name="user_id" required><option value="">Elegir cuenta</option>@foreach($accounts as $account)<option value="{{ $account->id }}" @selected((string) old('user_id') === (string) $account->id)>{{ $account->name }} · {{ $account->email }} · {{ $account->role === 'client' ? 'Asesoría' : 'Licencia' }}</option>@endforeach</select></label>
-                <label>Plan<select name="plan_code" required>@foreach(config('commerce.plans') as $code => $plan)<option value="{{ $code }}" @selected(old('plan_code') === $code)>{{ $plan['name'] }} · ${{ number_format($plan['price'], 0, ',', '.') }}/mes</option>@endforeach</select></label>
+                <label>Plan<select name="plan_code" required>@foreach(\App\Support\CommercialCatalog::plans() as $code => $plan)<option value="{{ $code }}" @selected(old('plan_code') === $code)>{{ $plan['name'] }} · ${{ \App\Services\CommercialAmounts::format($plan['price_cents']) }}/mes</option>@endforeach</select></label>
                 <label class="m-checkbox"><input type="checkbox" name="confirmed" value="1" required><span>Confirmo que esta membresía está acordada con el titular. Prepararla no cobra dinero.</span></label>
                 <button class="m-button" type="submit">Preparar membresía manual</button>
             </form>
