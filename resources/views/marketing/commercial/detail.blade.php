@@ -9,7 +9,7 @@
     <section class="m-section m-wrap">
         @include('marketing.commercial.messages')
         <div class="m-dashboard">
-            <section><span class="m-eyebrow">PLAN Y ACCESO</span><h2>{{ $plan['name'] ?? $subscription->currentPlanCode() }}</h2><p>${{ number_format($subscription->currentAmountCents() / 100, 0, ',', '.') }} ARS por mes.</p>@include('marketing.commercial.status')
+            <section><span class="m-eyebrow">PLAN Y ACCESO</span><h2>{{ $plan['name'] ?? $subscription->currentPlanCode() }}</h2><p>${{ \App\Services\CommercialAmounts::format($subscription->currentAmountCents()) }} ARS por mes.</p>@include('marketing.commercial.status')
                 <p>Pagado hasta: <strong>{{ $subscription->paid_until?->format('d/m/Y H:i') ?? 'Sin cobros registrados' }}</strong>.</p>
                 @if($subscription->trial_ends_at)<p>Prueba hasta {{ $subscription->trial_ends_at->format('d/m/Y') }}.</p>@endif
                 @if($usage)<p>Alumnos habilitados: {{ $usage['students'] }} / {{ $plan['students'] ?? '—' }}. Profesionales: {{ $usage['staff'] }} / {{ $plan['staff'] ?? '—' }}.</p>@endif
@@ -17,7 +17,7 @@
                 <p class="m-small m-code">Referencia: {{ $subscription->public_id }}</p>
             </section>
             <section><span class="m-eyebrow">PRÓXIMO CICLO</span><h2>Lo acordado.</h2>
-                @if($hasUpcomingPlan)<p>{{ config('commerce.plans.'.$subscription->next_plan_code.'.name', $subscription->next_plan_code) }} por ${{ number_format($subscription->next_amount_cents / 100, 0, ',', '.') }}/mes.</p><p>{{ $subscription->next_plan_effective_at ? 'Se aplica desde el '.$subscription->next_plan_effective_at->format('d/m/Y H:i').'.' : 'Se aplica al comenzar el próximo período que se registre como pagado.' }}</p>@else<p>No hay cambio de plan programado.</p>@endif
+                @if($hasUpcomingPlan)<p>{{ config('commerce.plans.'.$subscription->next_plan_code.'.name', $subscription->next_plan_code) }} por ${{ \App\Services\CommercialAmounts::format($subscription->next_amount_cents) }}/mes.</p><p>{{ $subscription->next_plan_effective_at ? 'Se aplica desde el '.$subscription->next_plan_effective_at->format('d/m/Y H:i').'.' : 'Se aplica al comenzar el próximo período que se registre como pagado.' }}</p>@else<p>No hay cambio de plan programado.</p>@endif
                 <p>Un cambio no modifica los meses ya pagados ni genera un cobro proporcional. No se editan los cobros originales.</p>
                 @if(!$subscription->isManual())<p class="m-note">Esta cuenta está vinculada a Mercado Pago. Sus cobros y cancelación se confirman con el proveedor; las operaciones manuales están bloqueadas.</p>@endif
             </section>
@@ -29,7 +29,7 @@
             @if($subscription->cancel_at_period_end)<div class="m-note">La membresía está cancelada. Reanudala antes de registrar otro período.</div>@else
             <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias/'.$subscription->id.'/cobros') }}">@csrf
                 <input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
-                <label>Meses completos<select name="months" required>@for($months = 1; $months <= 12; $months++)<option value="{{ $months }}">{{ $months }} {{ $months === 1 ? 'mes' : 'meses' }} · ${{ number_format($renewalAmount * $months / 100, 0, ',', '.') }} · hasta {{ $starts->copy()->addMonthsNoOverflow($months)->format('d/m/Y') }}</option>@endfor</select></label>
+                <label>Meses completos<select name="months" required>@for($months = 1; $months <= 12; $months++)<option value="{{ $months }}">{{ $months }} {{ $months === 1 ? 'mes' : 'meses' }} · ${{ \App\Services\CommercialAmounts::format($renewalAmount * $months) }} · hasta {{ $starts->copy()->addMonthsNoOverflow($months)->format('d/m/Y') }}</option>@endfor</select></label>
                 <label>Importe recibido en ARS<input type="number" inputmode="decimal" min="0.01" step="0.01" name="amount" value="{{ number_format($renewalAmount / 100, 2, '.', '') }}" required></label>
                 <label>Medio de pago<select name="method"><option value="transfer">Transferencia</option><option value="cash">Efectivo</option><option value="other">Otro medio acordado</option></select></label>
                 <label>Referencia completa de la operación<input name="reference" maxlength="120"><small>Obligatoria y única para transferencias. No ingreses datos de tarjeta.</small></label>
@@ -42,7 +42,7 @@
         <section><h2>Plan y continuidad.</h2><p class="m-section-description">Guardá el acuerdo con el titular. Para bajar de plan, primero archivá accesos que excedan el nuevo cupo.</p>
             @if(!$subscription->next_plan_effective_at || $subscription->next_plan_effective_at->lessThanOrEqualTo(now()))
             <form class="m-form" method="POST" action="{{ url('/gestion-comercial/membresias/'.$subscription->id.'/plan') }}">@csrf<input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
-                <label>Plan para la próxima renovación<select name="plan_code"><option value="">Retirar un cambio pendiente</option>@foreach(config('commerce.plans') as $code => $choice)@if($choice['kind'] === $subscription->kind)<option value="{{ $code }}">{{ $choice['name'] }} · ${{ number_format($choice['price'], 0, ',', '.') }}/mes</option>@endif@endforeach</select></label>
+                <label>Plan para la próxima renovación<select name="plan_code"><option value="">Retirar un cambio pendiente</option>@foreach(\App\Support\CommercialCatalog::plans() as $code => $choice)@if($choice['kind'] === $subscription->kind)<option value="{{ $code }}">{{ $choice['name'] }} · ${{ \App\Services\CommercialAmounts::format($choice['price_cents']) }}/mes</option>@endif@endforeach</select></label>
                 <label>Motivo o acuerdo<textarea name="reason" required minlength="5" maxlength="500" rows="2"></textarea></label>
                 <label class="m-checkbox"><input type="checkbox" name="confirmed" value="1" required><span>El cambio está acordado con el titular y entra en su próximo período.</span></label>
                 <button class="m-button m-button-dark" type="submit">Guardar próximo plan</button>
@@ -57,9 +57,9 @@
     @endif
     <section class="m-section m-wrap"><h2>Cobros y reintegros.</h2><p class="m-section-description">Cada registro conserva su importe y período originales. Un reintegro completo retira ese período; uno parcial conserva su vigencia.</p>
         @forelse($payments as $payment)<article class="m-payment-entry">
-            <div class="m-payment-heading"><div><h3>${{ number_format($payment->amount_cents / 100, 0, ',', '.') }} ARS</h3><p>{{ ($payment->paid_at ?? $payment->created_at)->format('d/m/Y') }} · {{ $payment->source === 'manual' ? 'Cobro manual' : 'Mercado Pago' }} · {{ $payment->status === 'refunded' ? 'Reintegrado completo' : ($payment->status === 'approved' ? 'Aprobado' : $payment->status) }}</p><p>Período: {{ $payment->period_start?->format('d/m/Y H:i') ?? '—' }} → {{ $payment->period_end?->format('d/m/Y H:i') ?? '—' }}</p><p class="m-code">{{ $payment->reference ?? $payment->provider_payment_id }}</p></div><a class="m-button m-button-small m-button-dark" href="{{ url('/mi-suscripcion/comprobantes/'.$payment->public_id) }}">Comprobante</a></div>
+            <div class="m-payment-heading"><div><h3>${{ \App\Services\CommercialAmounts::format($payment->amount_cents) }} ARS</h3><p>{{ ($payment->paid_at ?? $payment->created_at)->format('d/m/Y') }} · {{ $payment->source === 'manual' ? 'Cobro manual' : 'Mercado Pago' }} · {{ $payment->status === 'refunded' ? 'Reintegrado completo' : ($payment->status === 'approved' ? 'Aprobado' : $payment->status) }}</p><p>Período: {{ $payment->period_start?->format('d/m/Y H:i') ?? '—' }} → {{ $payment->period_end?->format('d/m/Y H:i') ?? '—' }}</p><p class="m-code">{{ $payment->reference ?? $payment->provider_payment_id }}</p></div><a class="m-button m-button-small m-button-dark" href="{{ url('/mi-suscripcion/comprobantes/'.$payment->public_id) }}">Comprobante</a></div>
             @if($payment->fiscal_reference)<p>Referencia fiscal informada: {{ $payment->fiscal_reference }}</p>@endif
-            @foreach($payment->refunds as $refund)<p>Reintegro del {{ $refund->performed_on->format('d/m/Y') }}: ${{ number_format($refund->amount_cents / 100, 0, ',', '.') }} · {{ $refund->reason }}</p>@endforeach
+            @foreach($payment->refunds as $refund)<p>Reintegro del {{ $refund->performed_on->format('d/m/Y') }}: ${{ \App\Services\CommercialAmounts::format($refund->amount_cents) }} · {{ $refund->reason }}</p>@endforeach
             @if($subscription->isManual() && $payment->source === 'manual')<div class="m-two">
                 @if($payment->status === 'approved' && $payment->amount_cents > $payment->refunded_cents)<details class="m-commercial-details"><summary>Registrar reintegro ya realizado</summary><form class="m-form" method="POST" action="{{ url('/gestion-comercial/pagos/'.$payment->id.'/reintegros') }}">@csrf<input type="hidden" name="operation_id" value="{{ Str::uuid() }}">
                     <p class="m-small">Saldo reintegrable: ${{ number_format(($payment->amount_cents - $payment->refunded_cents) / 100, 2, ',', '.') }}. VisionFit no envía el dinero.</p>

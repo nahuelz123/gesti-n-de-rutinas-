@@ -36,7 +36,7 @@ class CommercialAdminController extends Controller
         $user = User::findOrFail($data['user_id']);
         abort_unless(config('commerce.coaching_gym_id') && $user->gym_id === (int) config('commerce.coaching_gym_id') && $user->role === 'client', 422);
         $plan = CommercialCatalog::plan($data['plan_code']);
-        CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $user->id, 'kind' => 'coaching', 'plan_code' => $data['plan_code'], 'amount_cents' => $plan['price'] * 100, 'currency' => 'ARS', 'status' => 'awaiting_payment', 'terms_version' => config('legal.versions.terms')]);
+        CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $user->id, 'kind' => 'coaching', 'plan_code' => $data['plan_code'], 'amount_cents' => $plan['price_cents'], 'currency' => 'ARS', 'status' => 'awaiting_payment', 'terms_version' => config('legal.versions.terms')]);
 
         return redirect('/gestion-comercial')->with('status', 'Asesoría preparada. El cliente podrá contratarla desde Mi suscripción; todavía no se cobró.');
     }

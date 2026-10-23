@@ -2,11 +2,23 @@
 
 namespace App\Support;
 
+use App\Services\CommercialPricing;
+
 class CommercialCatalog
 {
     public static function plans(): array
     {
-        return config('commerce.plans');
+        return array_intersect_key(app(CommercialPricing::class)->items(), config('commerce.plans'));
+    }
+
+    public static function oneOffRoutine(): array
+    {
+        return app(CommercialPricing::class)->items()['rutina-puntual'];
+    }
+
+    public static function promotion(): array
+    {
+        return app(CommercialPricing::class)->promotion();
     }
 
     public static function plan(string $code): array

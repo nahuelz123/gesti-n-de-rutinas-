@@ -45,7 +45,7 @@ class CommercialSubscriptionController extends Controller
             foreach (['privacy', 'terms'] as $scope) {
                 $user->consents()->create(['scope' => $scope, 'version' => config('legal.versions.'.$scope), 'granted_at' => now()]);
             }
-            CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $user->id, 'gym_id' => $gym->id, 'kind' => 'software', 'plan_code' => $plan, 'amount_cents' => $selected['price'] * 100, 'currency' => 'ARS', 'status' => 'trialing', 'trial_ends_at' => now()->addDays(config('commerce.trial_days')), 'terms_version' => config('legal.versions.terms')]);
+            CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $user->id, 'gym_id' => $gym->id, 'kind' => 'software', 'plan_code' => $plan, 'amount_cents' => $selected['price_cents'], 'currency' => 'ARS', 'status' => 'trialing', 'trial_ends_at' => now()->addDays(config('commerce.trial_days')), 'terms_version' => config('legal.versions.terms')]);
 
             return $user;
         });

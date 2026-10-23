@@ -49,7 +49,7 @@ class ManualMembershipPlans
                 if ($software) {
                     $this->assertCapacity($gym, $selected);
                 }
-                $sub = CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $account->id, 'gym_id' => $software ? $gym->id : null, 'kind' => $selected['kind'], 'plan_code' => $plan, 'amount_cents' => $selected['price'] * 100, 'currency' => 'ARS', 'billing_mode' => 'manual', 'status' => 'awaiting_payment', 'terms_version' => config('legal.versions.terms')]);
+                $sub = CommercialSubscription::create(['public_id' => (string) Str::uuid(), 'user_id' => $account->id, 'gym_id' => $software ? $gym->id : null, 'kind' => $selected['kind'], 'plan_code' => $plan, 'amount_cents' => $selected['price_cents'], 'currency' => 'ARS', 'billing_mode' => 'manual', 'status' => 'awaiting_payment', 'terms_version' => config('legal.versions.terms')]);
                 $this->operations->execute($sub->fresh(), $actor, $operationId, 'subscription_assigned', $payload, fn () => ['subscription_id' => $sub->id, 'legacy_access_preserved' => $software && ! $gym->billing_managed]);
 
                 return $sub;
@@ -79,7 +79,7 @@ class ManualMembershipPlans
             if ($selected && $locked->gym) {
                 $this->assertCapacity($locked->gym, $selected);
             }
-            $locked->update(['next_plan_code' => $code, 'next_amount_cents' => $selected ? $selected['price'] * 100 : null, 'next_plan_effective_at' => null]);
+            $locked->update(['next_plan_code' => $code, 'next_amount_cents' => $selected ? $selected['price_cents'] : null, 'next_plan_effective_at' => null]);
 
             return ['next_plan_code' => $code, 'next_amount_cents' => $locked->next_amount_cents];
         });
