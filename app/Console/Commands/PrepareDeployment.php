@@ -24,7 +24,9 @@ class PrepareDeployment extends Command
                     return self::FAILURE;
                 }
                 $ready = Schema::hasTable('commercial_inquiries') && Schema::hasColumn('commercial_payments', 'provider_updated_at')
-                    && Schema::hasColumns('commercial_subscriptions', ['public_id', 'paid_until', 'trial_ends_at'])
+                    && Schema::hasColumns('commercial_subscriptions', ['public_id', 'paid_until', 'trial_ends_at', 'billing_mode', 'next_plan_effective_at'])
+                    && Schema::hasColumns('commercial_payments', ['public_id', 'source', 'refunded_cents', 'plan_code'])
+                    && Schema::hasTable('commercial_settings') && Schema::hasTable('commercial_operations') && Schema::hasTable('commercial_refunds')
                     && Schema::hasColumn('gyms', 'billing_managed') && Schema::hasColumn('users', 'commercial_access_enabled');
                 if (! $ready) {
                     $this->error('El esquema comercial está incompleto; se detiene esta publicación.');

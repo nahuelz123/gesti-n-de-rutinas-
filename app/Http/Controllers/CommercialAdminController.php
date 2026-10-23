@@ -18,10 +18,7 @@ class CommercialAdminController extends Controller
         $status = $request->query('status');
         $inquiries = CommercialInquiry::query()->when(in_array($status, ['new', 'contacted', 'closed']), fn ($query) => $query->where('status', $status))->latest()->paginate(20)->withQueryString();
 
-        $coachingClients = User::where('gym_id', config('commerce.coaching_gym_id'))->where('role', 'client')->whereNotIn('id', CommercialSubscription::select('user_id'))->orderBy('name')->limit(200)->get();
-        $subscriptions = CommercialSubscription::with('user', 'gym')->latest()->limit(50)->get();
-
-        return view('marketing.admin', compact('inquiries', 'coachingClients', 'subscriptions') + ['meta' => ['title' => 'Gestión comercial | VisionFit', 'description' => 'Solicitudes y consultas comerciales.', 'path' => '/gestion-comercial']]);
+        return view('marketing.admin', compact('inquiries') + ['meta' => ['title' => 'Gestión comercial | VisionFit', 'description' => 'Solicitudes y consultas comerciales.', 'path' => '/gestion-comercial']]);
     }
 
     public function update(Request $request, CommercialInquiry $inquiry)

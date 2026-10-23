@@ -209,6 +209,9 @@ class User extends Authenticatable implements FilamentUser
     protected static function booted(): void
     {
         static::deleting(function (User $user) {
+            if (CommercialSubscription::where('user_id', $user->id)->where(fn ($query) => $query->whereHas('payments')->orWhereHas('operations'))->exists()) {
+                throw ValidationException::withMessages(['user' => 'La cuenta tiene historial comercial. Archivá el acceso y gestioná sus datos sin borrar los movimientos.']);
+            }
             if (CommercialSubscription::where('user_id', $user->id)->whereNotNull('provider_id')->where('cancel_at_period_end', false)->exists()) {
                 throw ValidationException::withMessages(['user' => 'Detené la renovación antes de eliminar la cuenta que paga la suscripción.']);
             }

@@ -6,6 +6,7 @@ use App\Models\CommercialSubscription;
 use App\Models\Gym;
 use App\Models\User;
 use App\Services\CommercialBilling;
+use App\Services\ManualMembershipPlans;
 use App\Services\MercadoPagoSubscriptions;
 use App\Support\CommercialCatalog;
 use Illuminate\Http\Client\ConnectionException;
@@ -56,10 +57,11 @@ class CommercialSubscriptionController extends Controller
 
     public function index(Request $request, MercadoPagoSubscriptions $gateway)
     {
-        $subscription = CommercialSubscription::where('user_id', $request->user()->id)->first();
+        $subscription = CommercialSubscription::with('gym')->withCoverage()->where('user_id', $request->user()->id)->first();
         $students = $subscription?->gym?->users()->where('role', 'client')->where('commercial_access_enabled', true)->count() ?? 0;
+        $payments = $subscription?->payments()->latest('id')->paginate(20);
 
-        return view('marketing.subscription', compact('subscription', 'students') + ['ready' => $gateway->ready(), 'meta' => ['title' => 'Mi suscripción | VisionFit', 'description' => 'Gestioná tu plan y su renovación.', 'path' => '/mi-suscripcion']]);
+        return view('marketing.subscription', compact('subscription', 'students', 'payments') + ['ready' => $gateway->ready(), 'meta' => ['title' => 'Mi suscripción | VisionFit', 'description' => 'Gestioná tu plan y su renovación.', 'path' => '/mi-suscripcion']]);
     }
 
     private function owned(Request $request): CommercialSubscription
@@ -83,9 +85,15 @@ class CommercialSubscriptionController extends Controller
         return redirect()->away($url);
     }
 
-    public function cancel(Request $request, MercadoPagoSubscriptions $gateway)
+    public function cancel(Request $request, MercadoPagoSubscriptions $gateway, ManualMembershipPlans $manual)
     {
         $subscription = $this->owned($request);
+        if ($subscription->isManual()) {
+            $data = $request->validate(['operation_id' => ['required', 'uuid']]);
+            $manual->cancelByOwner($subscription, $request->user(), $data['operation_id']);
+
+            return redirect('/mi-suscripcion')->with('status', 'Membresía cancelada. Conservás los períodos abonados.');
+        }
         try {
             DB::transaction(fn () => $gateway->cancel(CommercialSubscription::lockForUpdate()->findOrFail($subscription->id)));
         } catch (RequestException|ConnectionException $e) {

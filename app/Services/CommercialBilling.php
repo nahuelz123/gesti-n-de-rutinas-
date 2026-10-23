@@ -55,7 +55,7 @@ class CommercialBilling
     {
         $payment = $this->gateway->request('GET', '/v1/payments/'.rawurlencode($id));
         // Only payment IDs already bound through a provider invoice may update access.
-        $existing = CommercialPayment::where('provider_payment_id', $id)->first();
+        $existing = CommercialPayment::where('provider_payment_id', $id)->where('source', 'mercadopago')->first();
         if (! $existing) {
             return;
         }
@@ -73,14 +73,18 @@ class CommercialBilling
             $start = $debitDate ?: ($payment['date_approved'] ?? null);
             $record = CommercialPayment::firstOrNew(['provider_payment_id' => (string) $payment['id']]);
             abort_if($record->exists && $record->commercial_subscription_id !== $locked->id, 422);
+            abort_if($record->exists && $record->source !== 'mercadopago', 422);
             $providerUpdatedAt = Carbon::parse($payment['date_last_updated'])->utc();
             // A delayed provider response must never overwrite a newer refund or approval.
             if ($record->provider_updated_at && $providerUpdatedAt->lessThanOrEqualTo($record->provider_updated_at)) {
                 return;
             }
             $record->fill(['commercial_subscription_id' => $locked->id, 'status' => $payment['status'], 'amount_cents' => $amount, 'currency' => $payment['currency_id'], 'provider_updated_at' => $providerUpdatedAt]);
+            if (! $record->paid_at && ! empty($payment['date_approved'])) {
+                $record->paid_at = Carbon::parse($payment['date_approved'])->timezone(config('app.timezone'));
+            }
             if (! $record->period_start && $start) {
-                $record->period_start = Carbon::parse($start);
+                $record->period_start = Carbon::parse($start)->timezone(config('app.timezone'));
                 $record->period_end = $record->period_start->copy()->addMonthNoOverflow();
             }
             abort_if($payment['status'] === 'approved' && ! $record->period_end, 422);

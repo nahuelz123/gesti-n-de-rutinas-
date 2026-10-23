@@ -28,6 +28,9 @@ class MercadoPagoSubscriptions
         if ($subscription->cancel_at_period_end) {
             throw ValidationException::withMessages(['billing' => 'La renovación está cancelada. Contactanos para acordar una nueva contratación.']);
         }
+        if ($subscription->isManual() && ($subscription->paid_until?->isFuture() || $subscription->next_plan_code)) {
+            throw ValidationException::withMessages(['billing' => 'Tenés un período manual abonado o un cambio acordado. Coordiná la transición antes de activar una renovación automática.']);
+        }
         if ($subscription->provider_id && $subscription->checkout_url) {
             return $subscription->checkout_url;
         }
@@ -42,7 +45,7 @@ class MercadoPagoSubscriptions
         if (empty($result['id']) || parse_url($url, PHP_URL_SCHEME) !== 'https' || ! in_array(parse_url($url, PHP_URL_HOST), ['www.mercadopago.com.ar', 'mercadopago.com.ar'])) {
             throw ValidationException::withMessages(['billing' => 'No pudimos preparar un enlace de pago válido. Volvé a intentar.']);
         }
-        $subscription->update(['provider_id' => $result['id'], 'provider_status' => $result['status'] ?? 'pending', 'checkout_url' => $url, 'renewal_consented_at' => now()]);
+        $subscription->update(['billing_mode' => 'mercadopago', 'provider_id' => $result['id'], 'provider_status' => $result['status'] ?? 'pending', 'checkout_url' => $url, 'renewal_consented_at' => now()]);
 
         return $url;
     }

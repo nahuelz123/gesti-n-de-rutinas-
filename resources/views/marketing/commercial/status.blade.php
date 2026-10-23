@@ -1,0 +1,1 @@
+<span class="m-badge">{{ $subscription->cancel_at_period_end ? 'Cancelada' : ($subscription->hasAccess() ? ($subscription->trial_ends_at?->isFuture() && !$subscription->paid_until ? 'En prueba' : 'Con acceso vigente') : 'Sin período vigente') }}</span>
