@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class CommercialSettings extends Model
 {
@@ -15,6 +16,8 @@ class CommercialSettings extends Model
         'operator_address' => 'legal.operator_address', 'tax_id' => 'legal.tax_id',
         'manual_payment_instructions' => 'commerce.manual_payment_instructions',
         'coaching_gym_id' => 'commerce.coaching_gym_id',
+        'reminders_enabled' => 'commerce.reminders_enabled',
+        'reminder_recipient_id' => 'commerce.reminder_recipient_id',
     ];
 
     protected function casts(): array
@@ -29,7 +32,10 @@ class CommercialSettings extends Model
 
     public static function saveValues(array $values): void
     {
-        static::updateOrCreate(['id' => 1], ['values' => Arr::only($values, array_keys(self::CONFIG_KEYS))]);
+        DB::transaction(function () use ($values) {
+            $settings = static::lockForUpdate()->findOrFail(1);
+            $settings->update(['values' => array_replace($settings->values, Arr::only($values, array_keys(self::CONFIG_KEYS)))]);
+        });
         Cache::forget('visionfit.commercial-settings');
     }
 }

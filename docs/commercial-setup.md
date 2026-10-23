@@ -9,7 +9,7 @@ La web pública y la app usan el mismo Laravel. `/` presenta el servicio; `/logi
 3. Cobrar por transferencia, efectivo u otro medio acordado. Comprobar el ingreso en la cuenta real: una captura o un mensaje no confirma fondos.
 4. Abrir la membresía y registrar el importe exacto, entre uno y doce meses completos, medio, fecha y referencia completa de la transferencia. Confirmar que el dinero ya ingresó. La app registra el cobro, habilita el período, aplica cupos y conserva quién hizo la operación. No ejecuta transferencias ni cobros.
 5. El titular consulta `/mi-suscripcion`: instrucciones, plan, vencimiento, historial y comprobantes internos imprimibles. Estos comprobantes son privados y **no son facturas fiscales**. Emitir la factura por el circuito fiscal del operador y anotar después su referencia si corresponde.
-6. Revisar el filtro «Vencen en 7 días» y coordinar la renovación por el canal acordado. No se prometen recordatorios automáticos por correo. Exportar los cobros/reintegros del período en CSV privado para conciliación.
+6. Revisar el filtro «Vencen en 7 días» y coordinar la renovación por el canal acordado. En Avisos de vencimiento podés activar el resumen diario para el correo de tu cuenta si el transporte está configurado; la lista funciona sin correo. Exportar los cobros/reintegros del período en CSV privado para conciliación.
 
 ### Reglas operativas
 - El período comienza al confirmar el cobro, o al finalizar el período ya pagado si su vencimiento es futuro. La fecha del ingreso documenta el movimiento, sin retrotraer automáticamente el acceso. Se usa el calendario de Argentina; fin de mes sin desbordes (31/01 → 28/02).
@@ -81,3 +81,15 @@ Reconstruir cachés con el proceso existente. Confirmar `/up`, `/`, planes, cont
 - https://www.mercadopago.com.ar/developers/es/reference/online-payments/subscriptions/get-authorized-payment/get
 - https://www.mercadopago.com.ar/developers/es/docs/checkout-pro-orders/resources/notifications/webhooks
 - https://www.mercadopago.com.ar/developers/es/docs/subscriptions/additional-content/payment-management
+
+## Avisos de vencimiento y cobro manual
+
+`/gestion-comercial/recordatorios` muestra manuales próximas a vencer (7 días calendario) o vencidas en últimos30. Las más antiguas siguen en el filtro general. Excluye bajas, proveedor y espacios anteriores no incorporados; registrar la renovación actualiza la lista.
+
+El correo está desactivado por defecto. Solo root activa para el correo de su propia cuenta; nunca a clientes ni direcciones arbitrarias. Requiere SMTP u otro transporte soportado real y COMMERCE_PUBLIC_URL/APP_URL HTTPS. Log/array, incluso seleccionados por MAIL_URL, no se consideran envío. El panel muestra el último intento; aceptación del transporte no certifica recepción en bandeja.
+
+El worker existente `php artisan rest-alerts:work --sleep=1` comprueba cada15 minutos entre09:00 y21:00 de Argentina y lanza `php artisan memberships:remind` como hijo asíncrono de60 segundos, sin otro servicio ni bloquear el cronómetro. En otro hosting puede ejecutarse ese comando por cron cada15 minutos. Configuración de correo y base deben corresponder al entorno del worker.
+
+Un intento diario por destinatario, hasta100 filas y vínculo a la lista completa. Se reserva antes de contactar el transporte para no duplicar si se corta el proceso; fallo/interrupción no se reintenta ese día. El panel sigue actualizado. Justo antes del envío se vuelve a comprobar la activación y la cuenta/rol/correo actual; revocación anterior cancela el aviso. Un cambio que ocurre después de la entrega al transporte no puede retirarlo.
+
+No se enviaron correos reales de prueba ni se cargaron credenciales. Telegram, WhatsApp y push no están habilitados para estos avisos.

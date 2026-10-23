@@ -3,6 +3,7 @@
     @if(auth()->user()?->role === 'super_admin')
         <a href="{{ url('/gestion-comercial/membresias') }}">Membresías y cobros</a>
         <a href="{{ url('/gestion-comercial') }}">Consultas comerciales</a>
-        <a href="{{ url('/gestion-comercial/configuracion') }}">Datos del servicio</a>
+        <a href="{{ url('/gestion-comercial/recordatorios') }}">Avisos de vencimiento</a>
+    <a href="{{ url('/gestion-comercial/configuracion') }}">Datos del servicio</a>
     @endif
 </div>
