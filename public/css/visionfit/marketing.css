@@ -228,3 +228,25 @@
 .m-legal a{color:#a32430}
 .m-legal .rounded-xl{padding:20px;border:1px solid #c99838;background:#fff3d8;border-radius:9px}
 .m-legal ul{padding-left:22px}
+.m-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:30px}
+.m-metrics article{background:#fff;border:1px solid #dfd9d1;border-radius:10px;padding:22px}
+.m-metrics span{display:block;font-size:12px;color:#615b59}
+.m-metrics strong{display:block;font-size:28px;overflow-wrap:anywhere;margin-top:8px}
+.m-filter-form{display:flex;gap:18px;align-items:end;flex-wrap:wrap;margin:25px 0}
+.m-filter-form label{display:grid;gap:7px;font-size:13px;flex:1;min-width:170px}
+.m-filter-form input,.m-filter-form select{font:inherit;padding:12px;border:1px solid #bdb4aa;border-radius:7px;background:#fff;min-height:46px;width:100%}
+.m-pagination{margin-top:25px;overflow-x:auto}
+.m-form-spaced{margin-top:25px}
+.m-payment-entry{padding:25px;border:1px solid #dfd9d1;background:#fff;border-radius:12px;margin-top:22px}
+.m-payment-heading{display:flex;justify-content:space-between;gap:20px;align-items:start;margin-bottom:20px;flex-wrap:wrap}
+.m-payment-entry p{margin-top:10px}
+.m-commercial-details{margin-top:15px}
+.m-commercial-details summary{cursor:pointer;font-weight:650;margin-bottom:15px;font-size:14px}
+.m-code,.m-audit-data{overflow-wrap:anywhere;word-break:break-word}
+.m-audit-data{white-space:pre-wrap;max-width:550px;font-size:11px}
+.m-payment-instructions{white-space:pre-wrap}
+.m-receipt-data{margin:25px 0}
+.m-receipt-data dt{font-size:12px;color:#6f6764;margin-top:20px}
+.m-receipt-data dd{margin:5px 0 0;font-weight:600;overflow-wrap:anywhere}
+@media(max-width:760px){.m-metrics{grid-template-columns:1fr 1fr}.m-payment-entry{padding:20px}.m-filter-form label{min-width:100%;}.m-filter-form .m-button{width:100%}}
+@media print{.m-header,.m-footer,#vf-cookie-notice,.m-print-actions,.skip-link{display:none!important}.vf-marketing{background:#fff;color:#000}.m-receipt{width:100%;max-width:none;padding:15px 0}.m-receipt .m-form{border:0;padding:0}.m-receipt h1{font-size:30px}.m-receipt h2{font-size:23px}}

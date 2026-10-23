@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CommercialConfiguration;
 use App\Http\Middleware\CommercialIndexing;
 use App\Http\Middleware\CommercialMembershipAccess;
 use App\Http\Middleware\EnsureClientRole;
@@ -20,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->validateCsrfTokens(except: ['webhooks/mercadopago']);
         $middleware->append(CommercialIndexing::class);
-        $middleware->appendToGroup('web', CommercialMembershipAccess::class);
+        $middleware->appendToGroup('web', [CommercialConfiguration::class, CommercialMembershipAccess::class]);
         $middleware->alias([
             'filament.access' => EnsureNotClientForFilament::class,
             'client' => EnsureClientRole::class,

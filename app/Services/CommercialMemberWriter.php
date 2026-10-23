@@ -27,12 +27,12 @@ class CommercialMemberWriter
         return DB::transaction(function () use ($user, $data) {
             $gymId = (int) ($data['gym_id'] ?? $user->gym_id);
             $this->authorizeGym($gymId, $user);
+            $gym = Gym::lockForUpdate()->findOrFail($gymId);
             $owned = CommercialSubscription::where('user_id', $user->id)->first();
             $expectedRole = $owned?->kind === 'coaching' ? 'client' : 'admin';
             if ($owned && ($gymId !== $user->gym_id || ($data['role'] ?? $user->role) !== $expectedRole || ! ($data['commercial_access_enabled'] ?? true))) {
                 throw ValidationException::withMessages(['commercial_access_enabled' => 'El propietario conserva su acceso de administración y facturación.']);
             }
-            $gym = Gym::lockForUpdate()->findOrFail($gymId);
             $this->assertCapacity($gym, $data['role'] ?? $user->role, (bool) ($data['commercial_access_enabled'] ?? $user->commercial_access_enabled), $user->id);
             $user->update($data);
 
@@ -57,9 +57,13 @@ class CommercialMemberWriter
         if (! $subscription?->hasAccess()) {
             throw ValidationException::withMessages(['commercial_access_enabled' => 'El espacio necesita una membresía vigente para habilitar nuevos accesos.']);
         }
-        $plan = config('commerce.plans.'.$subscription?->plan_code);
+        $plan = config('commerce.plans.'.$subscription->currentPlanCode());
         $staff = in_array($role, ['admin', 'coach']);
         $limit = (int) ($plan[$staff ? 'staff' : 'students'] ?? 0);
+        if ($subscription->next_plan_code) {
+            $pending = config('commerce.plans.'.$subscription->next_plan_code);
+            $limit = min($limit, (int) ($pending[$staff ? 'staff' : 'students'] ?? 0));
+        }
         $count = User::where('gym_id', $gym->id)->where('commercial_access_enabled', true)
             ->whereIn('role', $staff ? ['admin', 'coach'] : ['client'])->when($except, fn ($query) => $query->where('id', '!=', $except))->count();
         if ($count >= $limit) {

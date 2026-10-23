@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\CommercialSubscription;
 use App\Models\User;
 use App\Services\CommercialMemberWriter;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -238,5 +239,35 @@ class CommercialSubscriptionsTest extends TestCase
         $this->actingAs($admin)->post('/gestion-comercial/asesorias', ['user_id' => $client->id, 'plan_code' => 'asesoria'])->assertRedirect();
         app(CommercialMemberWriter::class)->update($client, ['goals' => 'Registrar mi entrenamiento']);
         $this->assertSame('Registrar mi entrenamiento', $client->fresh()->goals);
+    }
+
+    public function test_provider_dates_with_a_timezone_offset_are_stored_as_the_correct_utc_instant(): void
+    {
+        $this->travelTo(Carbon::parse('2027-01-31 10:00:00', 'UTC'));
+        $sub = $this->enroll();
+        $sub->update(['provider_id' => 'offset-demo']);
+        $this->ready();
+        Http::fake([
+            'api.mercadopago.com/authorized_payments/123' => Http::response(['id' => 123, 'preapproval_id' => 'offset-demo', 'debit_date' => '2027-01-31T10:00:00+00:00', 'payment' => ['id' => 456]]),
+            'api.mercadopago.com/v1/payments/456' => Http::response(['id' => 456, 'status' => 'approved', 'transaction_amount' => 14900, 'currency_id' => 'ARS', 'date_approved' => '2027-01-31T07:00:00-03:00', 'date_last_updated' => '2027-01-31T07:00:00-03:00']),
+        ]);
+        $this->event('123')->assertOk();
+        $this->assertSame('2027-01-31 10:00:00', $sub->payments()->firstOrFail()->period_start->utc()->format('Y-m-d H:i:s'));
+    }
+
+    public function test_a_newer_provider_refund_is_not_dropped_due_to_timezone_conversion(): void
+    {
+        $sub = $this->enroll();
+        $this->ready();
+        $sub->update(['provider_id' => 'preapproval-demo']);
+        $snapshot = ['id' => 456, 'status' => 'approved', 'transaction_amount' => 14900, 'currency_id' => 'ARS', 'date_approved' => now()->toIso8601String(), 'date_last_updated' => now()->toIso8601String()];
+        Http::fake([
+            'api.mercadopago.com/authorized_payments/123' => Http::response(['id' => 123, 'preapproval_id' => 'preapproval-demo', 'debit_date' => now()->toIso8601String(), 'payment' => ['id' => 456]]),
+            'api.mercadopago.com/v1/payments/456' => Http::sequence()->push($snapshot)->push(array_replace($snapshot, ['status' => 'refunded', 'date_last_updated' => now()->addSecond()->toIso8601String()])),
+        ]);
+        $this->event('123')->assertOk();
+        $this->event('456', 'payment')->assertOk();
+        $this->assertSame('refunded', $sub->payments()->firstOrFail()->status);
+        $this->assertNull($sub->fresh()->paid_until);
     }
 }

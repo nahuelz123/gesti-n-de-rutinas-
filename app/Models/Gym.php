@@ -24,6 +24,10 @@ class Gym extends Model
     {
         static::deleting(function (Gym $gym) {
             if (CommercialSubscription::where(fn ($query) => $query->where('gym_id', $gym->id)->orWhereIn('user_id', $gym->users()->select('id')))
+                ->where(fn ($query) => $query->whereHas('payments')->orWhereHas('operations'))->exists()) {
+                throw ValidationException::withMessages(['gym' => 'El espacio tiene historial comercial. Archivá sus accesos y conservá los movimientos.']);
+            }
+            if (CommercialSubscription::where(fn ($query) => $query->where('gym_id', $gym->id)->orWhereIn('user_id', $gym->users()->select('id')))
                 ->whereNotNull('provider_id')->where('cancel_at_period_end', false)->exists()) {
                 throw ValidationException::withMessages(['gym' => 'Detené la renovación antes de eliminar el espacio que tiene una suscripción.']);
             }
