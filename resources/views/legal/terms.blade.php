@@ -11,6 +11,13 @@
         <p>La IA es opcional y puede equivocarse. No sigas una respuesta que te cause dolor o que contradiga una indicación profesional. El permiso para enviar información personal al proveedor de IA se gestiona por separado desde Mi cuenta.</p>
     </section>
     <section>
+        <h2 class="text-xl font-semibold text-white">Planes, cobros y cancelación</h2>
+        <p>El catálogo distingue licencias de software para entrenadores o gimnasios y asesorías de entrenamiento personal. La licencia del profesional incluye los accesos de sus alumnos dentro del cupo del plan. La asesoría personal incluye el acceso a la app para ese servicio.</p>
+        <p>Los precios publicados se expresan en pesos argentinos. Antes de autorizar una contratación se informa el plan, importe y frecuencia. La prueba de software de catorce días no solicita tarjeta ni autoriza cobros al terminar. Las renovaciones pagas requieren autorización en Mercado Pago; la suscripción puede detenerse desde Mi suscripción. El acceso se mantiene hasta finalizar el período abonado, salvo un reintegro o una circunstancia que justifique otra medida.</p>
+        <p>Los cambios de precio se comunican antes de aplicarlos a una renovación futura, con una anticipación propuesta de treinta días. Alcanzar el cupo no elimina alumnos: requiere archivar accesos o acordar otro plan. Una capacitación adicional, migración masiva o desarrollo específico no está incluido salvo acuerdo expreso.</p>
+        <p>Podés registrar una <a class="text-amber-300 underline" href="{{ url('/baja') }}">baja de servicio</a> o ejercer el <a class="text-amber-300 underline" href="{{ url('/arrepentimiento') }}">derecho de arrepentimiento</a> desde la web pública, sin crear una cuenta adicional. Estas condiciones no limitan los derechos del consumidor establecidos por la normativa aplicable. El comprobante del procesador de pagos es independiente de la factura fiscal que corresponda emitir.</p>
+    </section>
+    <section>
         <h2 class="text-xl font-semibold text-white">Disponibilidad y cambios</h2>
         <p>El operador puede actualizar funciones para mantener el servicio. Si un cambio afecta estas condiciones o el uso de datos, se publicará una versión nueva.</p>
         <p>Para consultas sobre tu cuenta o el servicio, contactá a tu gimnasio o escribí al contacto de plataforma indicado en la política de privacidad.</p>

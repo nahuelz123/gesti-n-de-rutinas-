@@ -20,6 +20,9 @@
                 El correo de contacto legal de la plataforma está pendiente de configurar.
             @endif
         </p>
+        @if(config('legal.operator_address'))<p>Domicilio del operador: {{ config('legal.operator_address') }}.</p>@endif
+        @if(config('legal.tax_id'))<p>Identificación fiscal: {{ config('legal.tax_id') }}.</p>@endif
+        <p>También podés contactar al área de atención de VisionFit por el <a class="text-amber-300 underline" href="{{ url('/contacto') }}">formulario de contacto</a> o registrar una <a class="text-amber-300 underline" href="{{ url('/privacidad/solicitud') }}">solicitud sobre tus datos</a>.</p>
     </section>
 
     <section>
@@ -56,9 +59,17 @@
     </section>
 
     <section>
+        <h2 class="text-xl font-semibold text-white">Web pública, consultas y contratación</h2>
+        <p>Si completás un formulario comercial, de baja, arrepentimiento o privacidad, guardamos tu nombre, email, el servicio o plan indicado, el mensaje, la fecha y una referencia de gestión. Se usan para responder y tramitar lo solicitado; no te incorporan a publicidad ni a una lista de marketing. No incluyas datos de salud ni de tarjetas en estos formularios.</p>
+        <p>Las consultas quedan disponibles para la administración autorizada de VisionFit. Podés solicitar su acceso, corrección o eliminación desde <a class="text-amber-300 underline" href="{{ url('/privacidad/solicitud') }}">el formulario de privacidad</a>. Las solicitudes comerciales se conservan mientras se gestionan y se revisan para su eliminación cuando dejan de ser necesarias; los comprobantes y registros sujetos a conservación obligatoria siguen el plazo aplicable.</p>
+        <p>Si contratás un plan con cobro online, Mercado Pago procesa los datos del medio de pago en su propio sitio. VisionFit conserva identificadores de suscripción y pagos, importes, moneda, estados y fechas para administrar el acceso y la renovación. VisionFit no guarda números completos de tarjeta ni códigos de seguridad.</p>
+    </section>
+
+    <section>
         <h2 class="text-xl font-semibold text-white">Tus opciones</h2>
         <p>Podés corregir los datos de perfil desde Mi cuenta, decidir si usás el asistente de IA y retirar ese permiso cuando quieras. Para ejercer otros derechos sobre tus datos, usá los contactos indicados arriba. Esta política debe revisarse según el contrato y la configuración real de cada gimnasio.</p>
     </section>
+    <p>La Agencia de Acceso a la Información Pública es el órgano de control de la Ley 25.326. Podés consultar tus derechos y presentar un reclamo en <a class="text-amber-300 underline" href="https://www.argentina.gob.ar/aaip/datospersonales" rel="external">su sitio oficial</a>.</p>
 
     @if (! config('legal.operator_name') || ! $contactEmail || ($gym && ! $gym->privacy_contact_email))
         <div class="rounded-xl border border-amber-700 bg-amber-950/40 p-4 text-amber-100">

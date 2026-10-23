@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Gym;
 use App\Models\User;
+use App\Services\CommercialMemberWriter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +45,7 @@ class GymJoinController extends Controller
         // Si en realidad es un profe, el admin del gimnasio le cambia el
         // rol después desde el panel (Usuarios → editar → Rol: Coach).
         $user = DB::transaction(function () use ($gym, $data) {
-            $user = User::create([
+            $user = app(CommercialMemberWriter::class)->create($gym, [
                 'gym_id' => $gym->id,
                 'name' => $data['name'],
                 'email' => $data['email'],

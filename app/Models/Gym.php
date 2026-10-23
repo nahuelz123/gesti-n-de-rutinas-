@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class Gym extends Model
 {
@@ -21,6 +22,12 @@ class Gym extends Model
 
     protected static function booted(): void
     {
+        static::deleting(function (Gym $gym) {
+            if (CommercialSubscription::where(fn ($query) => $query->where('gym_id', $gym->id)->orWhereIn('user_id', $gym->users()->select('id')))
+                ->whereNotNull('provider_id')->where('cancel_at_period_end', false)->exists()) {
+                throw ValidationException::withMessages(['gym' => 'Detené la renovación antes de eliminar el espacio que tiene una suscripción.']);
+            }
+        });
         static::creating(function (Gym $gym) {
             if (! $gym->invite_code) {
                 $gym->invite_code = static::generateUniqueInviteCode();

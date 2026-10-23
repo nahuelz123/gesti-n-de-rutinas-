@@ -3,20 +3,22 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
-use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
@@ -36,6 +38,7 @@ class User extends Authenticatable implements FilamentUser
         'activity_level',
         'goals',
         'medical_notes',
+        'commercial_access_enabled',
     ];
 
     /**
@@ -60,6 +63,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'commercial_access_enabled' => 'boolean',
         ];
     }
 
@@ -84,7 +88,7 @@ class User extends Authenticatable implements FilamentUser
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
@@ -203,25 +207,33 @@ class User extends Authenticatable implements FilamentUser
     }
 
     protected static function booted(): void
-{
-    static::saving(function (User $model) {
-        $actor = Auth::user();
+    {
+        static::deleting(function (User $user) {
+            if (CommercialSubscription::where('user_id', $user->id)->whereNotNull('provider_id')->where('cancel_at_period_end', false)->exists()) {
+                throw ValidationException::withMessages(['user' => 'Detené la renovación antes de eliminar la cuenta que paga la suscripción.']);
+            }
+        });
+        static::saving(function (User $model) {
+            $actor = Auth::user();
 
-        if (! $actor) return;
+            if (! $actor) {
+                return;
+            }
 
-        // Si NO es super_admin, fuerza gym_id al del actor
-        if ($actor->role !== 'super_admin') {
-            $model->gym_id = $actor->gym_id;
-        }
+            // Si NO es super_admin, fuerza gym_id al del actor
+            if ($actor->role !== 'super_admin') {
+                $model->gym_id = $actor->gym_id;
+            }
 
-        // Si NO es super_admin, no puede crear/editar usuarios a super_admin
-        if ($actor->role !== 'super_admin' && $model->role === 'super_admin') {
-            throw new \RuntimeException('No autorizado: no podés asignar el rol super_admin.');
-        }
-    });
-}
+            // Si NO es super_admin, no puede crear/editar usuarios a super_admin
+            if ($actor->role !== 'super_admin' && $model->role === 'super_admin') {
+                throw new \RuntimeException('No autorizado: no podés asignar el rol super_admin.');
+            }
+        });
+    }
+
     public function canAccessPanel(Panel $panel): bool
-{
-    return in_array($this->role, ['super_admin', 'admin', 'coach']);
-}
+    {
+        return in_array($this->role, ['super_admin', 'admin', 'coach']);
+    }
 }
