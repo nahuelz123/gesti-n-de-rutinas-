@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -22,14 +24,14 @@ class UserForm
         // - otros: gym_id oculto y automático
         $gymField = ($user?->role === 'super_admin')
             ? Select::make('gym_id')
-            ->label('Gimnasio')
-            ->relationship('gym', 'name')
-            ->searchable()
-            ->required()
+                ->label('Gimnasio')
+                ->relationship('gym', 'name')
+                ->searchable()
+                ->required()
             : Hidden::make('gym_id')
-            ->default(fn() => Auth::user()?->gym_id)
-            ->dehydrated()
-            ->required();
+                ->default(fn () => Auth::user()?->gym_id)
+                ->dehydrated()
+                ->required();
 
         // Roles disponibles según quién crea
         $roleOptions = match ($user?->role) {
@@ -52,9 +54,12 @@ class UserForm
             ],
         };
 
-
         return $schema->components([
             $gymField,
+            Toggle::make('commercial_access_enabled')
+                ->label('Acceso habilitado')
+                ->default(true)
+                ->helperText('En espacios con membresía, desactivar archiva el acceso y libera una plaza sin borrar el historial.'),
 
             TextInput::make('name')
                 ->label('Nombre')
@@ -67,7 +72,7 @@ class UserForm
                 ->required()
                 ->maxLength(255)
                 ->rules([
-                    fn($record) => Rule::unique('users', 'email')->ignore($record),
+                    fn ($record) => Rule::unique('users', 'email')->ignore($record),
                 ]),
 
             Select::make('role')
@@ -83,23 +88,23 @@ class UserForm
             TextInput::make('password')
                 ->password()
                 ->revealable()
-                ->required(fn(string $operation) => $operation === 'create')
-                ->dehydrated(fn($state) => filled($state))
-                ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                ->required(fn (string $operation) => $operation === 'create')
+                ->dehydrated(fn ($state) => filled($state))
+                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                 ->maxLength(255),
 
             Textarea::make('goals')
                 ->label('Objetivos del cliente')
                 ->rows(3)
                 ->columnSpanFull()
-                ->visible(fn($get) => $get('role') === 'client')
+                ->visible(fn ($get) => $get('role') === 'client')
                 ->nullable(),
 
             Select::make('activity_level')
                 ->label('Nivel de actividad')
-                ->options(\App\Models\User::ACTIVITY_LEVELS)
+                ->options(User::ACTIVITY_LEVELS)
                 ->native(false)
-                ->visible(fn($get) => $get('role') === 'client')
+                ->visible(fn ($get) => $get('role') === 'client')
                 ->nullable(),
 
             TextInput::make('age')
@@ -107,14 +112,14 @@ class UserForm
                 ->numeric()
                 ->minValue(10)
                 ->maxValue(100)
-                ->visible(fn($get) => $get('role') === 'client')
+                ->visible(fn ($get) => $get('role') === 'client')
                 ->nullable(),
 
             Textarea::make('medical_notes')
                 ->label('Notas médicas / lesiones')
                 ->rows(5)
                 ->columnSpanFull()
-                ->visible(fn($get) => $get('role') === 'client')
+                ->visible(fn ($get) => $get('role') === 'client')
                 ->nullable(),
         ]);
     }

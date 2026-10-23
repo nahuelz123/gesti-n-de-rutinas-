@@ -2,6 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
+use App\Filament\Widgets\ClientsWithoutActiveDiet;
+use App\Filament\Widgets\ClientsWithoutActiveRoutine;
+use App\Filament\Widgets\VisionFitStatsOverview;
+use App\Http\Middleware\CommercialMembershipAccess;
+use App\Http\Middleware\PreventBackNavigation;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,13 +38,14 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('images/visionfit-logo-navbar.svg'))
             ->brandLogoHeight('1.75rem')
             ->favicon(asset('favicon.svg'))
-            ->login(\App\Filament\Pages\Auth\Login::class)
-           ->colors([
-           'primary' => Color::Amber,
-           ])
-           ->defaultThemeMode(\Filament\Enums\ThemeMode::Dark)
-           ->darkMode(isForced: true)
+            ->login(Login::class)
+            ->colors([
+                'primary' => Color::Amber,
+            ])
+            ->defaultThemeMode(ThemeMode::Dark)
+            ->darkMode(isForced: true)
             ->renderHook(PanelsRenderHook::BODY_END, fn () => view('partials.cookie-notice'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_END, fn () => view('partials.commercial-admin-links'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -46,9 +54,9 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
-                \App\Filament\Widgets\VisionFitStatsOverview::class,
-                \App\Filament\Widgets\ClientsWithoutActiveRoutine::class,
-                \App\Filament\Widgets\ClientsWithoutActiveDiet::class,
+                VisionFitStatsOverview::class,
+                ClientsWithoutActiveRoutine::class,
+                ClientsWithoutActiveDiet::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -60,10 +68,11 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\PreventBackNavigation::class,
+                PreventBackNavigation::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->middleware([CommercialMembershipAccess::class], isPersistent: true);
     }
 }

@@ -17,14 +17,40 @@ use App\Http\Controllers\Client\ProgressController;
 use App\Http\Controllers\Client\RecipeCatalogController;
 use App\Http\Controllers\Client\RestAlertController;
 use App\Http\Controllers\Client\RoutineController;
+use App\Http\Controllers\CommercialAdminController;
+use App\Http\Controllers\CommercialInquiryController;
+use App\Http\Controllers\CommercialSubscriptionController;
+use App\Http\Controllers\CommercialWebhookController;
 use App\Http\Controllers\GymJoinController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\RoutinePhotoController;
+use App\Http\Middleware\CommercialMembershipAccess;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-})->name('home');
+Route::get('/', [MarketingController::class, 'show'])->name('home');
+foreach (['asesorias-online' => 'personal', 'software-entrenadores-personales' => 'coach', 'software-gimnasios' => 'gym', 'planes' => 'plans', 'preguntas-frecuentes' => 'faq', 'recursos' => 'resources', 'contacto' => 'contact'] as $path => $page) {
+    Route::get('/'.$path, [MarketingController::class, 'show'])->defaults('page', $page)->name('marketing.'.$page);
+}
+Route::get('/recursos/{slug}', [MarketingController::class, 'guide'])->name('marketing.guide');
+Route::get('/sitemap.xml', [MarketingController::class, 'sitemap']);
+Route::get('/robots.txt', [MarketingController::class, 'robots']);
+Route::post('/contacto', [CommercialInquiryController::class, 'store'])->middleware('throttle:6,1');
+Route::get('/contacto/recibido', [CommercialInquiryController::class, 'received']);
+foreach (['baja', 'arrepentimiento', 'privacidad/solicitud'] as $type) {
+    Route::get('/'.$type, [CommercialInquiryController::class, 'form'])->defaults('type', $type);
+    Route::post('/'.$type, [CommercialInquiryController::class, 'store'])->defaults('type', $type)->middleware('throttle:6,1');
+}
+Route::get('/gestion-comercial', [CommercialAdminController::class, 'index'])->middleware('auth');
+Route::post('/gestion-comercial/solicitudes/{inquiry}', [CommercialAdminController::class, 'update'])->middleware('auth');
+Route::post('/gestion-comercial/asesorias', [CommercialAdminController::class, 'coaching'])->middleware('auth');
+Route::get('/empezar/{plan}', [CommercialSubscriptionController::class, 'start']);
+Route::post('/empezar/{plan}', [CommercialSubscriptionController::class, 'enroll'])->middleware('throttle:5,1');
+Route::get('/mi-suscripcion', [CommercialSubscriptionController::class, 'index'])->middleware('auth');
+Route::post('/mi-suscripcion/checkout', [CommercialSubscriptionController::class, 'checkout'])->middleware(['auth', 'throttle:5,1']);
+Route::post('/mi-suscripcion/cancelar', [CommercialSubscriptionController::class, 'cancel'])->middleware(['auth', 'throttle:5,1']);
+Route::post('/mi-suscripcion/actualizar', [CommercialSubscriptionController::class, 'reconcile'])->middleware(['auth', 'throttle:5,1']);
+Route::post('/webhooks/mercadopago', CommercialWebhookController::class)->middleware('throttle:120,1');
 
 Route::get('/privacidad', [LegalController::class, 'privacy'])->name('legal.privacy');
 Route::get('/condiciones', [LegalController::class, 'terms'])->name('legal.terms');
@@ -41,7 +67,7 @@ Route::redirect('/apple-touch-icon-precomposed.png', '/apple-touch-icon.png', 30
 // (si ya tiene cuenta) o registrarse (entra siempre como cliente, ya con el
 // gym_id correcto). Público, sin auth.
 Route::get('/unirse/{inviteCode}', [GymJoinController::class, 'show'])->name('gym-join.show');
-Route::post('/unirse/{inviteCode}', [GymJoinController::class, 'register'])->name('gym-join.register');
+Route::post('/unirse/{inviteCode}', [GymJoinController::class, 'register'])->middleware('guest')->name('gym-join.register');
 
 Route::get('dashboard', function () {
     $user = auth()->user();
@@ -52,7 +78,7 @@ Route::get('dashboard', function () {
     return redirect('/admin');
 })->middleware(['auth'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', CommercialMembershipAccess::class.':required'])->group(function () {
     Route::get('/rutinas/desde-foto', [RoutinePhotoController::class, 'show'])->name('routines.photo.show');
     Route::post('/rutinas/desde-foto', [RoutinePhotoController::class, 'store'])->name('routines.photo.store');
 });
