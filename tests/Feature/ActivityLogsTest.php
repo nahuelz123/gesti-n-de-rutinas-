@@ -42,6 +42,22 @@ class ActivityLogsTest extends TestCase
         $this->assertSame('compendium2024-net-v1', $log->calculation_version);
     }
 
+    public function test_sports_are_available_and_calories_use_their_compendium_met(): void
+    {
+        $client = User::factory()->create(['role' => 'client']);
+        $response = $this->actingAs($client)->get('/app/activities')->assertOk()
+            ->assertSee('Boxeo · sparring')->assertSee('Básquetbol · partido')
+            ->assertSee('Natación · crol recreativo')->assertSee('Atletismo · vallas y obstáculos');
+
+        $this->post('/app/activities', $this->payload(['activity_key' => 'boxing_sparring', 'duration_minutes' => 60]))
+            ->assertRedirect();
+        $log = ActivityLog::firstOrFail();
+        $this->assertSame('boxing_sparring', $log->activity_key);
+        $this->assertSame('cardio', $log->category);
+        $this->assertEquals(7.8, $log->met);
+        $this->assertEquals(544, $log->active_kcal); // (7.8 - 1) × 80 kg × 1 hour.
+    }
+
     #[DataProvider('invalidEntries')]
     public function test_rejects_invalid_activity_data(string $field, mixed $value): void
     {
