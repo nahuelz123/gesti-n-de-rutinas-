@@ -5,8 +5,10 @@ Los valores provienen del **Compendio de Actividades Físicas para adultos 2024*
 - [Definición de MET y condiciones de uso comercial](https://pacompendium.com/): un MET estándar equivale aproximadamente a 1 kcal/kg/hora; uso comercial permitido con atribución, sin cambiar los valores MET.
 - [Acondicionamiento](https://pacompendium.com/conditioning-exercise/): elíptico, fuerza, remo, escaladora y soga.
 - [Bicicleta](https://pacompendium.com/bicycling/), [caminata](https://pacompendium.com/walking/) y [carrera](https://pacompendium.com/running/).
+- [Deportes](https://pacompendium.com/sports/): boxeo (bolsa, sparring y ring), básquetbol, fútbol, futsal, vóley, tenis y pruebas de atletismo.
+- [Actividades acuáticas](https://pacompendium.com/water-activities/): estilos recreativos e intensos de natación.
 
-`ActivityCatalog` conserva cada código y MET sin mezclarlos. Las opciones distinguen el esfuerzo o ritmo; los valores no se interpolan a partir del peso levantado.
+`ActivityCatalog` conserva cada código y MET sin mezclarlos. Las opciones distinguen el esfuerzo o ritmo; los valores no se interpolan a partir del peso levantado. El catálogo incluye deportes y pruebas de atletismo como actividades registrables por duración, dentro del mismo formulario de cardio. Elegir la opción más parecida a la sesión real importa: un partido, la práctica técnica y el sparring no comparten necesariamente el mismo MET.
 
 ## Cálculo
 
