@@ -288,6 +288,21 @@
         </div>
     </header>
 
+    @unless($isDemo ?? false)
+        @if(auth()->user()?->role === 'client')
+            <a href="{{ route('client.coach-help.create') }}" class="vf-panel" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;text-decoration:none;border-color:rgba(230,57,70,.45);background:linear-gradient(110deg,rgba(230,57,70,.12),var(--clr-surface));">
+                <span style="display:flex;align-items:center;gap:12px;min-width:0;">
+                    <span aria-hidden="true" style="display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:13px;background:rgba(230,57,70,.14);color:var(--clr-primary);font-size:23px;">?</span>
+                    <span style="display:block;min-width:0;">
+                        <strong style="display:block;color:var(--clr-text);font-size:15px;">¿Necesitás ayuda de tu coach?</strong>
+                        <span style="display:block;margin-top:4px;color:var(--clr-text-muted);font-size:13px;">Pedí ayuda desde VisionFit, sin compartir teléfonos personales.</span>
+                    </span>
+                </span>
+                <span aria-hidden="true" style="color:var(--clr-primary);font-size:22px;flex:0 0 auto;">→</span>
+            </a>
+        @endif
+    @endunless
+
     <div class="vf-dashboard-grid">
         <div class="vf-stack">
             <section class="vf-panel vf-training-panel">
