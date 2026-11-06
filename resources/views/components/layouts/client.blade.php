@@ -93,6 +93,14 @@
         </div>
     </nav>
 
+    @if(!$isDemo && $navigationUser?->role === 'client')
+        <a href="{{ route('client.coach-help.create') }}" aria-label="Pedir ayuda al coach"
+           style="position:fixed; right:18px; bottom:calc(112px + env(safe-area-inset-bottom)); z-index:40; display:flex; align-items:center; gap:8px; padding:12px 16px; border-radius:999px; background:var(--clr-primary); color:#fff; font-weight:700; text-decoration:none; box-shadow:0 8px 24px rgba(0,0,0,.28);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:20px;height:20px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H15m4.5-3.75a9 9 0 0 1-9 9H7.5l-3.75 3v-5.25a9 9 0 1 1 15.75-6.75Z"/></svg>
+            Pedir ayuda
+        </a>
+    @endif
+
     {{-- Botón flotante del asistente IA, estilo burbuja de WhatsApp --}}
     <a href="{{ route('client.ai-chat.index') }}" class="ai-fab" title="Asistente IA">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"/></svg>
