@@ -1,11 +1,11 @@
 <?php
 
-namespace App\\Http\\Controllers\\Client;
+namespace App\Http\Controllers\Client;
 
-use App\\Http\\Controllers\\Controller;
-use Filament\\Notifications\\Notification as FilamentNotification;
-use Illuminate\\Http\\Request;
-use Illuminate\\Validation\\Rule;
+use App\Http\Controllers\Controller;
+use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CoachHelpController extends Controller
 {

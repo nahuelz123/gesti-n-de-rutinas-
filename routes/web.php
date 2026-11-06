@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\AccountController;
 use App\Http\Controllers\Client\ActivityController;
 use App\Http\Controllers\Client\AiChatController;
 use App\Http\Controllers\Client\ChatController;
+use App\Http\Controllers\Client\CoachHelpController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\ExperienceController;
 use App\Http\Controllers\Client\FreeMealLogController;
@@ -163,7 +164,9 @@ Route::middleware(['auth', 'client', 'no-back'])
         Route::get('/recipes', [RecipeCatalogController::class, 'index'])->name('recipes.index');
         Route::get('/recipes/{recipe}', [RecipeCatalogController::class, 'show'])->name('recipes.show');
 
-        Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');\n        Route::get('/coach-help', [CoachHelpController::class, 'create'])->name('coach-help.create');\n        Route::post('/coach-help', [CoachHelpController::class, 'store'])->middleware('throttle:5,1')->name('coach-help.store');
+        Route::get('/notifications', [NotificationsController::class, 'index'])->name('notifications.index');
+        Route::get('/coach-help', [CoachHelpController::class, 'create'])->name('coach-help.create');
+        Route::post('/coach-help', [CoachHelpController::class, 'store'])->middleware('throttle:5,1')->name('coach-help.store');
     });
 
 require __DIR__.'/settings.php';
