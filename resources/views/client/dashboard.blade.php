@@ -295,7 +295,7 @@
                     <span aria-hidden="true" style="display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:13px;background:rgba(230,57,70,.14);color:var(--clr-primary);font-size:23px;">?</span>
                     <span style="display:block;min-width:0;">
                         <strong style="display:block;color:var(--clr-text);font-size:15px;">¿Necesitás ayuda de tu coach?</strong>
-                        <span style="display:block;margin-top:4px;color:var(--clr-text-muted);font-size:13px;">Pedí ayuda desde VisionFit, sin compartir teléfonos personales.</span>
+                        <span style="display:block;margin-top:4px;color:var(--clr-text-muted);font-size:13px;">Contactá a tu coach desde la app.</span>
                     </span>
                 </span>
                 <span aria-hidden="true" style="color:var(--clr-primary);font-size:22px;flex:0 0 auto;">→</span>
