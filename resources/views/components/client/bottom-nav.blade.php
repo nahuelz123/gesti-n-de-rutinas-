@@ -7,6 +7,7 @@
             'client.recipes',
             'client.chat',
             'client.ai-chat',
+            'client.coach-help',
             'client.account',
             'client.notifications',
             'client.character',
@@ -78,6 +79,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
             Catálogo de Recetas
         </a>
+        @unless($isDemo)
+            @if(auth()->user()?->role === 'client')
+                <a href="{{ route('client.coach-help.create') }}" class="app-nav-account-item" @if(request()->routeIs('client.coach-help.*')) aria-current="page" @endif>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H15m4.5-3.75a9 9 0 0 1-9 9H7.5l-3.75 3v-5.25a9 9 0 1 1 15.75-6.75Z"/></svg>
+                    Pedir ayuda al coach
+                </a>
+            @endif
+        @endunless
         <a href="{{ route('client.chat.index') }}" class="app-nav-account-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-.72 0-1.437-.023-2.148-.069m8.148-6.573V6.75c0-1.108-.806-2.057-1.907-2.185a48.507 48.507 0 0 0-11.186 0c-1.1.128-1.907 1.077-1.907 2.185v4.286c0 1.108.806 2.057 1.907 2.185.106.012.213.023.32.033m9.166-4.5H3.75"/></svg>
             Chat con Coach
